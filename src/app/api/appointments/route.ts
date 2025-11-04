@@ -3,8 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const CreateAppointment = z.object({
-  userId: z.string(),
-  serviceId: z.string(),
+  user: z.object({
+    name: z.string(),
+    phone: z.string(),
+  }),
+  service: z.object({
+    name: z.string(),
+  }),
   date: z.string(),
   notes: z.string().optional(),
 });
@@ -20,14 +25,41 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const parsed = CreateAppointment.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
-  const { userId, serviceId, date, notes } = parsed.data;
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
 
+  const { user, service, date, notes } = parsed.data;
+
+  // ✅ 1. Buscar o crear usuario
+  const existingUser = await prisma.user.findFirst({
+    where: { phone: user.phone },
+  });
+
+  const userRecord = existingUser
+    ? existingUser
+    : await prisma.user.create({
+        data: { name: user.name, phone: user.phone, email: "" },
+      });
+
+  // ✅ 2. Buscar servicio por nombre
+  const serviceRecord = await prisma.service.findFirst({
+    where: { name: service.name },
+  });
+
+  if (!serviceRecord) {
+    return NextResponse.json(
+      { error: "Servicio no encontrado" },
+      { status: 400 }
+    );
+  }
+
+  // ✅ 3. Crear el turno
   const appointment = await prisma.appointment.create({
     data: {
-      userId,
-      serviceId,
+      userId: userRecord.id,
+      serviceId: serviceRecord.id,
       date: new Date(date),
       notes,
     },
