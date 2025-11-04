@@ -8,13 +8,15 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String?
-  email         String         @unique
-  role          Role           @default(CLIENT)
-  appointments  Appointment[] 
-  createdAt     DateTime       @default(now())
+  id        String    @id @default(cuid())
+  name      String?
+  email     String?   @unique
+  phone     String?   // 👈 Agregamos este campo
+  role      Role      @default(CLIENT)
+  createdAt DateTime  @default(now())
+  appointments Appointment[]
 }
+
 
 model Service {
   id            String         @id @default(cuid())
