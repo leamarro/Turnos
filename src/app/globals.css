@@ -224,5 +224,5 @@ section {
 
 .text-indigo-600 {
   --tw-text-opacity: 1;
-  color: black;
+  color: black !important;
 }
