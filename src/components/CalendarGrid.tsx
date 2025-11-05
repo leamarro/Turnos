@@ -6,22 +6,18 @@
     const dayAppointments = appointments.filter(a => a.date.startsWith(dateKey));
 
     return (
-      <button
-        key={index}
-        onClick={() => handleDayClick(date)}
-        className={`p-3 rounded-xl border text-center transition-all shadow-soft ${
-          isToday
-            ? "bg-[var(--color-accent)] font-semibold"
-            : "bg-white hover:bg-[var(--color-accent)]/40"
-        }`}
-      >
-        <span>{day}</span>
-        {dayAppointments.length > 0 && (
-          <div className="mt-1 text-xs text-gray-600">
-            {dayAppointments.length} turno(s)
-          </div>
-        )}
-      </button>
+<div className="flex justify-between items-center mb-4">
+  <button onClick={handlePrevMonth} className="text-[var(--color-text)] text-xl font-light">
+    ←
+  </button>
+  <h2 className="text-lg font-semibold">
+    {monthName} {year}
+  </h2>
+  <button onClick={handleNextMonth} className="text-[var(--color-text)] text-xl font-light">
+    →
+  </button>
+</div>
+
     );
   })}
 </div>
