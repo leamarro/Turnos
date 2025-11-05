@@ -2,19 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* === ESTILO GLOBAL MINIMALISTA === */
 body {
+  background-color: #f5f3ef;
+  color: #111111;
   font-family: 'Inter', sans-serif;
-  background-color: #f9fafb;
 }
 
+a {
+  color: #111111;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+a:hover {
+  opacity: 0.7;
+}
+
+/* Animación sutil para modales o menús */
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
