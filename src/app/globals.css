@@ -16,7 +16,6 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-/* Enlaces */
 a {
   color: var(--color-text);
   text-decoration: none;
@@ -28,19 +27,15 @@ a:hover {
 }
 
 /* Botones */
-button,
-input[type="submit"] {
-  background-color: var(--color-accent);
+button {
+  background: transparent;
   color: var(--color-text);
-  font-weight: 500;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.1s ease;
 }
 
-button:hover,
-input[type="submit"]:hover {
-  opacity: 0.8;
+button:hover {
+  opacity: 0.7;
+  transform: scale(1.05);
 }
 
 /* Inputs */
