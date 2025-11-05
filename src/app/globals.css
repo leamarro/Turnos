@@ -226,3 +226,37 @@ section {
   --tw-text-opacity: 1;
   color: black !important;
 }
+
+
+/* ==== REACT DAY PICKER OVERRIDES ==== */
+.rdp {
+  --rdp-accent-color: #111 !important; /* Color de selección y flechas */
+  --rdp-accent-background-color: #111 !important;
+  --rdp-background-color: #fff;
+  --rdp-outline: none;
+}
+
+.rdp-button_reset {
+  color: #111 !important; /* Flechas del mes */
+}
+
+.rdp-nav_button {
+  color: #111 !important;
+}
+
+.rdp-caption_label {
+  text-transform: capitalize; /* Mes con mayúscula inicial */
+  color: #111;
+  font-weight: 500;
+}
+
+/* Día actual */
+.rdp-day_today {
+  border: 1px solid #111;
+}
+
+/* Día seleccionado */
+.rdp-day_selected {
+  background-color: #111 !important;
+  color: white !important;
+}
