@@ -12,12 +12,21 @@ export default function AppointmentForm() {
   const [date, setDate] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    axios.get("/api/services").then(res => {
-      setServices(res.data);
-      if (res.data[0]) setServiceId(res.data[0].id);
-    });
-  }, []);
+useEffect(() => {
+  async function fetchServices() {
+    try {
+      const res = await fetch("/api/services");
+      if (!res.ok) throw new Error("Error al obtener servicios");
+      const data = await res.json();
+      setServices(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  fetchServices();
+}, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

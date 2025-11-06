@@ -1,70 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { z } from "zod";
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
-const CreateAppointment = z.object({
-  user: z.object({
-    name: z.string(),
-    phone: z.string(),
-  }),
-  service: z.object({
-    name: z.string(),
-  }),
-  date: z.string(),
-  notes: z.string().optional(),
-});
+const prisma = new PrismaClient();
 
-export async function GET() {
-  const appointments = await prisma.appointment.findMany({
-    include: { user: true, service: true },
-    orderBy: { date: "asc" },
-  });
-  return NextResponse.json(appointments);
-}
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { name, email, date, serviceId } = body;
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const parsed = CreateAppointment.safeParse(body);
+    if (!name || !email || !date || !serviceId) {
+      return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
+    }
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error }, { status: 400 });
+    const appointment = await prisma.appointment.create({
+      data: {
+        name,
+        email,
+        date: new Date(date),
+        service: { connect: { id: serviceId } },
+      },
+    });
+
+    return NextResponse.json(appointment);
+  } catch (error) {
+    console.error("Error al crear turno:", error);
+    return NextResponse.json({ error: "Error al crear turno" }, { status: 500 });
   }
-
-  const { user, service, date, notes } = parsed.data;
-
-  // ✅ 1. Buscar o crear usuario
-  const existingUser = await prisma.user.findFirst({
-    where: { phone: user.phone },
-  });
-
-  const userRecord = existingUser
-    ? existingUser
-    : await prisma.user.create({
-        data: { name: user.name, phone: user.phone, email: "" },
-      });
-
-  // ✅ 2. Buscar servicio por nombre
-  const serviceRecord = await prisma.service.findFirst({
-    where: { name: service.name },
-  });
-
-  if (!serviceRecord) {
-    return NextResponse.json(
-      { error: "Servicio no encontrado" },
-      { status: 400 }
-    );
-  }
-
-  // ✅ 3. Crear el turno
-  const appointment = await prisma.appointment.create({
-    data: {
-      userId: userRecord.id,
-      serviceId: serviceRecord.id,
-      date: new Date(date),
-      notes,
-    },
-    include: { user: true, service: true },
-  });
-
-  return NextResponse.json(appointment);
 }

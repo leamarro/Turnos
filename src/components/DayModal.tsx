@@ -1,168 +1,160 @@
-"use client"
+"use client";
 
-import { motion, AnimatePresence } from "framer-motion"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
-import { useState } from "react"
-import axios from "axios"
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-interface Appointment {
-  id: string
-  date: string
-  service?: { name: string }
-  clientName?: string
-  notes?: string
-}
+export default function AppointmentForm() {
+  const [services, setServices] = useState<any[]>([]);
+  const [serviceId, setServiceId] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [message, setMessage] = useState("");
 
-interface Service {
-  id: string
-  name: string
-}
-
-interface DayModalProps {
-  open: boolean
-  onClose: () => void
-  date: Date | null
-  appointments: Appointment[]
-  onAppointmentAdded: () => void
-}
-
-export default function DayModal({ open, onClose, date, appointments, onAppointmentAdded }: DayModalProps) {
-  const [services, setServices] = useState<Service[]>([])
-  const [form, setForm] = useState({ serviceId: "", clientName: "", time: "", notes: "" })
-  const [loading, setLoading] = useState(false)
-
-  if (!date) return null
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const res = await axios.get("/api/services");
+        setServices(res.data);
+      } catch (error) {
+        console.error("Error cargando servicios:", error);
+      }
+    }
+    fetchServices();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    try {
-      await axios.post("/api/appointments", {
-        date: new Date(`${date.toISOString().split("T")[0]}T${form.time}:00`),
-        serviceId: form.serviceId,
-        clientName: form.clientName,
-        notes: form.notes,
-      })
-      onAppointmentAdded()
-      setForm({ serviceId: "", clientName: "", time: "", notes: "" })
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
+    e.preventDefault();
 
-  const loadServices = async () => {
-    if (services.length === 0) {
-      const res = await axios.get("/api/services")
-      setServices(res.data)
+    if (!serviceId || !name || !phone || !date || !time) {
+      setMessage("Por favor completá todos los campos.");
+      return;
     }
-  }
+
+    try {
+      const dateTime = new Date(`${date}T${time}`);
+      await axios.post("/api/appointments", {
+        user: { name, phone },
+        service: { id: serviceId },
+        date: dateTime,
+      });
+
+      setMessage("✅ Turno reservado con éxito!");
+      setName("");
+      setPhone("");
+      setDate("");
+      setTime("");
+      setServiceId("");
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Error al reservar el turno.");
+    }
+  };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-[90%] max-w-md mx-auto relative"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-          >
-            <button
-              onClick={onClose}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+    <div className="bg-white shadow-lg rounded-2xl p-6 max-w-md mx-auto">
+      <h2 className="text-2xl font-semibold text-center mb-4 text-[#111]">
+        Reservar Turno
+      </h2>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Nombre */}
+        <div>
+          <label className="block text-sm font-medium mb-1 text-[#111]">
+            Nombre
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tu nombre completo"
+            className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d4b996] bg-white transition"
+          />
+        </div>
+
+        {/* Teléfono */}
+        <div>
+          <label className="block text-sm font-medium mb-1 text-[#111]">
+            Teléfono
+          </label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Ej: 2914567890"
+            className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d4b996] bg-white transition"
+          />
+        </div>
+
+        {/* Servicio */}
+        <div>
+          <label className="block text-sm font-medium mb-1 text-[#111]">
+            Servicio
+          </label>
+          <div className="relative">
+            <select
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d4b996] bg-white pr-8 appearance-none"
             >
-              ✕
-            </button>
+              <option value="">Seleccioná un servicio</option>
+              {services.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name}
+                </option>
+              ))}
+            </select>
+            <span className="absolute right-3 top-3.5 text-gray-400 pointer-events-none">
+              ▾
+            </span>
+          </div>
+        </div>
 
-            <h3 className="text-lg sm:text-xl font-semibold mb-4 text-center">
-              {format(date, "EEEE d 'de' MMMM", { locale: es })}
-            </h3>
+        {/* Fecha */}
+        <div>
+          <label className="block text-sm font-medium mb-1 text-[#111]">
+            Fecha
+          </label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d4b996] bg-white transition"
+          />
+        </div>
 
-            {appointments.length > 0 ? (
-              <ul className="space-y-2 mb-4">
-                {appointments.map((a) => (
-                  <li
-                    key={a.id}
-                    className="border rounded-xl p-3 sm:p-4 bg-indigo-50 hover:bg-indigo-100 transition"
-                  >
-                    <p className="font-medium text-indigo-700">{a.service?.name || "Servicio"}</p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      🕒 {format(new Date(a.date), "HH:mm")} hs
-                    </p>
-                    {a.clientName && (
-                      <p className="text-xs sm:text-sm text-gray-600">👤 {a.clientName}</p>
-                    )}
-                    {a.notes && (
-                      <p className="text-xs sm:text-sm text-gray-500 mt-1 italic">{a.notes}</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 text-center text-sm mb-4">No hay turnos para este día.</p>
-            )}
+        {/* Hora */}
+        <div>
+          <label className="block text-sm font-medium mb-1 text-[#111]">
+            Hora
+          </label>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d4b996] bg-white transition"
+          />
+        </div>
 
-            {/* Formulario de nuevo turno */}
-            <form onSubmit={handleSubmit} className="space-y-3" onFocus={loadServices}>
-              <h4 className="text-sm font-semibold text-gray-700 text-center">Agregar turno</h4>
+        {/* Botón */}
+        <button
+          type="submit"
+          className="w-full bg-[#d4b996] hover:bg-[#c3a87e] text-white font-medium py-2.5 rounded-xl transition"
+        >
+          Confirmar Turno
+        </button>
 
-              <select
-                value={form.serviceId}
-                onChange={(e) => setForm({ ...form, serviceId: e.target.value })}
-                className="w-full border rounded-lg p-2 text-sm"
-                required
-              >
-                <option value="">Seleccionar servicio</option>
-                {services.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="text"
-                placeholder="Nombre del cliente"
-                className="w-full border rounded-lg p-2 text-sm"
-                value={form.clientName}
-                onChange={(e) => setForm({ ...form, clientName: e.target.value })}
-                required
-              />
-
-              <input
-                type="time"
-                className="w-full border rounded-lg p-2 text-sm"
-                value={form.time}
-                onChange={(e) => setForm({ ...form, time: e.target.value })}
-                required
-              />
-
-              <textarea
-                placeholder="Notas (opcional)"
-                className="w-full border rounded-lg p-2 text-sm"
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              />
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
-              >
-                {loading ? "Guardando..." : "Guardar turno"}
-              </button>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
+        {message && (
+          <p
+            className={`text-center text-sm mt-2 ${
+              message.startsWith("✅") ? "text-green-600" : "text-red-500"
+            }`}
+          >
+            {message}
+          </p>
+        )}
+      </form>
+    </div>
+  );
 }

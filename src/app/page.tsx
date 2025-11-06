@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+
 import { CalendarGrid } from "@/components/CalendarGrid";
+import { useEffect, useState } from "react";
 
 type Appointment = {
   id: string;
