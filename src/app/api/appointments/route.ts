@@ -12,14 +12,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
     }
 
-    const appointment = await prisma.appointment.create({
-      data: {
-        name,
-        email,
-        date: new Date(date),
-        service: { connect: { id: serviceId } },
-      },
-    });
+const appointment = await prisma.appointment.create({
+  data: {
+    date: new Date(date),
+    service: { connect: { id: serviceId } },
+  },
+});
+
 
     return NextResponse.json(appointment);
   } catch (error) {
