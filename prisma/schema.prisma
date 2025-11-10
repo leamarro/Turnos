@@ -1,44 +1,27 @@
+// Prisma schema for Turnos App
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // 👉 Cambia a "postgresql" si usás Postgres
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String    @id @default(cuid())
-  name      String?
-  email     String?   @unique
-  phone     String?   // 👈 Agregamos este campo
-  role      Role      @default(CLIENT)
-  createdAt DateTime  @default(now())
-  appointments Appointment[]
-}
-
-
 model Service {
-  id            String         @id @default(cuid())
-  name          String
-  duration      Int
-  price         Float
-  appointments  Appointment[]
-  createdAt     DateTime       @default(now())
+  id           String        @id @default(cuid())
+  name         String
+  duration     Int
+  price        Float
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
 }
 
 model Appointment {
-  id            String         @id @default(cuid())
-  date          DateTime
-  user          User           @relation(fields: [userId], references: [id])
-  userId        String
-  service       Service        @relation(fields: [serviceId], references: [id])
-  serviceId     String
-  notes         String?
-  createdAt     DateTime       @default(now())
-}
-
-enum Role {
-  ADMIN
-  CLIENT
+  id         String   @id @default(cuid())
+  date       DateTime
+  service    Service  @relation(fields: [serviceId], references: [id])
+  serviceId  String
+  createdAt  DateTime @default(now())
 }
