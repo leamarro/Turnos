@@ -1,127 +1,150 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-interface Service {
-  id: string;
-  name: string;
-  duration: number;
-  price: number;
-}
-
-export default function AppointmentPage() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [selectedService, setSelectedService] = useState<string>("");
+export default function AppointmentForm() {
+  const [services, setServices] = useState<{ id: string; name: string }[]>([]);
+  const [serviceId, setServiceId] = useState("");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchServices() {
-      const res = await fetch("/api/services");
-      const data = await res.json();
-      setServices(data);
+      try {
+        const res = await axios.get("/api/services");
+        setServices(res.data);
+      } catch (err) {
+        console.error("Error cargando servicios:", err);
+      }
     }
     fetchServices();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
+    setError("");
+    setSuccess(false);
+
+    if (!name || !telefono || !date || !time || !serviceId) {
+      setError("Por favor completá todos los campos");
+      return;
+    }
 
     try {
-      const res = await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, date, serviceId: selectedService }),
+      setLoading(true);
+
+      // Guardar/obtener usuario por teléfono
+      const userRes = await axios.post("/api/users", { name, telefono });
+
+      // Combinar fecha + hora
+      const combinedDate = new Date(`${date}T${time}:00`);
+
+      await axios.post("/api/appointments", {
+        date: combinedDate,
+        serviceId,
+        userId: userRes.data.id,
       });
 
-      if (!res.ok) throw new Error("Error al crear el turno");
-
-      setMessage("✅ Turno reservado correctamente");
+      setSuccess(true);
       setName("");
-      setEmail("");
+      setTelefono("");
       setDate("");
-      setSelectedService("");
-    } catch (error) {
-      setMessage("❌ Ocurrió un error al reservar el turno");
+      setTime("");
+      setServiceId("");
+    } catch (err) {
+      setError("Error al agendar el turno");
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 flex flex-col items-center p-6">
-      <h1 className="text-3xl font-bold mb-6">Reservar Turno</h1>
+    <div className="bg-white shadow-md rounded-2xl p-6 max-w-md mx-auto">
+      <h2 className="text-2xl font-semibold text-center mb-6">Agendar turno</h2>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-gray-50 border border-gray-200 shadow-sm rounded-2xl p-6 w-full max-w-md space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Nombre */}
         <div>
-          <label className="block text-sm font-medium mb-2">Nombre</label>
+          <label className="block text-sm font-medium mb-1">Nombre</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md bg-white"
-            required
+            className="w-full border rounded-lg p-2"
+            placeholder="Tu nombre"
           />
         </div>
 
+        {/* Teléfono */}
         <div>
-          <label className="block text-sm font-medium mb-2">Email</label>
+          <label className="block text-sm font-medium mb-1">Teléfono</label>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md bg-white"
-            required
+            type="tel"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+            className="w-full border rounded-lg p-2"
+            placeholder="Ej: 1123456789"
           />
         </div>
 
+        {/* Fecha */}
         <div>
-          <label className="block text-sm font-medium mb-2">Fecha y hora</label>
+          <label className="block text-sm font-medium mb-1">Fecha</label>
           <input
-            type="datetime-local"
+            type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md bg-white"
-            required
+            className="w-full border rounded-lg p-2"
           />
         </div>
 
+        {/* Hora */}
         <div>
-          <label className="block text-sm font-medium mb-2">Servicio</label>
+          <label className="block text-sm font-medium mb-1">Hora</label>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="w-full border rounded-lg p-2"
+          />
+        </div>
+
+        {/* Servicio */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Servicio</label>
           <select
-            value={selectedService}
-            onChange={(e) => setSelectedService(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md bg-white"
-            required
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value)}
+            className="w-full border rounded-lg p-2 bg-white"
           >
-            <option value="">Elegí un servicio...</option>
+            <option value="">Seleccionar servicio</option>
             {services.map((service) => (
               <option key={service.id} value={service.id}>
-                {service.name} — ${service.price}
+                {service.name}
               </option>
             ))}
           </select>
         </div>
 
+        {/* Mensajes */}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {success && <p className="text-green-600 text-sm">Turno agendado ✅</p>}
+
+        {/* Botón */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-black text-white rounded-xl py-2 mt-4 hover:bg-gray-800 transition disabled:opacity-50"
+          className="w-full bg-black text-white rounded-lg py-2 hover:opacity-90 transition"
         >
-          {loading ? "Reservando..." : "Reservar turno"}
+          {loading ? "Guardando..." : "Agendar turno"}
         </button>
-
-        {message && (
-          <p className="text-center text-sm mt-2">{message}</p>
-        )}
       </form>
     </div>
   );

@@ -1,15 +1,28 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { email, name } = body;
-  if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+const prisma = new PrismaClient();
 
-  let user = await prisma.user.findUnique({ where: { email } });
-  if (!user) {
-    user = await prisma.user.create({ data: { email, name } });
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { name, telefono } = body;
+
+    if (!telefono) {
+      return NextResponse.json({ error: "El teléfono es obligatorio" }, { status: 400 });
+    }
+
+    let user = await prisma.user.findUnique({ where: { telefono } });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: { name: name || "Sin nombre", telefono },
+      });
+    }
+
+    return NextResponse.json(user);
+  } catch (error) {
+    console.error("Error en /api/users:", error);
+    return NextResponse.json({ error: "Error al procesar el usuario" }, { status: 500 });
   }
-
-  return NextResponse.json(user);
 }
