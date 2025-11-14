@@ -13,7 +13,7 @@ export default function LoginPage() {
     try {
       const res = await axios.post("/api/auth/login", { password });
       if (res.status === 200) {
-        window.location.href = "/admin"; // Redirección al panel
+        window.location.href = "/";
       }
     } catch {
       setError("Contraseña incorrecta");
