@@ -1,17 +1,11 @@
-import "./globals.css";
 import Navbar from "@/components/Navbar";
 
-export const metadata = {
-  title: "BeatMakeup",
-  description: "Gestión de turnos de maquillaje y perfilado",
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-sans">
+      <body>
         <Navbar />
-        <main className="container mx-auto p-4 sm:p-6">{children}</main>
+        <div className="pt-16">{children}</div>
       </body>
     </html>
   );
