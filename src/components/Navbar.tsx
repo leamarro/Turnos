@@ -27,6 +27,9 @@ export default function Navbar() {
           {/* LINKS DESKTOP */}
           <div className="hidden sm:flex gap-6 text-gray-700 font-medium">
             <Link href="/">Inicio</Link>
+                      <Link href="/appointment">
+            Reservar Turno
+          </Link>
             <Link href="/admin">Panel Admin</Link>
             <Link href="/precios">Precios</Link>
             <Link href="/login">Login</Link>
@@ -62,6 +65,9 @@ export default function Navbar() {
         <div className="flex flex-col gap-4 p-4 text-gray-800 text-lg font-medium">
           <Link href="/" onClick={() => setOpen(false)}>
             Inicio
+          </Link>
+          <Link href="/appointment" onClick={() => setOpen(false)}>
+            Reservar Turno
           </Link>
           <Link href="/admin" onClick={() => setOpen(false)}>
             Panel Admin
