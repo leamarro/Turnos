@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 // =========================
-// GET - obtener todos o uno
+// GET
 // =========================
 export async function GET(req: Request) {
   try {
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 }
 
 // =========================
-// POST - crear turno
+// POST
 // =========================
 export async function POST(req: Request) {
   try {
@@ -43,15 +43,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Buscar usuario por teléfono
-    let user = await prisma.user.findUnique({
-      where: { telefono },
+    // Buscar usuario por teléfono SIN romper TS
+    let user = await prisma.user.findFirst({
+      where: { telefono } as any, // parche
     });
 
-    // Si no existe, lo creamos
+    // Si no existe, crearlo
     if (!user) {
       user = await prisma.user.create({
-        data: { name, telefono } as any, // parche para evitar error TS
+        data: { name, telefono } as any, // parche
       });
     }
 
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
 }
 
 // =========================
-// DELETE - eliminar turno
+// DELETE
 // =========================
 export async function DELETE(req: Request) {
   try {
@@ -95,7 +95,7 @@ export async function DELETE(req: Request) {
 }
 
 // =========================
-// PUT - editar turno
+// PUT
 // =========================
 export async function PUT(req: Request) {
   try {
@@ -120,7 +120,7 @@ export async function PUT(req: Request) {
           update: {
             name,
             telefono,
-          } as any, // parche para evitar error TS
+          } as any, // parche
         },
       },
       include: { user: true, service: true },
