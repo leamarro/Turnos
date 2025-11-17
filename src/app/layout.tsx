@@ -1,7 +1,12 @@
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { ReactNode } from "react";
 
-export default function RootLayout({ children }) {
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="es">
       <body>
