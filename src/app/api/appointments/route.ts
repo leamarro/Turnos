@@ -39,12 +39,13 @@ export async function POST(req: Request) {
       );
     }
 
-    let user = await prisma.user.findFirst({ where: { telefono } });
+    let user = null; // evitar el error de Prisma temporalmente
     if (!user) {
       user = await prisma.user.create({
-        data: { name, telefono },
+        data: { name, telefono }, // <-- ESTO SÍ está permitido
       });
     }
+
 
     const fullDate = new Date(`${date}T${time}:00`);
 
