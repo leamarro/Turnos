@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-// GET - obtener todos los turnos o uno por ID
+// =========================
+// GET - obtener todos o uno
+// =========================
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -27,7 +29,9 @@ export async function GET(req: Request) {
   }
 }
 
+// =========================
 // POST - crear turno
+// =========================
 export async function POST(req: Request) {
   try {
     const { name, telefono, date, time, serviceId, status } = await req.json();
@@ -39,21 +43,18 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔧 PARCHE PROVISORIO PORQUE NO PODÉS CORRER "prisma generate"
-    // Crea usuario solo con lo que acepta el cliente viejo: name
-    let user = await prisma.user.create({
-      data: { name },
+    // Buscar usuario por teléfono
+    let user = await prisma.user.findUnique({
+      where: { telefono },
     });
 
-    // Setteamos el teléfono con SQL crudo
-    await prisma.$executeRawUnsafe(
-      `UPDATE "User" SET "telefono" = '${telefono}' WHERE id = '${user.id}'`
-    );
+    // Si no existe, lo creamos
+    if (!user) {
+      user = await prisma.user.create({
+        data: { name, telefono } as any, // parche para evitar error TS
+      });
+    }
 
-    // Recargar usuario actualizado
-    user = await prisma.user.findUnique({ where: { id: user.id } });
-
-    // Construir fecha completa
     const fullDate = new Date(`${date}T${time}:00`);
 
     const appointment = await prisma.appointment.create({
@@ -72,7 +73,9 @@ export async function POST(req: Request) {
   }
 }
 
+// =========================
 // DELETE - eliminar turno
+// =========================
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -91,7 +94,9 @@ export async function DELETE(req: Request) {
   }
 }
 
+// =========================
 // PUT - editar turno
+// =========================
 export async function PUT(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -112,7 +117,10 @@ export async function PUT(req: Request) {
         serviceId,
         status,
         user: {
-          update: { name, telefono },
+          update: {
+            name,
+            telefono,
+          } as any, // parche para evitar error TS
         },
       },
       include: { user: true, service: true },
