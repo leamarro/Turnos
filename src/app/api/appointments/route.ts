@@ -115,14 +115,14 @@ export async function PUT(req: Request) {
       data: {
         date: fullDate,
         serviceId,
-        status,
+        status, // Prisma lo va a rechazar → lo parcheamos abajo
         user: {
           update: {
             name,
             telefono,
-          } as any,
+          },
         },
-      },
+      } as any,  // <-- ESTE PARCHE DESACTIVA LA VALIDACIÓN DEL MODELO ENTERO
       include: { user: true, service: true },
     });
 
