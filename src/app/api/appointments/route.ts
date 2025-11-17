@@ -38,18 +38,22 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-// PARCHE PROVISORIO
-let user = await prisma.user.create({
-  data: { name }, // sin telefono para evitar error del client viejo
-});
 
-// actualizar teléfono por SQL crudo (salteamos validación de tipos)
-await prisma.$executeRawUnsafe(
-  `UPDATE User SET telefono = '${telefono}' WHERE id = '${user.id}'`
-);
+    // 🔧 PARCHE PROVISORIO PORQUE NO PODÉS CORRER "prisma generate"
+    // Crea usuario solo con lo que acepta el cliente viejo: name
+    let user = await prisma.user.create({
+      data: { name },
+    });
 
+    // Setteamos el teléfono con SQL crudo
+    await prisma.$executeRawUnsafe(
+      `UPDATE "User" SET "telefono" = '${telefono}' WHERE id = '${user.id}'`
+    );
 
+    // Recargar usuario actualizado
+    user = await prisma.user.findUnique({ where: { id: user.id } });
 
+    // Construir fecha completa
     const fullDate = new Date(`${date}T${time}:00`);
 
     const appointment = await prisma.appointment.create({
