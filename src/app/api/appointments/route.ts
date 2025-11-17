@@ -38,13 +38,16 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+// PARCHE PROVISORIO
+let user = await prisma.user.create({
+  data: { name }, // sin telefono para evitar error del client viejo
+});
 
-    let user = null; // evitar el error de Prisma temporalmente
-    if (!user) {
-      user = await prisma.user.create({
-        data: { name, telefono }, // <-- ESTO SÍ está permitido
-      });
-    }
+// actualizar teléfono por SQL crudo (salteamos validación de tipos)
+await prisma.$executeRawUnsafe(
+  `UPDATE User SET telefono = '${telefono}' WHERE id = '${user.id}'`
+);
+
 
 
     const fullDate = new Date(`${date}T${time}:00`);
