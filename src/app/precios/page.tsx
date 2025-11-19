@@ -1,17 +1,51 @@
 "use client";
 
-import { useState } from "react";
-
-type PriceField = "perfilado" | "maquillaje";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function PreciosPage() {
   const [prices, setPrices] = useState({
-    perfilado: 2500,
-    maquillaje: 5000,
+    perfilado: 0,
+    maquillaje: 0,
+    prueba: 0,
   });
 
-  const updatePrice = (field: PriceField, value: string) => {
+  // Cargar precios desde la base
+  useEffect(() => {
+    async function loadPrices() {
+      const res = await axios.get("/api/services/prices");
+      const data = res.data;
+
+      setPrices({
+        perfilado: data.find((s: any) => s.name === "Perfilado")?.price ?? 0,
+        maquillaje: data.find((s: any) => s.name === "Maquillaje")?.price ?? 0,
+        prueba:
+          data.find((s: any) => s.name === "Prueba Maquillaje")?.price ?? 0,
+      });
+    }
+
+    loadPrices();
+  }, []);
+
+  // Actualizar valor
+  const updatePrice = (field: string, value: string) => {
     setPrices({ ...prices, [field]: Number(value) });
+  };
+
+  // Guardar cambios
+  const savePrices = async () => {
+    try {
+      await axios.put("/api/services/prices", {
+        perfilado: prices.perfilado,
+        maquillaje: prices.maquillaje,
+        prueba: prices.prueba,
+      });
+
+      alert("Precios actualizados correctamente");
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar precios");
+    }
   };
 
   return (
@@ -40,7 +74,20 @@ export default function PreciosPage() {
           />
         </div>
 
-        <button className="mt-4 bg-black text-white py-3 rounded-xl hover:bg-gray-900">
+        <div className="p-4 border rounded-xl shadow-sm">
+          <label className="font-semibold">Precio Prueba de Maquillaje</label>
+          <input
+            type="number"
+            value={prices.prueba}
+            onChange={(e) => updatePrice("prueba", e.target.value)}
+            className="w-full mt-2 p-2 border rounded"
+          />
+        </div>
+
+        <button
+          onClick={savePrices}
+          className="mt-4 bg-black text-white py-3 rounded-xl hover:bg-gray-900"
+        >
           Guardar cambios
         </button>
       </div>
