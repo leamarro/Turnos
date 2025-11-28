@@ -11,27 +11,25 @@ export async function GET() {
           select: { name: true },
         },
       },
+      orderBy: { date: "asc" },
     });
 
-    const result: Record<string, any> = {};
+    const result: Record<string, Record<string, number>> = {};
 
     appointments.forEach((a) => {
-      const d = new Date(a.date);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-
-      if (!result[key]) result[key] = { month: key };
-
+      const month = new Date(a.date).toISOString().slice(0, 7); // YYYY-MM
       const service = a.service?.name ?? "Sin servicio";
-      const price = a.servicePrice ?? 0;
+      const price = a.servicePrice ?? 0; // 🔥 usamos solo servicePrice
 
-      result[key][service] = (result[key][service] ?? 0) + price;
+      if (!result[month]) result[month] = {};
+      result[month][service] = (result[month][service] ?? 0) + price;
     });
 
-    return NextResponse.json(Object.values(result));
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("❌ ERROR INCOME BY SERVICE:", error);
+    console.error("Error en income-by-service:", error);
     return NextResponse.json(
-      { error: "No se pudo calcular ingresos." },
+      { error: "Error obteniendo los ingresos por servicio" },
       { status: 500 }
     );
   }

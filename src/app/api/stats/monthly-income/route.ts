@@ -10,13 +10,14 @@ export async function GET() {
       },
     });
 
-    const monthly: Record<string, number> = {};
+const monthly: Record<string, number> = {};
 
-    appointments.forEach((a) => {
-      const month = new Date(a.date).toISOString().slice(0, 7); // YYYY-MM
-      if (!monthly[month]) monthly[month] = 0;
-      monthly[month] += a.servicePrice;
-    });
+appointments.forEach((a) => {
+  const month = new Date(a.date).toISOString().slice(0, 7);
+  if (!monthly[month]) monthly[month] = 0;
+  monthly[month] += a.servicePrice ?? 0;
+});
+
 
     const result = Object.entries(monthly).map(([month, total]) => ({
       month,
