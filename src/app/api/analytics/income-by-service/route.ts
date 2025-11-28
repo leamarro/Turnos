@@ -6,11 +6,10 @@ export async function GET() {
     const appointments = await prisma.appointment.findMany({
       select: {
         date: true,
-        servicePrice: true,
         service: {
           select: {
             name: true,
-            price: true, // ⬅️ AGREGAMOS PRECIO
+            price: true,
           },
         },
       },
@@ -21,20 +20,20 @@ export async function GET() {
 
     appointments.forEach((a) => {
       const month = new Date(a.date).toISOString().slice(0, 7);
-      const service = a.service?.name ?? "Sin servicio";
-
-      // 🔥 servicePrice existe en tu schema, así que lo usamos
-      const price = a.servicePrice ?? a.service?.price ?? 0;
+      const serviceName = a.service?.name ?? "Sin servicio";
+      const price = a.service?.price ?? 0;
 
       if (!result[month]) result[month] = {};
-      result[month][service] = (result[month][service] ?? 0) + price;
+
+      result[month][serviceName] =
+        (result[month][serviceName] ?? 0) + price;
     });
 
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error en income-by-service:", error);
     return NextResponse.json(
-      { error: "Error obteniendo los ingresos por servicio" },
+      { error: "Error obteniendo ingresos por servicio" },
       { status: 500 }
     );
   }
