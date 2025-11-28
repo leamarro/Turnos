@@ -4,9 +4,14 @@ import prisma from "@/lib/prisma";
 export async function GET() {
   try {
     const appointments = await prisma.appointment.findMany({
-      include: {
+      select: {
+        date: true,
+        servicePrice: true,
         service: {
-          select: { name: true },
+          select: {
+            name: true,
+            price: true, // ⬅️ AGREGAMOS PRECIO
+          },
         },
       },
       orderBy: { date: "asc" },
@@ -17,7 +22,9 @@ export async function GET() {
     appointments.forEach((a) => {
       const month = new Date(a.date).toISOString().slice(0, 7);
       const service = a.service?.name ?? "Sin servicio";
-      const price = a.servicePrice ?? a.service?.price ?? 0; // ⬅️ funciona siempre
+
+      // 🔥 servicePrice existe en tu schema, así que lo usamos
+      const price = a.servicePrice ?? a.service?.price ?? 0;
 
       if (!result[month]) result[month] = {};
       result[month][service] = (result[month][service] ?? 0) + price;
