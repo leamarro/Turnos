@@ -14,6 +14,9 @@ export default function AppointmentForm() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
+  // ==========================
+  // Cargar servicios
+  // ==========================
   useEffect(() => {
     async function fetchServices() {
       try {
@@ -26,6 +29,9 @@ export default function AppointmentForm() {
     fetchServices();
   }, []);
 
+  // ==========================
+  // Enviar formulario
+  // ==========================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -39,20 +45,15 @@ export default function AppointmentForm() {
     try {
       setLoading(true);
 
-      // Guardar/obtener usuario por teléfono
-      const userRes = await axios.post("/api/users", { name, telefono });
-
-      // Combinar fecha + hora
+      // Crear fecha + hora combinada
       const combinedDate = new Date(`${date}T${time}:00`);
 
       await axios.post("/api/appointments", {
         name,
         telefono,
-        date,
-        time,
+        date: combinedDate.toISOString(),
         serviceId,
       });
-
 
       setSuccess(true);
       setName("");
@@ -73,6 +74,7 @@ export default function AppointmentForm() {
       <h2 className="text-2xl font-semibold text-center mb-6">Agendar turno</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+
         {/* Nombre */}
         <div>
           <label className="block text-sm font-medium mb-1">Nombre</label>
@@ -128,6 +130,7 @@ export default function AppointmentForm() {
             className="w-full border rounded-lg p-2 bg-white"
           >
             <option value="">Seleccionar servicio</option>
+
             {services.map((service) => (
               <option key={service.id} value={service.id}>
                 {service.name}

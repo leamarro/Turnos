@@ -19,17 +19,21 @@ export async function GET() {
     const result: Record<string, Record<string, number>> = {};
 
     appointments.forEach((a) => {
-      const month = new Date(a.date).toISOString().slice(0, 7);
+      const month = new Date(a.date).toISOString().slice(0, 7); // YYYY-MM
       const serviceName = a.service?.name ?? "Sin servicio";
       const price = a.service?.price ?? 0;
 
       if (!result[month]) result[month] = {};
-
-      result[month][serviceName] =
-        (result[month][serviceName] ?? 0) + price;
+      result[month][serviceName] = (result[month][serviceName] ?? 0) + price;
     });
 
-    return NextResponse.json(result);
+    // 🔥 Convertimos el objeto en un array para Recharts
+    const formatted = Object.entries(result).map(([month, services]) => ({
+      month,
+      ...services,
+    }));
+
+    return NextResponse.json(formatted);
   } catch (error) {
     console.error("Error en income-by-service:", error);
     return NextResponse.json(

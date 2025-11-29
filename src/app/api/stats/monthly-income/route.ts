@@ -5,19 +5,22 @@ export async function GET() {
   try {
     const appointments = await prisma.appointment.findMany({
       select: {
-        servicePrice: true,
         date: true,
+        service: {
+          select: { price: true },
+        },
       },
     });
 
-const monthly: Record<string, number> = {};
+    const monthly: Record<string, number> = {};
 
-appointments.forEach((a) => {
-  const month = new Date(a.date).toISOString().slice(0, 7);
-  if (!monthly[month]) monthly[month] = 0;
-  monthly[month] += a.servicePrice ?? 0;
-});
+    appointments.forEach((a) => {
+      const month = new Date(a.date).toISOString().slice(0, 7);
+      const price = a.service?.price ?? 0;
 
+      if (!monthly[month]) monthly[month] = 0;
+      monthly[month] += price;
+    });
 
     const result = Object.entries(monthly).map(([month, total]) => ({
       month,

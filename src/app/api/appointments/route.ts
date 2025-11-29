@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(appointments, { status: 200 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ ERROR GET APPOINTMENTS:", error);
 
     return NextResponse.json(
@@ -77,7 +77,8 @@ export async function POST(request: Request) {
         date: new Date(date),
         serviceId,
         userId: user.id,
-        servicePrice: service.price,
+        // ❌ eliminado: servicePrice
+        // ahora el precio se consulta desde service.price
       },
       include: {
         user: true,
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(appointment, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ ERROR CREATE APPOINTMENT:", error);
 
     return NextResponse.json(
