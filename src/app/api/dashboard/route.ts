@@ -21,7 +21,7 @@ export async function GET() {
         acc[monthKey] = { total: 0, count: 0 };
       }
 
-      acc[monthKey].total += appt.service.price;
+      acc[monthKey].total += appt.service?.price ?? 0;
       acc[monthKey].count += 1;
 
       return acc;
@@ -38,7 +38,7 @@ export async function GET() {
         acc[dayKey] = { total: 0, count: 0 };
       }
 
-      acc[dayKey].total += appt.service.price;
+      acc[dayKey].total += appt.service?.price ?? 0;
       acc[dayKey].count += 1;
 
       return acc;
