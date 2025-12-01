@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -16,6 +15,7 @@ export default function AppointmentForm() {
     async function fetchServices() {
       try {
         const res = await axios.get("/api/services");
+        console.log("Servicios obtenidos:", res.data);
         setServices(res.data);
       } catch (error) {
         console.error("Error cargando servicios:", error);

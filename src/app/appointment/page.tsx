@@ -21,6 +21,7 @@ export default function AppointmentForm() {
     async function fetchServices() {
       try {
         const res = await axios.get("/api/services");
+        console.log("Servicios obtenidos:", res.data);
         setServices(res.data);
       } catch (err) {
         console.error("Error cargando servicios:", err);
