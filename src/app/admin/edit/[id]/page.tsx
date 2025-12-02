@@ -8,8 +8,8 @@ type Appointment = {
   id: string;
   date: string;
   status: string;
-  user: { id: string; name: string; telefono: string };
-  service: { id: string; name: string };
+  user?: { id: string; name: string; telefono: string };
+  service?: { id: string; name: string };
 };
 
 export default function EditAppointmentPage({ params }: { params: { id: string } }) {
@@ -29,24 +29,33 @@ export default function EditAppointmentPage({ params }: { params: { id: string }
 
   useEffect(() => {
     async function loadData() {
-      const ap = await axios.get(`/api/appointments?id=${id}`);
-      const sv = await axios.get("/api/services");
+      try {
+        // Obtener la cita
+        const ap = await axios.get(`/api/appointments?id=${id}`);
+        const sv = await axios.get("/api/services");
 
-      const a = ap.data;
-      setAppointment(a);
+        const a = ap.data as Appointment;
+        setAppointment(a);
 
-      setName(a.user.name);
-      setTelefono(a.user.telefono);
-      setServiceId(a.service.id);
+        // Manejo seguro en caso de que user o service no existan
+        setName(a.user?.name || "");
+        setTelefono(a.user?.telefono || "");
+        setServiceId(a.service?.id || "");
 
-      // separar fecha y hora
-      const d = new Date(a.date);
-      setDate(d.toISOString().slice(0, 10));
-      setTime(d.toTimeString().slice(0, 5));
+        // separar fecha y hora
+        if (a.date) {
+          const d = new Date(a.date);
+          setDate(d.toISOString().slice(0, 10));
+          setTime(d.toTimeString().slice(0, 5));
+        }
 
-      setStatus(a.status);
+        setStatus(a.status || "pendiente");
 
-      setServices(sv.data);
+        setServices(sv.data);
+      } catch (err) {
+        console.error(err);
+        alert("Error al cargar la cita o los servicios");
+      }
     }
 
     loadData();

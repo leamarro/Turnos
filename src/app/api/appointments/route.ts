@@ -2,13 +2,32 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 // =========================
-// GET — obtener todos los turnos
+// GET — obtener turno(s)
 // =========================
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
     const date = searchParams.get("date");
 
+    if (id) {
+      // Obtener turno por ID
+      const appointment = await prisma.appointment.findUnique({
+        where: { id },
+        include: { user: true, service: true },
+      });
+
+      if (!appointment) {
+        return NextResponse.json(
+          { error: "Turno no encontrado" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(appointment, { status: 200 });
+    }
+
+    // Obtener todos los turnos (opcional por fecha)
     const appointments = await prisma.appointment.findMany({
       where: date
         ? {
@@ -18,19 +37,13 @@ export async function GET(request: Request) {
             },
           }
         : {},
-      include: {
-        service: true,
-        user: true,
-      },
-      orderBy: {
-        date: "asc",
-      },
+      include: { user: true, service: true },
+      orderBy: { date: "asc" },
     });
 
     return NextResponse.json(appointments, { status: 200 });
   } catch (error) {
     console.error("❌ ERROR GET APPOINTMENTS:", error);
-
     return NextResponse.json(
       { error: "No se pudieron cargar los turnos" },
       { status: 500 }
@@ -39,60 +52,74 @@ export async function GET(request: Request) {
 }
 
 // =========================
-// POST — crear turno nuevo
+// PUT — actualizar turno
 // =========================
-export async function POST(request: Request) {
+export async function PUT(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+    }
+
     const body = await request.json();
-    const { date, serviceId, name, telefono } = body;
+    const { name, telefono, serviceId, date, time, status } = body;
 
-    if (!date || !serviceId || !name || !telefono) {
-      return NextResponse.json(
-        { error: "Faltan datos obligatorios" },
-        { status: 400 }
-      );
-    }
-
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId },
+    const existingAppointment = await prisma.appointment.findUnique({
+      where: { id },
     });
 
-    if (!service) {
-      return NextResponse.json(
-        { error: "El servicio no existe" },
-        { status: 404 }
-      );
+    if (!existingAppointment) {
+      return NextResponse.json({ error: "Turno no encontrado" }, { status: 404 });
     }
 
-    // Crear u obtener usuario
-    const user = await prisma.user.upsert({
-      where: { telefono },
-      update: { name },
-      create: { name, telefono },
-    });
+    // Actualizar usuario
+    if (existingAppointment.userId) {
+      await prisma.user.update({
+        where: { id: existingAppointment.userId },
+        data: { name, telefono },
+      });
+    }
 
-    // Crear turno
-    const appointment = await prisma.appointment.create({
+    // Combinar fecha y hora
+    const dateTime = new Date(`${date}T${time}`);
+
+    // Actualizar cita
+    const updatedAppointment = await prisma.appointment.update({
+      where: { id },
       data: {
-        date: new Date(date),
+        date: dateTime,
         serviceId,
-        userId: user.id,
-        // ❌ eliminado: servicePrice
-        // ahora el precio se consulta desde service.price
+        status,
       },
-      include: {
-        user: true,
-        service: true,
-      },
+      include: { user: true, service: true },
     });
 
-    return NextResponse.json(appointment, { status: 201 });
+    return NextResponse.json(updatedAppointment, { status: 200 });
   } catch (error) {
-    console.error("❌ ERROR CREATE APPOINTMENT:", error);
+    console.error("❌ ERROR UPDATE APPOINTMENT:", error);
+    return NextResponse.json({ error: "No se pudo actualizar el turno" }, { status: 500 });
+  }
+}
 
-    return NextResponse.json(
-      { error: "No se pudo crear el turno" },
-      { status: 500 }
-    );
+// =========================
+// DELETE — eliminar turno
+// =========================
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+    }
+
+    await prisma.appointment.delete({ where: { id } });
+
+    return NextResponse.json({ message: "Turno eliminado correctamente" }, { status: 200 });
+  } catch (error) {
+    console.error("❌ ERROR DELETE APPOINTMENT:", error);
+    return NextResponse.json({ error: "No se pudo eliminar el turno" }, { status: 500 });
   }
 }
