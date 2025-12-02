@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function AppointmentForm() {
+export default function AppointmentPage() {
   const [services, setServices] = useState<{ id: string; name: string }[]>([]);
   const [serviceId, setServiceId] = useState("");
   const [name, setName] = useState("");
@@ -21,8 +21,7 @@ export default function AppointmentForm() {
     async function fetchServices() {
       try {
         const res = await axios.get("/api/services");
-        console.log("Servicios obtenidos:", res.data);
-        setServices(res.data);
+        setServices(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error cargando servicios:", err);
       }
@@ -43,15 +42,18 @@ export default function AppointmentForm() {
       return;
     }
 
+    const combinedDate = new Date(`${date}T${time}:00`);
+    if (isNaN(combinedDate.getTime())) {
+      setError("Fecha u hora inválida");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      // Crear fecha + hora combinada
-      const combinedDate = new Date(`${date}T${time}:00`);
-
       await axios.post("/api/appointments", {
-        name,
-        telefono,
+        name: name.trim(),
+        telefono: String(telefono).trim(),
         date: combinedDate.toISOString(),
         serviceId,
       });
@@ -62,8 +64,8 @@ export default function AppointmentForm() {
       setDate("");
       setTime("");
       setServiceId("");
-    } catch (err) {
-      setError("Error al agendar el turno");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Error al agendar el turno");
       console.error(err);
     } finally {
       setLoading(false);
@@ -71,89 +73,89 @@ export default function AppointmentForm() {
   };
 
   return (
-    <div className="bg-white shadow-md rounded-2xl p-6 max-w-md mx-auto">
-      <h2 className="text-2xl font-semibold text-center mb-6">Agendar turno</h2>
+    <div className="pt-16">
+      <div className="bg-white shadow-md rounded-2xl p-6 max-w-md mx-auto">
+        <h2 className="text-2xl font-semibold text-center mb-6">Agendar turno</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Nombre */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Nombre</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full border rounded-lg p-2"
-            placeholder="Tu nombre"
-          />
-        </div>
+          {/* Nombre */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Nombre</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border rounded-lg p-2"
+              placeholder="Tu nombre"
+            />
+          </div>
 
-        {/* Teléfono */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Teléfono</label>
-          <input
-            type="tel"
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            className="w-full border rounded-lg p-2"
-            placeholder="Ej: 1123456789"
-          />
-        </div>
+          {/* Teléfono */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Teléfono</label>
+            <input
+              type="tel"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              className="w-full border rounded-lg p-2"
+              placeholder="Ej: 1123456789"
+            />
+          </div>
 
-        {/* Fecha */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Fecha</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
+          {/* Fecha */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Fecha</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
 
-        {/* Hora */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Hora</label>
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
+          {/* Hora */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Hora</label>
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
 
-        {/* Servicio */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Servicio</label>
-          <select
-            value={serviceId}
-            onChange={(e) => setServiceId(e.target.value)}
-            className="w-full border rounded-lg p-2 bg-white"
+          {/* Servicio */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Servicio</label>
+            <select
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              className="w-full border rounded-lg p-2 bg-white"
+            >
+              <option value="">Seleccionar servicio</option>
+              {services.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name || "Sin nombre"}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Mensajes */}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">Turno agendado ✅</p>}
+
+          {/* Botón */}
+          <button
+            type="submit"
+            disabled={loading || services.length === 0}
+            className="w-full bg-black text-white rounded-lg py-2 hover:opacity-90 transition"
           >
-            <option value="">Seleccionar servicio</option>
-
-            {Array.isArray(services) &&
-  services.map((service) => (
-              <option key={service.id} value={service.id}>
-                {service.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Mensajes */}
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        {success && <p className="text-green-600 text-sm">Turno agendado ✅</p>}
-
-        {/* Botón */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-black text-white rounded-lg py-2 hover:opacity-90 transition"
-        >
-          {loading ? "Guardando..." : "Agendar turno"}
-        </button>
-      </form>
+            {loading ? "Guardando..." : "Agendar turno"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
