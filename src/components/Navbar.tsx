@@ -88,7 +88,7 @@ export default function Navbar() {
           <Link href="/" onClick={() => setOpen(false)}>Inicio</Link>
           <Link href="/appointment" onClick={() => setOpen(false)}>Reservar Turno</Link>
           <Link href="/admin" onClick={() => setOpen(false)}>Panel Admin</Link>
-          <Link href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link> {/* ← agregado */}
+          <Link href="/dashboard" onClick={() => setOpen(false)}>Estadisticas</Link> {/* ← agregado */}
           <Link href="/precios" onClick={() => setOpen(false)}>Precios</Link>
         </div>
       </div>
