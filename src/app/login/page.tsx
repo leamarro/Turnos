@@ -18,27 +18,60 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white shadow-md rounded-2xl p-8 max-w-sm w-full">
-        <h1 className="text-2xl font-bold text-center mb-6">Acceso Admin</h1>
+    <div className="min-h-[100dvh] flex">
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          <input
-            type="password"
-            placeholder="Contraseña"
-            className="w-full border rounded-lg p-3"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+      {/* Imagen / background */}
+      <div
+        className="hidden lg:block lg:w-1/2 bg-cover bg-center"
+        style={{
+          backgroundImage: "url('/makeup-bg.jpg')",
+        }}
+      />
 
-          {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
-          )}
+      {/* Mobile background */}
+      <div
+        className="lg:hidden absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: "url('/makeup-bg.jpg')",
+        }}
+      />
 
-          <button className="w-full bg-black text-white py-3 rounded-lg hover:opacity-90 transition">
-            Ingresar
-          </button>
-        </form>
+      {/* Overlay mobile */}
+      <div className="lg:hidden absolute inset-0 bg-white/70 backdrop-blur-sm" />
+
+      {/* Card */}
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4">
+        <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl p-8 w-full max-w-sm">
+
+          <h1 className="text-2xl font-semibold text-center mb-2">
+            Acceso Admin
+          </h1>
+
+          <p className="text-center text-sm text-gray-500 mb-6">
+            Panel de gestión
+          </p>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <input
+              type="password"
+              placeholder="Contraseña"
+              className="w-full h-12 rounded-xl border border-gray-300 px-4 focus:outline-none focus:ring-2 focus:ring-black"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full h-12 rounded-xl bg-black text-white font-medium hover:opacity-90 transition"
+            >
+              Ingresar
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
