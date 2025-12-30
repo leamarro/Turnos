@@ -6,8 +6,13 @@ import { useEffect, useState } from "react";
 type Appointment = {
   id: string;
   date: string;
-  service: { name: string };
-  user: { name: string };
+  service: {
+    name: string;
+  };
+  user: {
+    name: string;
+    lastName: string;
+  };
 };
 
 export default function HomePage() {
@@ -25,9 +30,16 @@ export default function HomePage() {
         return;
       }
 
-      const formatted = data.map((a: any) => ({
-        ...a,
+      const formatted: Appointment[] = data.map((a: any) => ({
+        id: a.id,
         date: new Date(a.date).toISOString(),
+        service: {
+          name: a.service?.name ?? "",
+        },
+        user: {
+          name: a.user?.name ?? "",
+          lastName: a.user?.lastName ?? "",
+        },
       }));
 
       setAppointments(formatted);
@@ -38,7 +50,9 @@ export default function HomePage() {
 
   return (
     <div className="py-6 px-3 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-center mb-4">Agenda de Turnos</h1>
+      <h1 className="text-2xl font-bold text-center mb-4">
+        Agenda de Turnos
+      </h1>
 
       <div className="flex justify-center gap-3 mb-4">
         <button
