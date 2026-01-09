@@ -6,19 +6,25 @@ const handler = NextAuth({
     CredentialsProvider({
       name: "Credenciales",
       credentials: {
-        username: { label: "Usuario", type: "text", placeholder: "tuUsuario" },
+        username: { label: "Usuario", type: "text" },
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
-        // 🔐 Usuario y contraseña hardcodeados (puedes conectar a DB luego)
-        const user = { id: "1", name: "Admin", username: "admin", password: "1234" }
+        if (!credentials) return null
+
+        const user = {
+          id: "1",
+          name: "Admin",
+          username: "admin",
+        }
 
         if (
-          credentials?.username === user.username &&
-          credentials?.password === user.password
+          credentials.username === "admin" &&
+          credentials.password === "1234"
         ) {
           return user
         }
+
         return null
       },
     }),
@@ -27,7 +33,7 @@ const handler = NextAuth({
     signIn: "/login",
   },
   session: { strategy: "jwt" },
-  secret: process.env.NEXTAUTH_SECRET || "supersecret",
+  secret: process.env.NEXTAUTH_SECRET,
 })
 
 export { handler as GET, handler as POST }
