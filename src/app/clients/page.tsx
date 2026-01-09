@@ -26,7 +26,10 @@ export default function ClientsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">Clientes</h1>
+      <h1 className="text-2xl font-bold mb-4">
+  CLIENTES NUEVO — {new Date().toISOString()}
+</h1>
+
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="w-full text-sm">
