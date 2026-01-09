@@ -1,6 +1,3 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -42,10 +39,7 @@ export default function ClientsPage() {
             {clients.map((c) => (
               <tr key={c.id} className="border-t hover:bg-gray-50">
                 <td className="p-3">
-                  <Link
-                    href={`/clients/${c.id}`}
-                    className="font-medium underline"
-                  >
+                  <Link href={`/clients/${c.id}`} className="underline">
                     {c.name} {c.lastName ?? ""}
                   </Link>
                 </td>
