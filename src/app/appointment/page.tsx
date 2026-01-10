@@ -1,5 +1,8 @@
-import AppointmentForm from "@/components/AppointmentForm";
 export const dynamic = "force-dynamic";
+
+"use client";
+import AppointmentForm from "@/components/AppointmentForm";
+
 
 export default function AppointmentPage() {
   return (
