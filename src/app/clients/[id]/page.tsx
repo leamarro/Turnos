@@ -4,44 +4,92 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 
+type Appointment = {
+  id: string;
+  date: string;
+  status: string;
+  service: {
+    name: string;
+  };
+};
+
+type Client = {
+  name: string;
+  lastName?: string;
+  telefono: string;
+  appointments: Appointment[];
+};
+
 export default function ClientDetail({
   params,
 }: {
   params: { id: string };
 }) {
-  const [client, setClient] = useState<any>(null);
+  const [client, setClient] = useState<Client | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`/api/clients/${params.id}`)
-      .then((res) => res.json())
-      .then(setClient);
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Error");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setClient(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
   }, [params.id]);
 
-  if (!client) return <p className="p-6">Cargando...</p>;
+  if (loading) return <p className="p-6">Cargando...</p>;
+
+  if (error) {
+    return (
+      <p className="p-6 text-red-600">
+        {error}
+      </p>
+    );
+  }
+
+  if (!client) return null;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-2">{client.name}</h1>
-      <p className="text-gray-600 mb-4">{client.telefono}</p>
+      <h1 className="text-2xl font-bold mb-1">
+        {client.name} {client.lastName}
+      </h1>
 
-      <h2 className="font-semibold mb-2">Historial de turnos</h2>
+      <p className="text-gray-600 mb-6">{client.telefono}</p>
 
-      <div className="space-y-2">
-        {client.appointments.map((a: any) => (
-          <div
-            key={a.id}
-            className="border rounded-lg p-3 bg-white"
-          >
-            <p className="font-medium">{a.service.name}</p>
-            <p className="text-sm text-gray-600">
-              {new Date(a.date).toLocaleString()}
-            </p>
-            <p className="text-xs text-gray-500">
-              Estado: {a.status}
-            </p>
-          </div>
-        ))}
-      </div>
+      <h2 className="font-semibold mb-3">Historial de turnos</h2>
+
+      {client.appointments.length === 0 ? (
+        <p className="text-gray-500">Este cliente no tiene turnos.</p>
+      ) : (
+        <div className="space-y-3">
+          {client.appointments.map((a) => (
+            <div
+              key={a.id}
+              className="border rounded-xl p-4 bg-white shadow-sm"
+            >
+              <p className="font-medium">{a.service.name}</p>
+              <p className="text-sm text-gray-600">
+                {new Date(a.date).toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Estado: {a.status}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

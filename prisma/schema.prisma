@@ -9,24 +9,32 @@ datasource db {
 
 model Appointment {
   id        String   @id @default(cuid())
-  name      String
-  lastName  String
-  telefono  String
   date      DateTime
-  status    String   @default("pending")
-
-  serviceId String
-  service   Service  @relation(fields: [serviceId], references: [id])
-
+  serviceId String?
   createdAt DateTime @default(now())
+  userId    String?
+  status    String   @default("pending")
+  name      String?
+  lastName  String?
+  telefono  String?
+  service   Service? @relation(fields: [serviceId], references: [id])
+  User      User?    @relation(fields: [userId], references: [id])
 }
-
 
 model Service {
   id           String        @id @default(cuid())
   name         String
   duration     Int
   price        Float
-  appointments Appointment[]
   createdAt    DateTime      @default(now())
+  appointments Appointment[]
+}
+
+model User {
+  id          String        @id
+  name        String
+  telefono    String        @unique
+  createdAt   DateTime      @default(now())
+  lastName    String?
+  Appointment Appointment[]
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import TimePicker from "react-time-picker";
+import { useRouter } from "next/navigation";
 
 import "react-time-picker/dist/TimePicker.css";
 import "react-clock/dist/Clock.css";
@@ -13,6 +14,8 @@ type Service = {
 };
 
 export default function AppointmentForm() {
+  const router = useRouter();
+
   const [services, setServices] = useState<Service[]>([]);
   const [serviceId, setServiceId] = useState("");
 
@@ -41,7 +44,7 @@ export default function AppointmentForm() {
     try {
       const dateTime = new Date(`${date}T${time}`);
 
-      await axios.post("/api/appointments", {
+      const res = await axios.post("/api/appointments", {
         name,
         lastName,
         telefono,
@@ -49,14 +52,9 @@ export default function AppointmentForm() {
         date: dateTime.toISOString(),
       });
 
-      setMessage("✅ Turno reservado con éxito!");
+      const appointmentId = res.data.id;
 
-      setName("");
-      setLastName("");
-      setTelefono("");
-      setDate("");
-      setTime(null);
-      setServiceId("");
+      router.push(`/appointments/${appointmentId}`);
     } catch (error) {
       console.error(error);
       setMessage("❌ Error al reservar el turno.");

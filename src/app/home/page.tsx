@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import CalendarGrid from "@/components/CalendarGrid";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Appointment = {
   id: string;
@@ -20,6 +21,7 @@ type Appointment = {
 export default function HomePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [view, setView] = useState<"week" | "month">("month");
+  const router = useRouter();
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -47,6 +49,10 @@ export default function HomePage() {
     fetchAppointments();
   }, []);
 
+  const handleSelectAppointment = (id: string) => {
+    router.push(`/appointments/${id}`);
+  };
+
   return (
     <div className="py-6 px-3 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-center mb-4">
@@ -73,7 +79,11 @@ export default function HomePage() {
         </button>
       </div>
 
-      <CalendarGrid appointments={appointments} view={view} />
+      <CalendarGrid
+        appointments={appointments}
+        view={view}
+        onSelectAppointment={handleSelectAppointment}
+      />
     </div>
   );
 }

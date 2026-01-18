@@ -11,12 +11,9 @@ type Appointment = {
   id: string;
   date?: string;
   status?: string;
-  user?: {
-    id: string;
-    name?: string;
-    lastName?: string;
-    telefono?: string;
-  };
+  name?: string;
+  lastName?: string;
+  telefono?: string;
   service?: { id: string; name?: string };
 };
 
@@ -49,15 +46,14 @@ export default function EditAppointmentPage({
         const a: Appointment = ap.data;
         setAppointment(a);
 
-        // Datos del usuario
-        setName(a.user?.name || "");
-        setLastName(a.user?.lastName || "");
-        setTelefono(a.user?.telefono || "");
+        // ✅ DATOS DIRECTOS DEL TURNO
+        setName(a.name || "");
+        setLastName(a.lastName || "");
+        setTelefono(a.telefono || "");
 
         setServiceId(a.service?.id || "");
         setStatus(a.status || "pendiente");
 
-        // Fecha y hora
         if (a.date) {
           const d = new Date(a.date);
           if (!isNaN(d.getTime())) {
@@ -119,7 +115,6 @@ export default function EditAppointmentPage({
     <div className="max-w-lg mx-auto bg-white p-6 rounded-2xl shadow space-y-4 mt-6">
       <h2 className="text-xl font-bold text-center mb-2">Editar turno</h2>
 
-      {/* Nombre */}
       <label className="block text-sm font-medium">
         Nombre
         <input
@@ -129,7 +124,6 @@ export default function EditAppointmentPage({
         />
       </label>
 
-      {/* Apellido */}
       <label className="block text-sm font-medium">
         Apellido
         <input
@@ -139,7 +133,6 @@ export default function EditAppointmentPage({
         />
       </label>
 
-      {/* Teléfono */}
       <label className="block text-sm font-medium">
         Teléfono
         <input
@@ -149,7 +142,6 @@ export default function EditAppointmentPage({
         />
       </label>
 
-      {/* Servicio */}
       <label className="block text-sm font-medium">
         Servicio
         <select
@@ -160,13 +152,12 @@ export default function EditAppointmentPage({
           <option value="">Seleccionar servicio</option>
           {services.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.name || "Sin nombre"}
+              {s.name}
             </option>
           ))}
         </select>
       </label>
 
-      {/* Fecha y hora */}
       <div className="flex gap-4">
         <label className="block flex-1 text-sm font-medium">
           Fecha
@@ -189,7 +180,6 @@ export default function EditAppointmentPage({
         </label>
       </div>
 
-      {/* Estado */}
       <label className="block text-sm font-medium">
         Estado
         <select
@@ -204,18 +194,17 @@ export default function EditAppointmentPage({
         </select>
       </label>
 
-      {/* Botones */}
       <div className="flex justify-between items-center pt-4">
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
         >
           Guardar cambios
         </button>
 
         <button
           onClick={handleDelete}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          className="px-4 py-2 bg-red-600 text-white rounded-lg"
         >
           Eliminar turno
         </button>

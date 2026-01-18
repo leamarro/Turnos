@@ -5,33 +5,54 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const clients = await prisma.user.findMany({
-      include: {
-        appointments: {
-          include: { service: true },
-        },
+    const appointments = await prisma.appointment.findMany({
+      orderBy: { date: "desc" },
+      select: {
+        id: true,
+        name: true,
+        lastName: true,
+        telefono: true,
+        date: true,
       },
-      orderBy: { createdAt: "desc" },
     });
 
-    const formatted = clients.map((c) => ({
-      id: c.id,
-      name: c.name,
-      lastName: c.lastName ?? "",
-      telefono: c.telefono,
-      totalAppointments: c.appointments.length,
-      lastAppointment:
-        c.appointments.length > 0
-          ? c.appointments
-              .sort(
-                (a, b) =>
-                  new Date(b.date).getTime() -
-                  new Date(a.date).getTime()
-              )[0].date
-          : null,
-    }));
+    // Agrupar clientes por teléfono
+    const clientsMap = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        lastName: string;
+        telefono: string;
+        totalAppointments: number;
+        lastAppointment: Date | null;
+      }
+    >();
 
-    return NextResponse.json(formatted);
+    for (const a of appointments) {
+      if (!clientsMap.has(a.telefono)) {
+        clientsMap.set(a.telefono, {
+          id: a.id,
+          name: a.name,
+          lastName: a.lastName,
+          telefono: a.telefono,
+          totalAppointments: 1,
+          lastAppointment: a.date,
+        });
+      } else {
+        const client = clientsMap.get(a.telefono)!;
+        client.totalAppointments += 1;
+
+        if (
+          !client.lastAppointment ||
+          a.date > client.lastAppointment
+        ) {
+          client.lastAppointment = a.date;
+        }
+      }
+    }
+
+    return NextResponse.json(Array.from(clientsMap.values()));
   } catch (e) {
     console.error("ERROR CLIENTS:", e);
     return NextResponse.json(
@@ -40,4 +61,3 @@ export async function GET() {
     );
   }
 }
-//

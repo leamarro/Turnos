@@ -38,7 +38,7 @@ export default function Navbar() {
 
           <div className="hidden sm:flex gap-6 items-center">
             <Link href="/home">Inicio</Link>
-            <Link href="/appointment">Reservar Turno</Link>
+            <Link href="/appointments">Reservar Turno</Link>
 
             <Link href="/clients">Clientes</Link>
             <Link href="/admin">Panel Admin</Link>
@@ -84,7 +84,7 @@ export default function Navbar() {
 
         <div className="flex flex-col p-4 gap-4">
           <Link href="/home" onClick={() => setOpen(false)}>Inicio</Link>
-          <Link href="/appointment" onClick={() => setOpen(false)}>Reservar Turno</Link>
+          <Link href="/appointments" onClick={() => setOpen(false)}>Reservar Turno</Link>
           
           <Link href="/clients" onClick={() => setOpen(false)}>Clientes</Link>
           <Link href="/admin" onClick={() => setOpen(false)}>Panel Admin</Link>
