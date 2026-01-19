@@ -17,40 +17,35 @@ export async function GET() {
     });
 
     // Agrupar clientes por teléfono
-    const clientsMap = new Map<
-      string,
-      {
-        id: string;
-        name: string;
-        lastName: string;
-        telefono: string;
-        totalAppointments: number;
-        lastAppointment: Date | null;
-      }
-    >();
+const clientsMap = new Map<
+  string,
+  {
+    id: string;
+    name: string | null;
+    lastName: string | null;
+    telefono: string;
+    appointments: any[];
+  }
+>();
 
-    for (const a of appointments) {
-      if (!clientsMap.has(a.telefono)) {
-        clientsMap.set(a.telefono, {
-          id: a.id,
-          name: a.name,
-          lastName: a.lastName,
-          telefono: a.telefono,
-          totalAppointments: 1,
-          lastAppointment: a.date,
-        });
-      } else {
-        const client = clientsMap.get(a.telefono)!;
-        client.totalAppointments += 1;
+for (const a of appointments) {
+  // 🔒 Validación obligatoria
+  if (!a.telefono) continue;
 
-        if (
-          !client.lastAppointment ||
-          a.date > client.lastAppointment
-        ) {
-          client.lastAppointment = a.date;
-        }
-      }
-    }
+  if (!clientsMap.has(a.telefono)) {
+    clientsMap.set(a.telefono, {
+      id: a.id,
+      name: a.name ?? "",
+      lastName: a.lastName ?? "",
+      telefono: a.telefono,
+      appointments: [],
+    });
+  }
+
+  clientsMap.get(a.telefono)!.appointments.push(a);
+}
+
+
 
     return NextResponse.json(Array.from(clientsMap.values()));
   } catch (e) {
