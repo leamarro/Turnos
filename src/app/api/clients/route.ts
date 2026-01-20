@@ -29,7 +29,7 @@ const clientsMap = new Map<
 >();
 
 for (const a of appointments) {
-  // 🔒 Validación obligatoria
+  // Validación obligatoria
   if (!a.telefono) continue;
 
   if (!clientsMap.has(a.telefono)) {
