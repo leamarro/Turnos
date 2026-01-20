@@ -53,7 +53,7 @@ export async function GET() {
       clientsMap.get(a.telefono)!.appointments.push(a);
     }
 
-    // 4️⃣ Respuesta final
+    // 4Respuesta final
     return NextResponse.json(Array.from(clientsMap.values()));
   } catch (error) {
     console.error("ERROR CLIENTS:", error);
