@@ -163,3 +163,27 @@ input:focus, select:focus, textarea:focus {
 .custom-timepicker .react-time-picker__button {
   display: none;
 }
+
+.minimal-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 0;
+  font-size: 0.95rem;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+.minimal-input:focus {
+  border-bottom-color: #000;
+  outline: none;
+  box-shadow: none;
+}
+
+.minimal-input::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+}

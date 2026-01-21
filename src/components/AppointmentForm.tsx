@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import TimePicker from "react-time-picker";
 import { useRouter } from "next/navigation";
-
-import "react-time-picker/dist/TimePicker.css";
-import "react-clock/dist/Clock.css";
 
 type Service = {
   id: string;
@@ -24,12 +20,14 @@ export default function AppointmentForm() {
   const [telefono, setTelefono] = useState("");
 
   const [date, setDate] = useState("");
-  const [time, setTime] = useState<string | null>(null);
+  const [time, setTime] = useState("");
 
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    axios.get("/api/services").then((res) => setServices(res.data));
+    axios.get("/api/services").then((res) => {
+      setServices(Array.isArray(res.data) ? res.data : []);
+    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,9 +50,7 @@ export default function AppointmentForm() {
         date: dateTime.toISOString(),
       });
 
-      const appointmentId = res.data.id;
-
-      router.push(`/appointments/${appointmentId}`);
+      router.push(`/appointments/${res.data.id}`);
     } catch (error) {
       console.error(error);
       setMessage("❌ Error al reservar el turno.");
@@ -62,68 +58,97 @@ export default function AppointmentForm() {
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-2xl p-6 max-w-md mx-auto">
-      <h2 className="text-2xl font-semibold text-center mb-4">
-        Reservar Turno
-      </h2>
+    <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 pt-8 sm:pt-16">
+      <div className="w-full max-w-md bg-white rounded-2xl p-6 space-y-6">
+        <h2 className="text-2xl font-semibold text-center">
+          Reservar turno
+        </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          placeholder="Nombre"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border rounded-xl p-2"
-        />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <Input
+            placeholder="Nombre"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
 
-        <input
-          placeholder="Apellido"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="w-full border rounded-xl p-2"
-        />
+          <Input
+            placeholder="Apellido"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
 
-        <input
-          placeholder="Teléfono"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-          className="w-full border rounded-xl p-2"
-        />
+          <Input
+            placeholder="Teléfono"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+          />
 
-        <select
-          value={serviceId}
-          onChange={(e) => setServiceId(e.target.value)}
-          className="w-full border rounded-xl p-2"
-        >
-          <option value="">Seleccioná un servicio</option>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
+          <select
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value)}
+            className="minimal-input"
+          >
+            <option value="">Seleccionar servicio</option>
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full border rounded-xl p-2"
-        />
+          {/* 📅 FECHA */}
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="minimal-input"
+          />
 
-        <TimePicker
-          value={time}
-          onChange={setTime}
-          disableClock
-          format="HH:mm"
-        />
+          {/* ⏰ HORA */}
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="minimal-input"
+          />
 
-        <button className="w-full bg-black text-white py-2 rounded-xl">
-          Confirmar turno
-        </button>
+          <button
+            type="submit"
+            className="w-full bg-black text-white py-3 rounded-xl font-medium hover:opacity-90 transition"
+          >
+            Confirmar turno
+          </button>
 
-        {message && (
-          <p className="text-center text-sm mt-2">{message}</p>
-        )}
-      </form>
+          {message && (
+            <p className="text-center text-sm text-red-500">
+              {message}
+            </p>
+          )}
+        </form>
+      </div>
     </div>
+  );
+}
+
+/* ===================== */
+/* INPUT MINIMAL */
+/* ===================== */
+
+function Input({
+  placeholder,
+  value,
+  onChange,
+}: {
+  placeholder: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <input
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className="minimal-input"
+    />
   );
 }

@@ -1,9 +1,19 @@
 "use client";
 
 export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import {
+  User,
+  Phone,
+  Sparkles,
+  CalendarClock,
+  BadgeCheck,
+  Trash2,
+  Save,
+} from "lucide-react";
 
 type Service = { id: string; name: string };
 
@@ -22,13 +32,12 @@ export default function EditAppointmentPage({
 }: {
   params: { id: string };
 }) {
-  const id = params.id;
   const router = useRouter();
+  const id = params.id;
 
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [services, setServices] = useState<Service[]>([]);
 
-  // Campos editables
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -46,13 +55,11 @@ export default function EditAppointmentPage({
         const a: Appointment = ap.data;
         setAppointment(a);
 
-        // ✅ DATOS DIRECTOS DEL TURNO
-        setName(a.name || "");
-        setLastName(a.lastName || "");
-        setTelefono(a.telefono || "");
-
-        setServiceId(a.service?.id || "");
-        setStatus(a.status || "pendiente");
+        setName(a.name ?? "");
+        setLastName(a.lastName ?? "");
+        setTelefono(a.telefono ?? "");
+        setServiceId(a.service?.id ?? "");
+        setStatus(a.status ?? "pendiente");
 
         if (a.date) {
           const d = new Date(a.date);
@@ -65,7 +72,7 @@ export default function EditAppointmentPage({
         setServices(Array.isArray(sv.data) ? sv.data : []);
       } catch (err) {
         console.error(err);
-        alert("Error al cargar el turno o los servicios");
+        alert("Error al cargar el turno");
       }
     }
 
@@ -74,7 +81,7 @@ export default function EditAppointmentPage({
 
   async function handleSave() {
     if (!name.trim() || !lastName.trim() || !telefono.trim()) {
-      alert("Nombre, apellido y teléfono no pueden estar vacíos.");
+      alert("Nombre, apellido y teléfono son obligatorios");
       return;
     }
 
@@ -89,11 +96,10 @@ export default function EditAppointmentPage({
         status,
       });
 
-      alert("Turno actualizado correctamente");
       router.push("/admin");
     } catch (err) {
       console.error(err);
-      alert("Error al guardar los cambios");
+      alert("Error al guardar");
     }
   }
 
@@ -105,110 +111,136 @@ export default function EditAppointmentPage({
       router.push("/admin");
     } catch (err) {
       console.error(err);
-      alert("No se pudo eliminar el turno");
+      alert("No se pudo eliminar");
     }
   }
 
-  if (!appointment) return <p className="p-4">Cargando...</p>;
+  if (!appointment) {
+    return <p className="p-6 text-center text-gray-500">Cargando…</p>;
+  }
 
   return (
-    <div className="max-w-lg mx-auto bg-white p-6 rounded-2xl shadow space-y-4 mt-6">
-      <h2 className="text-xl font-bold text-center mb-2">Editar turno</h2>
+    <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16">
+      <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 space-y-5">
 
-      <label className="block text-sm font-medium">
-        Nombre
-        <input
-          className="mt-1 block w-full border rounded-lg p-2"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </label>
+        <h1 className="text-lg font-semibold text-center">
+          Editar turno
+        </h1>
 
-      <label className="block text-sm font-medium">
-        Apellido
-        <input
-          className="mt-1 block w-full border rounded-lg p-2"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-        />
-      </label>
-
-      <label className="block text-sm font-medium">
-        Teléfono
-        <input
-          className="mt-1 block w-full border rounded-lg p-2"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-        />
-      </label>
-
-      <label className="block text-sm font-medium">
-        Servicio
-        <select
-          className="mt-1 block w-full border rounded-lg p-2"
-          value={serviceId}
-          onChange={(e) => setServiceId(e.target.value)}
-        >
-          <option value="">Seleccionar servicio</option>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <div className="flex gap-4">
-        <label className="block flex-1 text-sm font-medium">
-          Fecha
+        <Field icon={<User size={16} />} label="Nombre">
           <input
-            type="date"
-            className="mt-1 block w-full border rounded-lg p-2"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input"
           />
-        </label>
+        </Field>
 
-        <label className="block flex-1 text-sm font-medium">
-          Hora
+        <Field icon={<User size={16} />} label="Apellido">
           <input
-            type="time"
-            className="mt-1 block w-full border rounded-lg p-2"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className="input"
           />
-        </label>
-      </div>
+        </Field>
 
-      <label className="block text-sm font-medium">
-        Estado
-        <select
-          className="mt-1 block w-full border rounded-lg p-2"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="pendiente">Pendiente</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="finalizado">Finalizado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
+        <Field icon={<Phone size={16} />} label="Teléfono">
+          <input
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+            className="input"
+          />
+        </Field>
+
+        <Field icon={<Sparkles size={16} />} label="Servicio">
+          <select
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value)}
+            className="input"
+          >
+            <option value="">Seleccionar servicio</option>
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <div className="flex gap-3">
+          <Field icon={<CalendarClock size={16} />} label="Fecha">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="input"
+            />
+          </Field>
+
+          <Field icon={<CalendarClock size={16} />} label="Hora">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="input"
+            />
+          </Field>
+        </div>
+
+        <Field icon={<BadgeCheck size={16} />} label="Estado">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="input"
+          >
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="finalizado">Finalizado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </Field>
+
+        <div className="flex justify-between gap-3 pt-2">
+          <button
+            onClick={handleDelete}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-red-600 hover:bg-red-50 transition w-full"
+          >
+            <Trash2 size={16} />
+            Eliminar
+          </button>
+
+          <button
+            onClick={handleSave}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 transition w-full"
+          >
+            <Save size={16} />
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------ */
+/* COMPONENTES UI */
+/* ------------------ */
+
+function Field({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1 w-full">
+      <label className="flex items-center gap-2 text-xs text-gray-500">
+        {icon}
+        {label}
       </label>
-
-      <div className="flex justify-between items-center pt-4">
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
-        >
-          Guardar cambios
-        </button>
-
-        <button
-          onClick={handleDelete}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg"
-        >
-          Eliminar turno
-        </button>
-      </div>
+      {children}
     </div>
   );
 }
