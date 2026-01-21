@@ -13,6 +13,7 @@ import {
   CalendarClock,
   BadgeCheck,
   Pencil,
+  MessageCircle,
 } from "lucide-react";
 
 type Appointment = {
@@ -31,8 +32,11 @@ type Appointment = {
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pendiente",
   confirmed: "Confirmado",
-  cancelled: "Cancelado",
+  cancelado: "Cancelado",
   finished: "Finalizado",
+  pendiente: "Pendiente",
+  confirmado: "Confirmado",
+  finalizado: "Finalizado",
 };
 
 export default function AppointmentDetail({
@@ -59,16 +63,39 @@ export default function AppointmentDetail({
   }
 
   const statusColor =
-    appointment.status === "confirmed"
+    appointment.status === "confirmed" || appointment.status === "confirmado"
       ? "text-green-600"
-      : appointment.status === "cancelled"
+      : appointment.status === "cancelled" || appointment.status === "cancelado"
       ? "text-red-600"
-      : appointment.status === "finished"
+      : appointment.status === "finished" || appointment.status === "finalizado"
       ? "text-gray-600"
       : "text-yellow-600";
 
+  const isConfirmed =
+    appointment.status.toLowerCase() === "confirmed" ||
+    appointment.status.toLowerCase() === "confirmado";
+  
+    const isPending =
+    appointment.status.toLowerCase() === "pending" ||
+    appointment.status.toLowerCase() === "pendiente";
+
+  const handleSendWhatsapp = () => {
+    const message = `Hola ${appointment.name} ${
+      appointment.lastName ?? ""
+    }! \n\nTu turno ha sido confirmado.\n\nServicio: ${
+      appointment.service?.name ?? "—"
+    }\nFecha y hora: ${format(
+      new Date(appointment.date),
+      "dd/MM/yyyy HH:mm",
+      { locale: es }
+    )}\n\n¡Nos vemos pronto!`;
+    const phone = appointment.telefono.replace(/\D/g, ""); // limpia símbolos
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 px-4 pt-6 sm:pt-16">
+    <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16 pb-16">
       <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 relative">
 
         {/* ✏️ EDITAR */}
@@ -112,7 +139,20 @@ export default function AppointmentDetail({
 
         </div>
 
-        <div className="mt-6 flex justify-center">
+        {/* WhatsApp */}
+        {isConfirmed || isPending && (
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={handleSendWhatsapp}
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition"
+            >
+              <MessageCircle size={18} />
+              Enviar WhatsApp
+            </button>
+          </div>
+        )}
+
+        <div className="mt-4 flex justify-center">
           <button
             onClick={() => router.back()}
             className="px-5 py-2 border rounded-xl text-sm hover:bg-gray-100 transition"

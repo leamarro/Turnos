@@ -48,7 +48,9 @@ export default function AppointmentForm() {
         telefono,
         serviceId,
         date: dateTime.toISOString(),
+        status: "confirmed", // <--- agregado para que sea confirmado
       });
+
 
       router.push(`/appointments/${res.data.id}`);
     } catch (error) {
