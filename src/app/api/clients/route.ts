@@ -23,12 +23,12 @@ export async function GET() {
         name: string;
         lastName: string;
         telefono: string;
-        appointments: any[];
+        totalAppointments: number;
+        lastAppointment: string | null;
       }
     >();
 
     for (const a of appointments) {
-      // ✅ GUARDIA CRÍTICA PARA PROD
       if (!a.telefono) continue;
 
       if (!clientsMap.has(a.telefono)) {
@@ -37,11 +37,23 @@ export async function GET() {
           name: a.name ?? "",
           lastName: a.lastName ?? "",
           telefono: a.telefono,
-          appointments: [],
+          totalAppointments: 0,
+          lastAppointment: a.date
+            ? a.date.toISOString()
+            : null,
         });
       }
 
-      clientsMap.get(a.telefono)!.appointments.push(a);
+      const client = clientsMap.get(a.telefono)!;
+      client.totalAppointments += 1;
+
+      if (
+        a.date &&
+        (!client.lastAppointment ||
+          new Date(a.date) > new Date(client.lastAppointment))
+      ) {
+        client.lastAppointment = a.date.toISOString();
+      }
     }
 
     return NextResponse.json(Array.from(clientsMap.values()));
