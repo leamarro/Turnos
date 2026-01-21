@@ -16,6 +16,7 @@ type Appointment = {
     name: string;
     lastName: string;
   };
+  timeStatus: "past" | "today" | "future";
 };
 
 export default function HomePage() {
@@ -25,25 +26,50 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchAppointments = async () => {
-      const res = await fetch("/api/appointments");
-      const data = await res.json();
+      try {
+        const res = await fetch("/api/appointments", { cache: "no-store" });
+        const data = await res.json();
 
-      if (!Array.isArray(data)) {
+        if (!Array.isArray(data)) {
+          setAppointments([]);
+          return;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const formatted: Appointment[] = data.map((a: any) => {
+          const date = new Date(a.date);
+          const compareDate = new Date(date);
+          compareDate.setHours(0, 0, 0, 0);
+
+          let timeStatus: "past" | "today" | "future" = "future";
+
+          if (compareDate.getTime() === today.getTime()) {
+            timeStatus = "today";
+          } else if (compareDate < today) {
+            timeStatus = "past";
+          }
+
+          return {
+            id: a.id,
+            date: date.toISOString(),
+            service: {
+              name: a.service?.name ?? "",
+            },
+            user: {
+              name: a.user?.name ?? "",
+              lastName: a.user?.lastName ?? "",
+            },
+            timeStatus,
+          };
+        });
+
+        setAppointments(formatted);
+      } catch (error) {
+        console.error("ERROR FETCH APPOINTMENTS:", error);
         setAppointments([]);
-        return;
       }
-
-      const formatted: Appointment[] = data.map((a: any) => ({
-        id: a.id,
-        date: new Date(a.date).toISOString(),
-        service: { name: a.service?.name ?? "" },
-        user: {
-          name: a.user?.name ?? "",
-          lastName: a.user?.lastName ?? "",
-        },
-      }));
-
-      setAppointments(formatted);
     };
 
     fetchAppointments();
@@ -62,8 +88,10 @@ export default function HomePage() {
       <div className="flex justify-center gap-3 mb-4">
         <button
           onClick={() => setView("month")}
-          className={`px-4 py-2 rounded-lg ${
-            view === "month" ? "bg-black text-white" : "bg-gray-200"
+          className={`px-4 py-2 rounded-lg transition ${
+            view === "month"
+              ? "bg-black text-white"
+              : "bg-gray-200 hover:bg-gray-300"
           }`}
         >
           Mes
@@ -71,8 +99,10 @@ export default function HomePage() {
 
         <button
           onClick={() => setView("week")}
-          className={`px-4 py-2 rounded-lg ${
-            view === "week" ? "bg-black text-white" : "bg-gray-200"
+          className={`px-4 py-2 rounded-lg transition ${
+            view === "week"
+              ? "bg-black text-white"
+              : "bg-gray-200 hover:bg-gray-300"
           }`}
         >
           Semana

@@ -1,11 +1,39 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import {
+  User,
+  Phone,
+  Sparkles,
+  CalendarClock,
+  BadgeCheck,
+  Pencil,
+} from "lucide-react";
 
-export const dynamic = "force-dynamic";
+type Appointment = {
+  id: string;
+  name: string;
+  lastName?: string;
+  telefono: string;
+  date: string;
+  status: string;
+  service?: {
+    name: string;
+  };
+};
+
+/* 🧠 Traducción de estados */
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Pendiente",
+  confirmed: "Confirmado",
+  cancelled: "Cancelado",
+  finished: "Finalizado",
+};
 
 export default function AppointmentDetail({
   params,
@@ -13,63 +41,81 @@ export default function AppointmentDetail({
   params: { id: string };
 }) {
   const router = useRouter();
-  const [appointment, setAppointment] = useState<any>(null);
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
 
   useEffect(() => {
-    fetch(`/api/appointments?id=${params.id}`)
+    fetch(`/api/appointments?id=${params.id}`, { cache: "no-store" })
       .then((res) => res.json())
-      .then(setAppointment);
+      .then(setAppointment)
+      .catch(() => setAppointment(null));
   }, [params.id]);
 
   if (!appointment) {
-    return <p className="p-6 text-center">Cargando turno...</p>;
+    return (
+      <p className="p-6 text-center text-gray-500">
+        Cargando turno…
+      </p>
+    );
   }
 
+  const statusColor =
+    appointment.status === "confirmed"
+      ? "text-green-600"
+      : appointment.status === "cancelled"
+      ? "text-red-600"
+      : appointment.status === "finished"
+      ? "text-gray-600"
+      : "text-yellow-600";
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 relative">
+    <div className="min-h-screen bg-gray-100 px-4 pt-6 sm:pt-16">
+      <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 relative">
 
         {/* ✏️ EDITAR */}
         <button
           onClick={() => router.push(`/admin/edit/${params.id}`)}
-          className="absolute top-4 right-4 text-gray-500 hover:text-black transition"
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition"
+          aria-label="Editar turno"
         >
-          ✏️
+          <Pencil size={18} />
         </button>
 
-        <h1 className="text-2xl font-bold text-center mb-4">
-          📅 Detalle del Turno
+        <h1 className="text-xl font-semibold text-center mb-6">
+          Detalle del turno
         </h1>
 
-        <div className="space-y-3 text-sm">
+        <div className="space-y-4 text-sm">
 
-          <Info label="Cliente">
-            {appointment.name} {appointment.lastName}
+          <Info label="Cliente" icon={<User size={16} />}>
+            {appointment.name} {appointment.lastName ?? ""}
           </Info>
 
-          <Info label="Teléfono">
+          <Info label="Teléfono" icon={<Phone size={16} />}>
             {appointment.telefono}
           </Info>
 
-          <Info label="Servicio">
-            {appointment.service?.name}
+          <Info label="Servicio" icon={<Sparkles size={16} />}>
+            {appointment.service?.name ?? "—"}
           </Info>
 
-          <Info label="Fecha y hora">
+          <Info label="Fecha y hora" icon={<CalendarClock size={16} />}>
             {format(new Date(appointment.date), "dd/MM/yyyy HH:mm", {
               locale: es,
             })} hs
           </Info>
 
-          <Info label="Estado">
-            <span className="capitalize">{appointment.status}</span>
+          <Info label="Estado" icon={<BadgeCheck size={16} />}>
+            <span className={`font-medium ${statusColor}`}>
+              {STATUS_LABELS[appointment.status] ?? appointment.status}
+            </span>
           </Info>
+
         </div>
 
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 border rounded-xl hover:bg-gray-100"
+            className="px-5 py-2 border rounded-xl text-sm hover:bg-gray-100 transition"
           >
             Volver
           </button>
@@ -81,15 +127,23 @@ export default function AppointmentDetail({
 
 function Info({
   label,
+  icon,
   children,
 }: {
   label: string;
+  icon: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex justify-between border-b pb-2">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-right">{children}</span>
+    <div className="flex items-center justify-between border-b pb-3 gap-4">
+      <div className="flex items-center gap-2 text-gray-500">
+        {icon}
+        <span>{label}</span>
+      </div>
+
+      <span className="text-right">
+        {children}
+      </span>
     </div>
   );
 }

@@ -2,20 +2,20 @@
   "name": "turnos-app",
   "version": "0.1.0",
   "private": true,
-"scripts": {
-  "dev": "next dev",
-  "build": "prisma generate && next build",
-  "start": "next start",
-  "seed": "tsx prisma/seed.ts",
-  "lint": "eslint"
-},
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "seed": "tsx prisma/seed.ts",
+    "lint": "eslint"
+  },
   "dependencies": {
     "@prisma/client": "^6.18.0",
     "@tanstack/react-query": "^5.90.5",
     "axios": "^1.13.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.24",
-    "lucide-react": "0.474.0",
+    "lucide-react": "^0.474.0",
     "next": "^13.5.11",
     "next-auth": "^4.24.13",
     "prisma": "^6.18.0",
