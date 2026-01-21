@@ -31,7 +31,7 @@ export default function ClientsPage() {
       <h1 className="text-2xl font-bold mb-4">Clientes</h1>
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full text-[0.75rem] md:text-sm">
           <thead className="bg-gray-100">
             <tr>
               <th className="p-3 text-left">Nombre</th>

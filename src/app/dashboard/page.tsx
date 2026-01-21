@@ -27,6 +27,9 @@ export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
+  // =========================
+  // FETCH TURNOS
+  // =========================
   useEffect(() => {
     const load = async () => {
       try {
@@ -54,6 +57,7 @@ export default function DashboardPage() {
         const qq = q.toLowerCase();
         const d = new Date(a.date);
 
+        // 🔍 búsqueda
         if (q) {
           const name = a.user?.name?.toLowerCase() ?? "";
           const phone = a.user?.telefono ?? "";
@@ -62,18 +66,21 @@ export default function DashboardPage() {
             return false;
         }
 
+        // 📅 rango fechas
         if (from && d < new Date(`${from}T00:00:00`)) return false;
         if (to && d > new Date(`${to}T23:59:59`)) return false;
 
+        // 📆 mes seleccionado (FIX getMonth)
         if (selectedMonth !== "all") {
-          const [year, month] = selectedMonth.split("-");
+          const [year, month] = selectedMonth.split("-").map(Number);
           if (
-            d.getFullYear() !== Number(year) ||
-            d.getMonth() !== Number(month)
+            d.getFullYear() !== year ||
+            d.getMonth() + 1 !== month
           )
             return false;
         }
 
+        // 📌 estado (FIX valores reales)
         if (selectedStatus !== "all" && a.status !== selectedStatus)
           return false;
 
@@ -110,19 +117,19 @@ export default function DashboardPage() {
   }, [filtered]);
 
   // =========================
-  // MESES DISPONIBLES
+  // MESES DISPONIBLES (FIX)
   // =========================
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
     appointments.forEach((a) => {
       const d = new Date(a.date);
-      set.add(`${d.getFullYear()}-${d.getMonth()}`);
+      set.add(`${d.getFullYear()}-${d.getMonth() + 1}`);
     });
     return [...set];
   }, [appointments]);
 
   // =========================
-  // EXPORTAR CSV
+  // EXPORT CSV
   // =========================
   const handleExport = () => {
     exportToCsv(
@@ -141,39 +148,37 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-       <main className="w-full max-w-7xl mx-auto pt-20 p-4 sm:p-6 space-y-6">
+      <main className="w-full max-w-7xl mx-auto pt-20 p-4 sm:p-6 space-y-6">
 
         <h1 className="text-2xl font-semibold">Dashboard</h1>
 
-        {/* ✅ SELECTOR DE MES PARA EL GRÁFICO */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border rounded-md p-2 max-w-xs"
-          >
-            <option value="all">Todos los meses</option>
-            {availableMonths.map((m) => {
-              const [y, mo] = m.split("-");
-              return (
-                <option key={m} value={m}>
-                  {new Date(Number(y), Number(mo)).toLocaleDateString("es", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </option>
-              );
-            })}
-          </select>
-        </div>
+        {/* SELECTOR MES */}
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="border rounded-md p-2 max-w-xs"
+        >
+          <option value="all">Todos los meses</option>
+          {availableMonths.map((m) => {
+            const [y, mo] = m.split("-");
+            return (
+              <option key={m} value={m}>
+                {new Date(Number(y), Number(mo) - 1).toLocaleDateString("es", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </option>
+            );
+          })}
+        </select>
 
-        {/* ✅ GRÁFICO FILTRADO POR MES */}
+        {/* GRÁFICO */}
         <div className="bg-white rounded-lg shadow p-4">
           <h2 className="font-semibold mb-3">Ingresos por mes</h2>
           <MonthlyIncomeByServiceChart selectedMonth={selectedMonth} />
         </div>
 
-        {/* STAT CARDS */}
+        {/* STATS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard title="Turnos totales" value={totalTurns.toString()} />
           <StatCard title="Ingresos (mes)" value={`$ ${incomeMonth}`} />
@@ -182,88 +187,33 @@ export default function DashboardPage() {
         </div>
 
         {/* FILTROS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-center">
-          <input
-            type="date"
-            value={from ?? ""}
-            onChange={(e) => setFrom(e.target.value || null)}
-            className="border rounded-md p-2 w-full"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <input type="date" value={from ?? ""} onChange={(e) => setFrom(e.target.value || null)} className="border rounded-md p-2" />
+          <input type="date" value={to ?? ""} onChange={(e) => setTo(e.target.value || null)} className="border rounded-md p-2" />
 
-          <input
-            type="date"
-            value={to ?? ""}
-            onChange={(e) => setTo(e.target.value || null)}
-            className="border rounded-md p-2 w-full"
-          />
-
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="border rounded-md p-2 w-full"
-          >
-            <option value="all">Todos los estados</option>
-            <option value="pending">Pendiente</option>
-            <option value="confirmed">Confirmado</option>
-            <option value="cancelled">Cancelado</option>
+          <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="border rounded-md p-2">
+            <option value="all">Todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="finalizado">Finalizado</option>
+            <option value="cancelado">Cancelado</option>
           </select>
 
           <input
             placeholder="Buscar cliente / servicio / teléfono"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="border rounded-md p-2 w-full"
+            className="border rounded-md p-2 col-span-2"
           />
 
-          {/* ✅ EXPORT DESKTOP */}
-          <button
-            onClick={handleExport}
-            className="hidden sm:block bg-black text-white px-4 py-2 rounded-md w-full"
-          >
+          <button onClick={handleExport} className="bg-black text-white px-4 py-2 rounded-md">
             Exportar CSV
           </button>
         </div>
 
-        {/* ✅ EXPORT MOBILE */}
-        <button
-          onClick={handleExport}
-          className="block sm:hidden bg-black text-white px-4 py-2 rounded-md w-full"
-        >
-          Exportar CSV
-        </button>
-
-        {/* ✅ TABLA DESKTOP */}
-        <div className="hidden sm:block bg-white rounded-lg shadow p-4 overflow-x-auto">
+        {/* TABLA */}
+        <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
           <TurnsTable data={filtered} loading={loading} />
-        </div>
-
-        {/* ✅ MOBILE CARDS */}
-        <div className="block sm:hidden space-y-4">
-          {filtered.map((a) => (
-            <div
-              key={a.id}
-              className="bg-white rounded-xl shadow p-4 border space-y-2"
-            >
-              <div className="flex justify-between">
-                <span className="font-semibold">
-                  {a.user?.name || "Sin nombre"}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {new Date(a.date).toLocaleDateString()}
-                </span>
-              </div>
-
-              <p className="text-sm">📞 {a.user?.telefono}</p>
-              <p className="text-sm">💄 {a.service?.name}</p>
-              <p className="text-sm">
-                💰 $ {a.servicePrice ?? a.service?.price ?? 0}
-              </p>
-
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                {a.status}
-              </span>
-            </div>
-          ))}
         </div>
       </main>
     </div>
