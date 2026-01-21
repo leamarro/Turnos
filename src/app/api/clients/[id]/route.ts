@@ -8,29 +8,36 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // 1️⃣ Buscar el turno por ID
-    const appointment = await prisma.appointment.findUnique({
-      where: { id: params.id },
+    const telefono = params.id;
+
+    // Buscar todos los turnos de ese teléfono
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        telefono: telefono,
+      },
+      include: {
+        service: {
+          select: { name: true },
+        },
+      },
+      orderBy: {
+        date: "desc",
+      },
     });
 
-    if (!appointment || !appointment.telefono) {
+    if (appointments.length === 0) {
       return NextResponse.json(
         { error: "Cliente no encontrado" },
         { status: 404 }
       );
     }
 
-    // 2️⃣ Buscar todos los turnos de ese teléfono
-    const appointments = await prisma.appointment.findMany({
-      where: { telefono: appointment.telefono },
-      include: { service: true },
-      orderBy: { date: "desc" },
-    });
+    const { name, lastName } = appointments[0];
 
     return NextResponse.json({
-      name: appointment.name,
-      lastName: appointment.lastName,
-      telefono: appointment.telefono,
+      name,
+      lastName,
+      telefono,
       appointments,
     });
   } catch (error) {

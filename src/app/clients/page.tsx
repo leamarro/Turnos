@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Client = {
-  id: string;
+  id: string; // id interno (no se usa para navegar)
   name: string;
   lastName?: string;
   telefono: string;
@@ -20,7 +20,10 @@ export default function ClientsPage() {
   useEffect(() => {
     fetch("/api/clients", { cache: "no-store" })
       .then((res) => res.json())
-      .then(setClients);
+      .then(setClients)
+      .catch((err) => {
+        console.error("ERROR CLIENTS PAGE:", err);
+      });
   }, []);
 
   return (
@@ -39,9 +42,13 @@ export default function ClientsPage() {
           </thead>
           <tbody>
             {clients.map((c) => (
-              <tr key={c.id} className="border-t hover:bg-gray-50">
+              <tr key={c.telefono} className="border-t hover:bg-gray-50">
                 <td className="p-3">
-                  <Link href={`/clients/${c.id}`} className="underline">
+                  {/* ✅ NAVEGAR POR TELÉFONO */}
+                  <Link
+                    href={`/clients/${c.telefono}`}
+                    className="underline font-medium"
+                  >
                     {c.name} {c.lastName ?? ""}
                   </Link>
                 </td>
