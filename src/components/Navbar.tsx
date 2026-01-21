@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -24,83 +24,120 @@ export default function Navbar() {
     window.location.href = "/login";
   }
 
+  const NavLink = ({
+    href,
+    children,
+    onClick,
+  }: {
+    href: string;
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="text-sm text-gray-700 hover:text-black transition"
+    >
+      {children}
+    </Link>
+  );
+
   return (
     <>
-      <nav className="fixed top-0 left-0 w-full z-50 bg-[#F5F3EE] shadow">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/home">
-            <Image src="/logo.png" alt="Logo" width={90} height={90} />
+      {/* ================= NAVBAR ================= */}
+      <nav className="fixed top-0 left-0 w-full z-50 bg-[#F5F3EE]/90 backdrop-blur border-b">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+          {/* LOGO */}
+          <Link href="/home" className="flex items-center">
+            <Image src="/logo.png" alt="Logo" width={70} height={70} priority />
           </Link>
 
-          <button className="sm:hidden" onClick={() => setOpen(true)}>
-            <Menu size={28} />
-          </button>
-
-          <div className="hidden sm:flex gap-6 items-center">
-            <Link href="/home">Inicio</Link>
-            <Link href="/appointments">Reservar Turno</Link>
-
-            <Link href="/clients">Clientes</Link>
-            <Link href="/admin">Panel Admin</Link>
-
-            <Link href="/dashboard">Dashboard</Link>
-            <Link href="/precios">Precios</Link>
+          {/* DESKTOP */}
+          <div className="hidden sm:flex items-center gap-6">
+            <NavLink href="/home">Inicio</NavLink>
+            <NavLink href="/appointments">Reservar</NavLink>
+            <NavLink href="/clients">Clientes</NavLink>
+            <NavLink href="/admin">Admin</NavLink>
+            <NavLink href="/dashboard">Dashboard</NavLink>
+            <NavLink href="/precios">Precios</NavLink>
 
             {username && (
-              <span className="text-sm text-gray-600">
-                👋 {username}
+              <span className="text-xs text-gray-500">
+                {username}
               </span>
             )}
 
             <button
               onClick={handleLogout}
-              className="text-red-600 hover:text-red-700"
+              className="text-sm text-red-600 hover:text-red-700 transition"
             >
               Cerrar sesión
             </button>
           </div>
+
+          {/* MOBILE BUTTON */}
+          <button
+            className="sm:hidden"
+            onClick={() => setOpen(true)}
+            aria-label="Abrir menú"
+          >
+            <Menu size={24} />
+          </button>
         </div>
       </nav>
 
-      {/* Mobile */}
+      {/* ================= OVERLAY ================= */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 z-40"
+          className="fixed inset-0 bg-black/30 z-40"
           onClick={() => setOpen(false)}
         />
       )}
 
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-[#F5F3EE] z-50 transition-transform ${
+      {/* ================= MOBILE DRAWER ================= */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-72 bg-[#F5F3EE] z-50 transform transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex justify-between p-4 border-b">
-          <span className="font-bold">{username}</span>
-          <button onClick={() => setOpen(false)}>
-            <X />
+        <div className="flex items-center justify-between px-4 h-14 border-b">
+          <span className="text-sm font-medium">
+            {username ?? "Menú"}
+          </span>
+          <button onClick={() => setOpen(false)} aria-label="Cerrar menú">
+            <X size={20} />
           </button>
         </div>
 
-        <div className="flex flex-col p-4 gap-4">
-          <Link href="/home" onClick={() => setOpen(false)}>Inicio</Link>
-          <Link href="/appointments" onClick={() => setOpen(false)}>Reservar Turno</Link>
-          
-          <Link href="/clients" onClick={() => setOpen(false)}>Clientes</Link>
-          <Link href="/admin" onClick={() => setOpen(false)}>Panel Admin</Link>
-
-          
-          <Link href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
-          <Link href="/precios" onClick={() => setOpen(false)}>Precios</Link>
+        <nav className="flex flex-col gap-4 px-4 py-6">
+          <NavLink href="/home" onClick={() => setOpen(false)}>
+            Inicio
+          </NavLink>
+          <NavLink href="/appointments" onClick={() => setOpen(false)}>
+            Reservar turno
+          </NavLink>
+          <NavLink href="/clients" onClick={() => setOpen(false)}>
+            Clientes
+          </NavLink>
+          <NavLink href="/admin" onClick={() => setOpen(false)}>
+            Panel admin
+          </NavLink>
+          <NavLink href="/dashboard" onClick={() => setOpen(false)}>
+            Dashboard
+          </NavLink>
+          <NavLink href="/precios" onClick={() => setOpen(false)}>
+            Precios
+          </NavLink>
 
           <button
             onClick={handleLogout}
-            className="text-red-600 text-left"
+            className="flex items-center gap-2 text-sm text-red-600 mt-4"
           >
+            <LogOut size={16} />
             Cerrar sesión
           </button>
-        </div>
-      </div>
+        </nav>
+      </aside>
     </>
   );
 }

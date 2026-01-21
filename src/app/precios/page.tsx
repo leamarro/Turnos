@@ -1,6 +1,7 @@
 "use client";
 
 export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -11,7 +12,7 @@ export default function PreciosPage() {
     prueba: 0,
   });
 
-  // Cargar precios desde la base
+  // Cargar precios
   useEffect(() => {
     async function loadPrices() {
       const res = await axios.get("/api/services/prices");
@@ -28,20 +29,13 @@ export default function PreciosPage() {
     loadPrices();
   }, []);
 
-  // Actualizar valor
   const updatePrice = (field: string, value: string) => {
     setPrices({ ...prices, [field]: Number(value) });
   };
 
-  // Guardar cambios
   const savePrices = async () => {
     try {
-      await axios.put("/api/services/prices", {
-        perfilado: prices.perfilado,
-        maquillaje: prices.maquillaje,
-        prueba: prices.prueba,
-      });
-
+      await axios.put("/api/services/prices", prices);
       alert("Precios actualizados correctamente");
     } catch (err) {
       console.error(err);
@@ -50,47 +44,61 @@ export default function PreciosPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-28 px-4">
-      <h1 className="text-3xl font-bold mb-6">Gestión de Precios</h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-md mx-auto px-4 pt-20 pb-16">
 
-      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-semibold mb-8 text-center">
+          Precios
+        </h1>
 
-        <div className="p-4 border rounded-xl shadow-sm">
-          <label className="font-semibold">Precio Perfilado</label>
-          <input
-            type="number"
-            value={prices.perfilado}
-            onChange={(e) => updatePrice("perfilado", e.target.value)}
-            className="w-full mt-2 p-2 border rounded"
-          />
+        <div className="bg-white rounded-2xl shadow p-6 space-y-6">
+
+          {/* PERFILADO */}
+          <div>
+            <label className="block text-sm text-gray-500 mb-1">
+              Perfilado
+            </label>
+            <input
+              type="number"
+              value={prices.perfilado}
+              onChange={(e) => updatePrice("perfilado", e.target.value)}
+              className="w-full text-lg font-medium bg-transparent border-b border-gray-300 focus:border-black focus:outline-none py-1"
+            />
+          </div>
+
+          {/* MAQUILLAJE */}
+          <div>
+            <label className="block text-sm text-gray-500 mb-1">
+              Maquillaje
+            </label>
+            <input
+              type="number"
+              value={prices.maquillaje}
+              onChange={(e) => updatePrice("maquillaje", e.target.value)}
+              className="w-full text-lg font-medium bg-transparent border-b border-gray-300 focus:border-black focus:outline-none py-1"
+            />
+          </div>
+
+          {/* PRUEBA */}
+          <div>
+            <label className="block text-sm text-gray-500 mb-1">
+              Prueba de maquillaje
+            </label>
+            <input
+              type="number"
+              value={prices.prueba}
+              onChange={(e) => updatePrice("prueba", e.target.value)}
+              className="w-full text-lg font-medium bg-transparent border-b border-gray-300 focus:border-black focus:outline-none py-1"
+            />
+          </div>
+
+          <button
+            onClick={savePrices}
+            className="w-full mt-6 bg-black text-white py-3 rounded-xl font-medium"
+          >
+            Guardar cambios
+          </button>
         </div>
-
-        <div className="p-4 border rounded-xl shadow-sm">
-          <label className="font-semibold">Precio Maquillaje</label>
-          <input
-            type="number"
-            value={prices.maquillaje}
-            onChange={(e) => updatePrice("maquillaje", e.target.value)}
-            className="w-full mt-2 p-2 border rounded"
-          />
-        </div>
-
-        <div className="p-4 border rounded-xl shadow-sm">
-          <label className="font-semibold">Precio Prueba de Maquillaje</label>
-          <input
-            type="number"
-            value={prices.prueba}
-            onChange={(e) => updatePrice("prueba", e.target.value)}
-            className="w-full mt-2 p-2 border rounded"
-          />
-        </div>
-
-        <button
-          onClick={savePrices}
-          className="mt-4 bg-black text-white py-3 rounded-xl hover:bg-gray-900"
-        >
-          Guardar cambios
-        </button>
       </div>
     </div>
   );

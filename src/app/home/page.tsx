@@ -54,9 +54,7 @@ export default function HomePage() {
           return {
             id: a.id,
             date: date.toISOString(),
-            service: {
-              name: a.service?.name ?? "",
-            },
+            service: { name: a.service?.name ?? "" },
             user: {
               name: a.user?.name ?? "",
               lastName: a.user?.lastName ?? "",
@@ -80,18 +78,21 @@ export default function HomePage() {
   };
 
   return (
-    <div className="py-6 px-3 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-center mb-4">
-        Agenda de Turnos
-      </h1>
+    <div className="max-w-4xl mx-auto px-3 pt-4 pb-16">
+      {/* HEADER */}
+      <div className="text-center mb-5">
+        <h1 className="text-xl font-semibold">Agenda</h1>
+        <p className="text-sm text-gray-500">Turnos programados</p>
+      </div>
 
-      <div className="flex justify-center gap-3 mb-4">
+      {/* TOGGLE VIEW */}
+      <div className="flex justify-center gap-2 mb-5">
         <button
           onClick={() => setView("month")}
-          className={`px-4 py-2 rounded-lg transition ${
+          className={`px-4 py-1.5 rounded-full text-sm transition ${
             view === "month"
               ? "bg-black text-white"
-              : "bg-gray-200 hover:bg-gray-300"
+              : "border text-gray-600 hover:bg-gray-100"
           }`}
         >
           Mes
@@ -99,16 +100,17 @@ export default function HomePage() {
 
         <button
           onClick={() => setView("week")}
-          className={`px-4 py-2 rounded-lg transition ${
+          className={`px-4 py-1.5 rounded-full text-sm transition ${
             view === "week"
               ? "bg-black text-white"
-              : "bg-gray-200 hover:bg-gray-300"
+              : "border text-gray-600 hover:bg-gray-100"
           }`}
         >
           Semana
         </button>
       </div>
 
+      {/* CALENDAR */}
       <CalendarGrid
         appointments={appointments}
         view={view}

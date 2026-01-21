@@ -34,10 +34,11 @@ export default function CalendarGrid({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isClient, setIsClient] = useState(false);
 
-  // Evitar errores SSR
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const today = startOfDay(new Date());
 
   const getWeekDays = () => {
     const start = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -45,46 +46,29 @@ export default function CalendarGrid({
   };
 
   const getMonthDays = () => {
-    try {
-      const start = startOfMonth(currentDate);
-      const end = endOfMonth(currentDate);
-      return eachDayOfInterval({ start, end });
-    } catch (e) {
-      console.error("Error generating month days", e);
-      return [];
-    }
+    const start = startOfMonth(currentDate);
+    const end = endOfMonth(currentDate);
+    return eachDayOfInterval({ start, end }).filter((d) => d >= today);
   };
 
-  const today = startOfDay(new Date());
+  const days = view === "week" ? getWeekDays() : getMonthDays();
 
-  const safeMonthDays = Array.isArray(getMonthDays())
-    ? getMonthDays()
-    : [];
-
-  const days =
-    view === "week"
-      ? getWeekDays()
-      : safeMonthDays.filter((d) => d >= today);
-
-  const getAppointmentsByDay = (day: Date) => {
-    return appointments.filter(
+  const getAppointmentsByDay = (day: Date) =>
+    appointments.filter(
       (a) =>
         format(new Date(a.date), "yyyy-MM-dd") ===
         format(day, "yyyy-MM-dd")
     );
-  };
 
-  const next = () => {
-    setCurrentDate((prev) =>
-      view === "week" ? addDays(prev, 7) : addDays(prev, 30)
+  const next = () =>
+    setCurrentDate((d) =>
+      view === "week" ? addDays(d, 7) : addDays(d, 30)
     );
-  };
 
-  const prev = () => {
-    setCurrentDate((prev) =>
-      view === "week" ? addDays(prev, -7) : addDays(prev, -30)
+  const prev = () =>
+    setCurrentDate((d) =>
+      view === "week" ? addDays(d, -7) : addDays(d, -30)
     );
-  };
 
   if (!isClient) return null;
 
@@ -93,49 +77,54 @@ export default function CalendarGrid({
   // ================= MOBILE =================
   if (isMobile) {
     return (
-      <div className="space-y-4 mt-4">
-        <div className="flex justify-between items-center">
-          <button onClick={prev} className="text-xl">◀</button>
-          <h2 className="font-semibold text-lg">
+      <div className="space-y-5 mt-4">
+        <div className="flex items-center justify-between">
+          <button onClick={prev} className="text-gray-500 text-lg">←</button>
+
+          <h2 className="font-semibold">
             {format(
               currentDate,
               view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
               { locale: es }
             )}
           </h2>
-          <button onClick={next} className="text-xl">▶</button>
+
+          <button onClick={next} className="text-gray-500 text-lg">→</button>
         </div>
 
         {days.map((day) => {
           const items = getAppointmentsByDay(day);
+
           return (
             <div
-              key={day.toString()}
-              className="border rounded-xl p-4 bg-white shadow-sm"
+              key={day.toISOString()}
+              className="bg-white rounded-2xl p-4 shadow-sm"
             >
-              <h3 className="font-semibold mb-1">
+              <h3 className="font-medium mb-2">
                 {format(day, "EEEE dd", { locale: es })}
               </h3>
 
               {items.length === 0 && (
-                <p className="text-gray-500 text-sm">Sin turnos</p>
+                <p className="text-sm text-gray-400">Sin turnos</p>
               )}
 
-              {items.map((a) => (
-                <div
-                  key={a.id}
-                  onClick={() => onSelectAppointment?.(a.id)}
-                  className="bg-gray-100 p-2 rounded-lg mt-2 border cursor-pointer hover:bg-gray-200 transition"
-                >
-                  <p className="font-medium">
-                    {a.user.name} {a.user.lastName}
-                  </p>
-                  <p className="text-sm text-gray-600">{a.service.name}</p>
-                  <p className="text-xs text-gray-700">
-                    {format(new Date(a.date), "HH:mm")} hs
-                  </p>
-                </div>
-              ))}
+              <div className="space-y-2">
+                {items.map((a) => (
+                  <div
+                    key={a.id}
+                    onClick={() => onSelectAppointment?.(a.id)}
+                    className="bg-gray-50 rounded-xl px-3 py-2 cursor-pointer hover:bg-gray-100 transition"
+                  >
+                    <p className="text-sm font-medium">
+                      {a.user.name} {a.user.lastName}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {a.service.name} ·{" "}
+                      {format(new Date(a.date), "HH:mm")} hs
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })}
@@ -146,10 +135,10 @@ export default function CalendarGrid({
   // ================= DESKTOP =================
   return (
     <div>
-      <div className="flex justify-between mb-4">
-        <button onClick={prev} className="text-xl">◀</button>
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={prev} className="text-gray-500 text-lg">←</button>
 
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-lg font-semibold">
           {format(
             currentDate,
             view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
@@ -157,34 +146,39 @@ export default function CalendarGrid({
           )}
         </h2>
 
-        <button onClick={next} className="text-xl">▶</button>
+        <button onClick={next} className="text-gray-500 text-lg">→</button>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-3">
         {days.map((day) => {
           const items = getAppointmentsByDay(day);
+
           return (
             <div
-              key={day.toString()}
-              className="border rounded-lg p-2 bg-white min-h-[110px]"
+              key={day.toISOString()}
+              className="bg-white rounded-xl p-3 min-h-[120px] shadow-sm"
             >
-              <p className="text-sm font-semibold mb-1">
+              <p className="text-sm font-medium mb-2 text-gray-700">
                 {format(day, "dd", { locale: es })}
               </p>
 
-              {items.map((a) => (
-                <div
-                  key={a.id}
-                  onClick={() => onSelectAppointment?.(a.id)}
-                  className="bg-gray-100 p-1 rounded mb-1 text-xs border cursor-pointer hover:bg-gray-200 transition"
-                >
-                  <p className="font-medium">
-                    {a.user.name} {a.user.lastName}
-                  </p>
-                  <p>{a.service.name}</p>
-                  <p>{format(new Date(a.date), "HH:mm")} hs</p>
-                </div>
-              ))}
+              <div className="space-y-1">
+                {items.map((a) => (
+                  <div
+                    key={a.id}
+                    onClick={() => onSelectAppointment?.(a.id)}
+                    className="bg-gray-50 rounded-lg px-2 py-1 text-xs cursor-pointer hover:bg-gray-100 transition"
+                  >
+                    <p className="font-medium truncate">
+                      {a.user.name} {a.user.lastName}
+                    </p>
+                    <p className="text-gray-500 truncate">
+                      {a.service.name} ·{" "}
+                      {format(new Date(a.date), "HH:mm")}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })}
