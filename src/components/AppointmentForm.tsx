@@ -40,15 +40,15 @@ export default function AppointmentForm() {
   /* ===================== */
   /* HORA */
   /* ===================== */
-  function formatTime(value: string) {
-    let v = value.replace(/[^\d]/g, "");
-    if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
-    return v.slice(0, 5);
-  }
+function formatTime(value: string) {
+  let v = value.replace(/[^\d]/g, "");
+  if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
+  return v.slice(0, 5);
+}
 
-  function isValidTime(value: string) {
-    return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
-  }
+function isValidTime(value: string) {
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
+}
 
   /* ===================== */
   /* SUBMIT */
@@ -147,20 +147,31 @@ export default function AppointmentForm() {
             />
           </div>
 
-          {/* HORA */}
-          <div className="space-y-1">
-<input
-  type="text"
-  inputMode="numeric"
-  autoComplete="off"
-  placeholder="HH:mm"
-  value={time}
-  onChange={(e) => setTime(formatTime(e.target.value))}
-  className="minimal-input no-time-picker"
-/>
+{/* HORA – sin input nativo */}
+<div className="space-y-1">
+  <label className="text-xs text-gray-500">Hora</label>
 
+  <div
+    contentEditable
+    suppressContentEditableWarning
+    inputMode="numeric"
+    className="minimal-input"
+    onInput={(e) => {
+      const text = e.currentTarget.textContent || "";
+      setTime(formatTime(text));
+      e.currentTarget.textContent = formatTime(text);
+    }}
+    onBlur={(e) => {
+      if (!isValidTime(time)) {
+        e.currentTarget.textContent = "";
+        setTime("");
+      }
+    }}
+  >
+    {time}
+  </div>
+</div>
 
-          </div>
 
           <button
             type="submit"
