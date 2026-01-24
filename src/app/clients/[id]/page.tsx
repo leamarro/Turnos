@@ -14,9 +14,11 @@ type Appointment = {
 };
 
 type Client = {
+  id: string;
   name: string;
   lastName?: string;
-  telefono: string;
+  telefono?: string;
+  instagram?: string;
   appointments: Appointment[];
 };
 
@@ -30,7 +32,7 @@ export default function ClientDetail({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/clients/${params.id}`)
+    fetch(`/api/clients/${params.id}`, { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json();
@@ -63,15 +65,23 @@ export default function ClientDetail({
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-1">
-        {client.name} {client.lastName}
+        {client.name} {client.lastName ?? ""}
       </h1>
 
-      <p className="text-gray-600 mb-6">{client.telefono}</p>
+      <p className="text-gray-600 mb-6">
+        {client.telefono
+          ? `📞 ${client.telefono}`
+          : client.instagram
+          ? `📸 ${client.instagram}`
+          : "Sin contacto"}
+      </p>
 
       <h2 className="font-semibold mb-3">Historial de turnos</h2>
 
       {client.appointments.length === 0 ? (
-        <p className="text-gray-500">Este cliente no tiene turnos.</p>
+        <p className="text-gray-500">
+          Este cliente no tiene turnos.
+        </p>
       ) : (
         <div className="space-y-3">
           {client.appointments.map((a) => (
@@ -79,7 +89,9 @@ export default function ClientDetail({
               key={a.id}
               className="border rounded-xl p-4 bg-white shadow-sm"
             >
-              <p className="font-medium">{a.service.name}</p>
+              <p className="font-medium">
+                {a.service.name}
+              </p>
               <p className="text-sm text-gray-600">
                 {new Date(a.date).toLocaleString()}
               </p>

@@ -149,23 +149,14 @@ export default function AppointmentForm() {
 
           {/* HORA */}
           <div className="space-y-1">
-            <label className="text-xs text-gray-500">Hora</label>
-            {isTouch ? (
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="minimal-input"
-              />
-            ) : (
-              <input
-                type="text"
-                placeholder="HH:mm"
-                value={time}
-                onChange={(e) => setTime(formatTime(e.target.value))}
-                className="minimal-input"
-              />
-            )}
+          <input
+  type="text"
+  placeholder="HH:mm"
+  value={time}
+  onChange={(e) => setTime(formatTime(e.target.value))}
+  className="minimal-input"
+/>
+
           </div>
 
           <button

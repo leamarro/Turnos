@@ -13,6 +13,7 @@ import {
   BadgeCheck,
   Trash2,
   Save,
+  Instagram,
 } from "lucide-react";
 
 type Service = { id: string; name: string };
@@ -24,6 +25,7 @@ type Appointment = {
   name?: string;
   lastName?: string;
   telefono?: string;
+  instagram?: string; // ✅
   service?: { id: string; name?: string };
 };
 
@@ -41,6 +43,7 @@ export default function EditAppointmentPage({
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [instagram, setInstagram] = useState(""); // ✅
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -58,6 +61,7 @@ export default function EditAppointmentPage({
         setName(a.name ?? "");
         setLastName(a.lastName ?? "");
         setTelefono(a.telefono ?? "");
+        setInstagram(a.instagram ?? ""); // ✅
         setServiceId(a.service?.id ?? "");
         setStatus(a.status ?? "pendiente");
 
@@ -79,35 +83,35 @@ export default function EditAppointmentPage({
     loadData();
   }, [id]);
 
-async function handleSave() {
-  if (!name.trim() || !lastName.trim() || !telefono.trim()) {
-    alert("Nombre, apellido y teléfono son obligatorios");
-    return;
-  }
-
-  try {
-    const payload: any = {
-      name: name.trim(),
-      lastName: lastName.trim(),
-      telefono: telefono.trim(),
-      serviceId,
-      status,
-    };
-
-    if (date && time) {
-      payload.date = date;
-      payload.time = time;
+  async function handleSave() {
+    if (!name.trim()) {
+      alert("El nombre es obligatorio");
+      return;
     }
 
-    await axios.put(`/api/appointments?id=${id}`, payload);
+    try {
+      const payload: any = {
+        name: name.trim(),
+        lastName: lastName.trim(),
+        telefono: telefono.trim() || null,
+        instagram: instagram.trim() || null, // ✅
+        serviceId,
+        status,
+      };
 
-    router.push("/admin");
-  } catch (err) {
-    console.error(err);
-    alert("Error al guardar");
+      if (date && time) {
+        payload.date = date;
+        payload.time = time;
+      }
+
+      await axios.put(`/api/appointments?id=${id}`, payload);
+
+      router.push("/admin");
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar");
+    }
   }
-}
-
 
   async function handleDelete() {
     if (!confirm("¿Eliminar el turno definitivamente?")) return;
@@ -154,6 +158,16 @@ async function handleSave() {
             value={telefono}
             onChange={(e) => setTelefono(e.target.value)}
             className="input"
+          />
+        </Field>
+
+        {/* ✅ INSTAGRAM */}
+        <Field icon={<Instagram size={16} />} label="Instagram">
+          <input
+            value={instagram}
+            onChange={(e) => setInstagram(e.target.value)}
+            className="input"
+            placeholder="@usuario"
           />
         </Field>
 

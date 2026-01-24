@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Client = {
-  id: string; // id interno (no se usa para navegar)
+  id: string; // ✅ ID REAL
   name: string;
   lastName?: string;
-  telefono: string;
+  telefono?: string;
+  instagram?: string;
   totalAppointments: number;
   lastAppointment: string | null;
 };
@@ -35,27 +36,36 @@ export default function ClientsPage() {
           <thead className="bg-gray-100">
             <tr>
               <th className="p-3 text-left">Nombre</th>
-              <th className="p-3 text-left">Teléfono</th>
+              <th className="p-3 text-left">Contacto</th>
               <th className="p-3 text-center">Turnos</th>
               <th className="p-3 text-left">Último turno</th>
             </tr>
           </thead>
           <tbody>
             {clients.map((c) => (
-              <tr key={c.telefono} className="border-t hover:bg-gray-50">
+              <tr key={c.id} className="border-t hover:bg-gray-50">
                 <td className="p-3">
-                  {/* ✅ NAVEGAR POR TELÉFONO */}
+                  {/* ✅ NAVEGAR POR ID */}
                   <Link
-                    href={`/clients/${c.telefono}`}
+                    href={`/clients/${c.id}`}
                     className="underline font-medium"
                   >
                     {c.name} {c.lastName ?? ""}
                   </Link>
                 </td>
-                <td className="p-3">{c.telefono}</td>
+
+                <td className="p-3">
+                  {c.telefono
+                    ? c.telefono
+                    : c.instagram
+                    ? c.instagram
+                    : "—"}
+                </td>
+
                 <td className="p-3 text-center">
                   {c.totalAppointments}
                 </td>
+
                 <td className="p-3">
                   {c.lastAppointment
                     ? new Date(c.lastAppointment).toLocaleDateString()

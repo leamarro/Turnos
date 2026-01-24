@@ -1,10 +1,12 @@
-generator client {
-  provider = "prisma-client-js"
-}
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  lastName  String?
+  telefono  String?  @unique
+  instagram String?  @unique
+  createdAt DateTime @default(now())
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  appointments Appointment[]
 }
 
 model Appointment {
@@ -16,30 +18,11 @@ model Appointment {
   name      String?
   lastName  String?
   telefono  String?
-  instagram String?   // ✅ NUEVO CAMPO
+  instagram String?
 
   serviceId String?
-  service   Service?  @relation(fields: [serviceId], references: [id])
+  service   Service? @relation(fields: [serviceId], references: [id])
 
-  userId String?
-  user   User? @relation(fields: [userId], references: [id])
-}
-
-model Service {
-  id           String        @id @default(cuid())
-  name         String
-  duration     Int
-  price        Float
-  createdAt    DateTime      @default(now())
-  appointments Appointment[]
-}
-
-model User {
-  id          String        @id
-  name        String
-  telefono    String        @unique
-  createdAt   DateTime      @default(now())
-  lastName    String?
-
-  appointments Appointment[]  // ✅ nombre en plural + relación clara
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
 }
