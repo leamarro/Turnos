@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -24,18 +24,44 @@ export default function AppointmentForm() {
 
   const [message, setMessage] = useState("");
 
+  /* ===================== */
+  /* DETECTAR MOBILE */
+  /* ===================== */
+  const isMobile = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }, []);
+
+  /* ===================== */
+  /* CARGAR SERVICIOS */
+  /* ===================== */
   useEffect(() => {
     axios.get("/api/services").then((res) => {
       setServices(Array.isArray(res.data) ? res.data : []);
     });
   }, []);
 
+  /* ===================== */
+  /* VALIDAR HORA */
+  /* ===================== */
+  function isValidTime(value: string) {
+    return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
+  }
+
+  /* ===================== */
+  /* SUBMIT */
+  /* ===================== */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
 
     if (!name || !lastName || !telefono || !date || !time || !serviceId) {
       setMessage("Por favor completá todos los campos.");
+      return;
+    }
+
+    if (!isValidTime(time)) {
+      setMessage("Hora inválida. Usá formato HH:mm");
       return;
     }
 
@@ -48,7 +74,7 @@ export default function AppointmentForm() {
         telefono,
         serviceId,
         date: dateTime.toISOString(),
-        status: "confirmed",
+        status: "confirmado", // 👈 confirmado directo
       });
 
       router.push(`/appointments/${res.data.id}`);
@@ -66,47 +92,27 @@ export default function AppointmentForm() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <Input
-            label="Nombre"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <Input placeholder="Nombre" value={name} onChange={setName} />
+          <Input placeholder="Apellido" value={lastName} onChange={setLastName} />
+          <Input placeholder="Teléfono" value={telefono} onChange={setTelefono} />
 
-          <Input
-            label="Apellido"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-
-          <Input
-            label="Teléfono"
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-          />
-
-          <div className="space-y-1">
-            <label className="text-xs text-gray-500">
-              Servicio
-            </label>
-            <select
-              value={serviceId}
-              onChange={(e) => setServiceId(e.target.value)}
-              className="minimal-input"
-            >
-              <option value="">Seleccionar servicio</option>
-              {services.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* SERVICIO */}
+          <select
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value)}
+            className="minimal-input"
+          >
+            <option value="">Seleccionar servicio</option>
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
 
           {/* FECHA */}
           <div className="space-y-1">
-            <label className="text-xs text-gray-500">
-              Fecha
-            </label>
+            <label className="text-xs text-gray-500">Fecha</label>
             <input
               type="date"
               value={date}
@@ -115,20 +121,32 @@ export default function AppointmentForm() {
             />
           </div>
 
-          {/* HORA */}
+          {/* HORA (MAGIA 🔥) */}
           <div className="space-y-1">
-            <label className="text-xs text-gray-500">
-              Hora (HH:mm)
-            </label>
-            <input
-              type="text"
-              placeholder="Ej: 14:30"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="minimal-input"
-            />
-          </div>
+            <label className="text-xs text-gray-500">Hora</label>
 
+            {isMobile ? (
+              /* 📱 Mobile → picker nativo */
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="minimal-input"
+              />
+            ) : (
+              /* 💻 Desktop → input limpio */
+              <input
+                type="text"
+                placeholder="HH:mm"
+                value={time}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^\d:]/g, "");
+                  setTime(v);
+                }}
+                className="minimal-input"
+              />
+            )}
+          </div>
 
           <button
             type="submit"
@@ -150,27 +168,23 @@ export default function AppointmentForm() {
 
 /* ===================== */
 /* INPUT MINIMAL */
-/* ===================== */
+ /* ===================== */
 
 function Input({
-  label,
+  placeholder,
   value,
   onChange,
 }: {
-  label: string;
+  placeholder: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (v: string) => void;
 }) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs text-gray-500">
-        {label}
-      </label>
-      <input
-        value={value}
-        onChange={onChange}
-        className="minimal-input"
-      />
-    </div>
+    <input
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="minimal-input"
+    />
   );
 }
