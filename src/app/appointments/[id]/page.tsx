@@ -109,16 +109,38 @@ Tu turno está confirmado 💄
   /* ========================= */
   /* 📸 INSTAGRAM — DM DIRECTO */
   /* ========================= */
-  const handleSendInstagram = () => {
-    if (!appointment.instagram) return;
+const handleSendInstagram = async () => {
+  if (!appointment.instagram) return;
 
-    const username = appointment.instagram.replace("@", "");
+  const username = appointment.instagram.replace("@", "");
 
-    // DM directo (NO abre perfil)
-    const dmUrl = `https://ig.me/m/${username}`;
+  const message = `Hola ${appointment.name}! 💕✨
 
-    window.open(dmUrl, "_blank", "noopener,noreferrer");
-  };
+Tu turno está confirmado 💄
+
+🧾 Servicio: ${appointment.service?.name ?? "—"}
+📅 Fecha y hora: ${format(
+    new Date(appointment.date),
+    "dd/MM/yyyy HH:mm",
+    { locale: es }
+  )}
+
+¡Te esperamos! 💖`;
+
+  try {
+    await navigator.clipboard.writeText(message);
+  } catch (err) {
+    console.warn("No se pudo copiar el mensaje");
+  }
+
+  // DM directo
+  window.open(
+    `https://ig.me/m/${username}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16 pb-16">
