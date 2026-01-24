@@ -1,4 +1,3 @@
-//forzar re deploy
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
@@ -11,6 +10,7 @@ export async function GET(request: Request) {
     const id = searchParams.get("id");
     const date = searchParams.get("date");
 
+    // 👉 obtener un turno puntual
     if (id) {
       const appointment = await prisma.appointment.findUnique({
         where: { id },
@@ -27,6 +27,7 @@ export async function GET(request: Request) {
       return NextResponse.json(appointment);
     }
 
+    // 👉 listar turnos (opcional por fecha)
     const appointments = await prisma.appointment.findMany({
       where: date
         ? {
@@ -50,13 +51,20 @@ export async function GET(request: Request) {
   }
 }
 
-
 // =========================
-// POST — crear turno 
+// POST — crear turno
 // =========================
 export async function POST(req: Request) {
   try {
-    const { name, lastName, telefono, serviceId, date } = await req.json();
+    const {
+      name,
+      lastName,
+      telefono,
+      instagram,
+      serviceId,
+      date,
+      status,
+    } = await req.json();
 
     if (!name || !lastName || !telefono || !serviceId || !date) {
       return NextResponse.json(
@@ -70,9 +78,12 @@ export async function POST(req: Request) {
         name,
         lastName,
         telefono,
+        instagram: instagram || null, // 👈 guarda @usuario o null
         serviceId,
         date: new Date(date),
+        status: status ?? "pendiente",
       },
+      include: { service: true },
     });
 
     return NextResponse.json(appointment);
@@ -85,8 +96,6 @@ export async function POST(req: Request) {
   }
 }
 
-
-
 // =========================
 // PUT — actualizar turno
 // =========================
@@ -96,7 +105,10 @@ export async function PUT(request: Request) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "ID requerido" },
+        { status: 400 }
+      );
     }
 
     const body = await request.json();
@@ -105,6 +117,7 @@ export async function PUT(request: Request) {
       name: body.name,
       lastName: body.lastName,
       telefono: body.telefono,
+      instagram: body.instagram ?? null,
       serviceId: body.serviceId,
       status: body.status,
     };
@@ -129,7 +142,6 @@ export async function PUT(request: Request) {
   }
 }
 
-
 // =========================
 // DELETE — eliminar turno
 // =========================
@@ -139,17 +151,22 @@ export async function DELETE(request: Request) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "ID requerido" },
+        { status: 400 }
+      );
     }
 
-    await prisma.appointment.delete({ where: { id } });
+    await prisma.appointment.delete({
+      where: { id },
+    });
 
     return NextResponse.json({ message: "Turno eliminado" });
   } catch (error) {
+    console.error(error);
     return NextResponse.json(
       { error: "No se pudo eliminar el turno" },
       { status: 500 }
     );
   }
 }
-

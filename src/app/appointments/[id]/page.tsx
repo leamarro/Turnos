@@ -14,13 +14,15 @@ import {
   BadgeCheck,
   Pencil,
   MessageCircle,
+  Instagram,
 } from "lucide-react";
 
 type Appointment = {
   id: string;
   name: string;
   lastName?: string;
-  telefono: string;
+  telefono?: string;
+  instagram?: string;
   date: string;
   status: string;
   service?: {
@@ -28,7 +30,6 @@ type Appointment = {
   };
 };
 
-/* 🧠 Traducción de estados */
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pendiente",
   confirmed: "Confirmado",
@@ -74,24 +75,49 @@ export default function AppointmentDetail({
   const isConfirmed =
     appointment.status.toLowerCase() === "confirmed" ||
     appointment.status.toLowerCase() === "confirmado";
-  
-    const isPending =
+
+  const isPending =
     appointment.status.toLowerCase() === "pending" ||
     appointment.status.toLowerCase() === "pendiente";
 
+  /* ========================= */
+  /* 📲 WHATSAPP */
+  /* ========================= */
   const handleSendWhatsapp = () => {
+    if (!appointment.telefono) return;
+
     const message = `Hola ${appointment.name} ${
       appointment.lastName ?? ""
-    }! \n\nTu turno ha sido confirmado.\n\nServicio: ${
-      appointment.service?.name ?? "—"
-    }\nFecha y hora: ${format(
+    }! 👋✨
+
+Tu turno está confirmado 💄
+
+🧾 Servicio: ${appointment.service?.name ?? "—"}
+📅 Fecha y hora: ${format(
       new Date(appointment.date),
       "dd/MM/yyyy HH:mm",
       { locale: es }
-    )}\n\n¡Nos vemos pronto!`;
-    const phone = appointment.telefono.replace(/\D/g, ""); // limpia símbolos
+    )}
+
+¡Te esperamos! 💕`;
+
+    const phone = appointment.telefono.replace(/\D/g, "");
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  /* ========================= */
+  /* 📸 INSTAGRAM — DM DIRECTO */
+  /* ========================= */
+  const handleSendInstagram = () => {
+    if (!appointment.instagram) return;
+
+    const username = appointment.instagram.replace("@", "");
+
+    // DM directo (NO abre perfil)
+    const dmUrl = `https://ig.me/m/${username}`;
+
+    window.open(dmUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -118,7 +144,11 @@ export default function AppointmentDetail({
           </Info>
 
           <Info label="Teléfono" icon={<Phone size={16} />}>
-            {appointment.telefono}
+            {appointment.telefono ?? "—"}
+          </Info>
+
+          <Info label="Instagram" icon={<Instagram size={16} />}>
+            {appointment.instagram ?? "—"}
           </Info>
 
           <Info label="Servicio" icon={<Sparkles size={16} />}>
@@ -139,20 +169,33 @@ export default function AppointmentDetail({
 
         </div>
 
-        {/* WhatsApp */}
-        {isConfirmed || isPending && (
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={handleSendWhatsapp}
-              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition"
-            >
-              <MessageCircle size={18} />
-              Enviar WhatsApp
-            </button>
+        {/* 📲 BOTONES */}
+        {(isConfirmed || isPending) && (
+          <div className="mt-6 flex flex-col gap-3">
+
+            {appointment.telefono && (
+              <button
+                onClick={handleSendWhatsapp}
+                className="flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition"
+              >
+                <MessageCircle size={18} />
+                Enviar WhatsApp
+              </button>
+            )}
+
+            {appointment.instagram && (
+              <button
+                onClick={handleSendInstagram}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-xl hover:opacity-90 transition"
+              >
+                <Instagram size={18} />
+                Enviar DM Instagram
+              </button>
+            )}
           </div>
         )}
 
-        <div className="mt-4 flex justify-center">
+        <div className="mt-6 flex justify-center">
           <button
             onClick={() => router.back()}
             className="px-5 py-2 border rounded-xl text-sm hover:bg-gray-100 transition"
@@ -165,6 +208,8 @@ export default function AppointmentDetail({
   );
 }
 
+/* ========================= */
+/* ℹ️ INFO ROW */
 function Info({
   label,
   icon,

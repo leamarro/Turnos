@@ -17,16 +17,13 @@ export default function AppointmentForm() {
 
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [telefono, setTelefono] = useState("");
+  const [telefono, setTelefono] = useState(""); // solo números
+  const [instagram, setInstagram] = useState("");
 
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-
   const [message, setMessage] = useState("");
 
-  /* ===================== */
-  /* DETECTAR TOUCH (REAL) */
-  /* ===================== */
   const isTouch =
     typeof window !== "undefined" &&
     window.matchMedia("(pointer: coarse)").matches;
@@ -41,15 +38,11 @@ export default function AppointmentForm() {
   }, []);
 
   /* ===================== */
-  /* FORMATEAR HORA */
+  /* HORA */
   /* ===================== */
   function formatTime(value: string) {
     let v = value.replace(/[^\d]/g, "");
-
-    if (v.length >= 3) {
-      v = v.slice(0, 2) + ":" + v.slice(2, 4);
-    }
-
+    if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
     return v.slice(0, 5);
   }
 
@@ -65,36 +58,42 @@ export default function AppointmentForm() {
     setMessage("");
 
     if (!name || !lastName || !telefono || !date || !time || !serviceId) {
-      setMessage("Por favor completá todos los campos.");
+      setMessage("Completá todos los campos obligatorios.");
       return;
     }
 
     if (!isValidTime(time)) {
-      setMessage("Hora inválida. Usá formato HH:mm");
+      setMessage("Hora inválida (HH:mm)");
       return;
     }
 
     try {
       const dateTime = new Date(`${date}T${time}`);
 
+      // formateo teléfono final
+      const telefonoFinal = telefono.startsWith("54")
+        ? `+${telefono}`
+        : `+54${telefono}`;
+
       const res = await axios.post("/api/appointments", {
         name,
         lastName,
-        telefono,
+        telefono: telefonoFinal,
+        instagram: instagram || null,
         serviceId,
         date: dateTime.toISOString(),
         status: "confirmado",
       });
 
       router.push(`/appointments/${res.data.id}`);
-    } catch (error) {
-      console.error(error);
-      setMessage("❌ Error al reservar el turno.");
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Error al reservar el turno");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 pt-8 sm:pt-16">
+    <div className="min-h-screen flex justify-center bg-gray-50 px-4 pt-12">
       <div className="w-full max-w-md bg-white rounded-2xl p-6 space-y-6">
         <h2 className="text-2xl font-semibold text-center">
           Reservar turno
@@ -103,7 +102,26 @@ export default function AppointmentForm() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <Input placeholder="Nombre" value={name} onChange={setName} />
           <Input placeholder="Apellido" value={lastName} onChange={setLastName} />
-          <Input placeholder="Teléfono" value={telefono} onChange={setTelefono} />
+
+          {/* TELÉFONO */}
+          <Input
+            placeholder="Teléfono (ej: 1123456789)"
+            value={telefono}
+            onChange={(v) => {
+              const onlyNumbers = v.replace(/[^\d]/g, "");
+              setTelefono(onlyNumbers);
+            }}
+          />
+
+          {/* INSTAGRAM */}
+          <Input
+            placeholder="Instagram (opcional)"
+            value={instagram}
+            onChange={(v) => {
+              if (!v) return setInstagram("");
+              setInstagram("@" + v.replace(/@+/g, ""));
+            }}
+          />
 
           <select
             value={serviceId}
@@ -129,12 +147,10 @@ export default function AppointmentForm() {
             />
           </div>
 
-          {/* HORA — SOLUCIÓN DEFINITIVA */}
+          {/* HORA */}
           <div className="space-y-1">
             <label className="text-xs text-gray-500">Hora</label>
-
             {isTouch ? (
-              /* 📱 MOBILE → NATIVO */
               <input
                 type="time"
                 value={time}
@@ -142,10 +158,8 @@ export default function AppointmentForm() {
                 className="minimal-input"
               />
             ) : (
-              /* 💻 DESKTOP → TEXTO LIMPIO */
               <input
                 type="text"
-                inputMode="numeric"
                 placeholder="HH:mm"
                 value={time}
                 onChange={(e) => setTime(formatTime(e.target.value))}
@@ -156,7 +170,7 @@ export default function AppointmentForm() {
 
           <button
             type="submit"
-            className="w-full bg-black text-white py-3 rounded-xl font-medium hover:opacity-90 transition"
+            className="w-full bg-black text-white py-3 rounded-xl font-medium"
           >
             Confirmar turno
           </button>
@@ -173,9 +187,7 @@ export default function AppointmentForm() {
 }
 
 /* ===================== */
-/* INPUT MINIMAL */
- /* ===================== */
-
+/* INPUT */
 function Input({
   placeholder,
   value,

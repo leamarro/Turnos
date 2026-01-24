@@ -8,17 +8,21 @@ datasource db {
 }
 
 model Appointment {
-  id        String   @id @default(cuid())
-  date      DateTime
-  serviceId String?
+  id         String   @id @default(cuid())
+  date       DateTime
+  status     String   @default("pending")
   createdAt DateTime @default(now())
-  userId    String?
-  status    String   @default("pending")
+
   name      String?
   lastName  String?
   telefono  String?
-  service   Service? @relation(fields: [serviceId], references: [id])
-  User      User?    @relation(fields: [userId], references: [id])
+  instagram String?   // ✅ NUEVO CAMPO
+
+  serviceId String?
+  service   Service?  @relation(fields: [serviceId], references: [id])
+
+  userId String?
+  user   User? @relation(fields: [userId], references: [id])
 }
 
 model Service {
@@ -36,5 +40,6 @@ model User {
   telefono    String        @unique
   createdAt   DateTime      @default(now())
   lastName    String?
-  Appointment Appointment[]
+
+  appointments Appointment[]  // ✅ nombre en plural + relación clara
 }
