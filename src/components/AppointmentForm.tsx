@@ -149,13 +149,16 @@ export default function AppointmentForm() {
 
           {/* HORA */}
           <div className="space-y-1">
-          <input
+<input
   type="text"
+  inputMode="numeric"
+  autoComplete="off"
   placeholder="HH:mm"
   value={time}
   onChange={(e) => setTime(formatTime(e.target.value))}
-  className="minimal-input"
+  className="minimal-input no-time-picker"
 />
+
 
           </div>
 

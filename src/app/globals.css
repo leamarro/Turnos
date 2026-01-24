@@ -187,3 +187,22 @@ input:focus, select:focus, textarea:focus {
 .minimal-input::-webkit-calendar-picker-indicator {
   opacity: 0.5;
 }
+
+/* 🔥 MATA PICKER DE HORA EN CHROME MOBILE */
+.no-time-picker::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+.no-time-picker::-webkit-clear-button {
+  display: none;
+}
+
+.no-time-picker::-webkit-inner-spin-button {
+  display: none;
+}
+
+.no-time-picker {
+  -webkit-appearance: none;
+  appearance: none;
+}
