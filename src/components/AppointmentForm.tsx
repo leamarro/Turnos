@@ -11,6 +11,9 @@ type Service = {
 
 export default function AppointmentForm() {
   const router = useRouter();
+const isMobile =
+  typeof window !== "undefined" &&
+  /Android|iPhone|iPad/i.test(navigator.userAgent);
 
   const [services, setServices] = useState<Service[]>([]);
   const [serviceId, setServiceId] = useState("");
@@ -116,17 +119,27 @@ export default function AppointmentForm() {
           </div>
 
           {/* HORA */}
-          <div className="space-y-1">
-            <label className="text-xs text-gray-500">
-              Hora
-            </label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="minimal-input"
-            />
-          </div>
+<div className="space-y-1">
+  <label className="text-xs text-gray-500">Hora</label>
+
+  {isMobile ? (
+    <input
+      type="time"
+      value={time}
+      onChange={(e) => setTime(e.target.value)}
+      className="minimal-input"
+    />
+  ) : (
+    <input
+      type="text"
+      placeholder="HH:mm"
+      value={time}
+      onChange={(e) => setTime(e.target.value)}
+      className="minimal-input"
+    />
+  )}
+</div>
+
 
           <button
             type="submit"
