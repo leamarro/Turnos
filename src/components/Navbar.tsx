@@ -57,7 +57,7 @@ export default function Navbar() {
             <NavLink href="/home">Inicio</NavLink>
             <NavLink href="/appointments">Reservar</NavLink>
             <NavLink href="/clients">Clientes</NavLink>
-            <NavLink href="/admin">Admin</NavLink>
+            <NavLink href="/admin">Turnos</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/precios">Precios</NavLink>
 
@@ -120,7 +120,7 @@ export default function Navbar() {
             Clientes
           </NavLink>
           <NavLink href="/admin" onClick={() => setOpen(false)}>
-            Panel admin
+            Turnos
           </NavLink>
           <NavLink href="/dashboard" onClick={() => setOpen(false)}>
             Dashboard

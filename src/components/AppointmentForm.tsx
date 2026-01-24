@@ -48,9 +48,8 @@ export default function AppointmentForm() {
         telefono,
         serviceId,
         date: dateTime.toISOString(),
-        status: "confirmed", // <--- agregado para que sea confirmado
+        status: "confirmed",
       });
-
 
       router.push(`/appointments/${res.data.id}`);
     } catch (error) {
@@ -68,51 +67,66 @@ export default function AppointmentForm() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <Input
-            placeholder="Nombre"
+            label="Nombre"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
 
           <Input
-            placeholder="Apellido"
+            label="Apellido"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />
 
           <Input
-            placeholder="Teléfono"
+            label="Teléfono"
             value={telefono}
             onChange={(e) => setTelefono(e.target.value)}
           />
 
-          <select
-            value={serviceId}
-            onChange={(e) => setServiceId(e.target.value)}
-            className="minimal-input"
-          >
-            <option value="">Seleccionar servicio</option>
-            {services.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">
+              Servicio
+            </label>
+            <select
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              className="minimal-input"
+            >
+              <option value="">Seleccionar servicio</option>
+              {services.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {/* 📅 FECHA */}
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="minimal-input"
-          />
+          {/* FECHA */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">
+              Fecha
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="minimal-input"
+            />
+          </div>
 
-          {/* ⏰ HORA */}
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="minimal-input"
-          />
+          {/* HORA */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">
+              Hora
+            </label>
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="minimal-input"
+            />
+          </div>
 
           <button
             type="submit"
@@ -137,20 +151,24 @@ export default function AppointmentForm() {
 /* ===================== */
 
 function Input({
-  placeholder,
+  label,
   value,
   onChange,
 }: {
-  placeholder: string;
+  label: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <input
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-      className="minimal-input"
-    />
+    <div className="space-y-1">
+      <label className="text-xs text-gray-500">
+        {label}
+      </label>
+      <input
+        value={value}
+        onChange={onChange}
+        className="minimal-input"
+      />
+    </div>
   );
 }
