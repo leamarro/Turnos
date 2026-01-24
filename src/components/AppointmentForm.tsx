@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -25,12 +25,11 @@ export default function AppointmentForm() {
   const [message, setMessage] = useState("");
 
   /* ===================== */
-  /* DETECTAR MOBILE */
+  /* DETECTAR TOUCH (REAL) */
   /* ===================== */
-  const isMobile = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  }, []);
+  const isTouch =
+    typeof window !== "undefined" &&
+    window.matchMedia("(pointer: coarse)").matches;
 
   /* ===================== */
   /* CARGAR SERVICIOS */
@@ -42,8 +41,18 @@ export default function AppointmentForm() {
   }, []);
 
   /* ===================== */
-  /* VALIDAR HORA */
+  /* FORMATEAR HORA */
   /* ===================== */
+  function formatTime(value: string) {
+    let v = value.replace(/[^\d]/g, "");
+
+    if (v.length >= 3) {
+      v = v.slice(0, 2) + ":" + v.slice(2, 4);
+    }
+
+    return v.slice(0, 5);
+  }
+
   function isValidTime(value: string) {
     return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
   }
@@ -74,7 +83,7 @@ export default function AppointmentForm() {
         telefono,
         serviceId,
         date: dateTime.toISOString(),
-        status: "confirmado", // 👈 confirmado directo
+        status: "confirmado",
       });
 
       router.push(`/appointments/${res.data.id}`);
@@ -96,7 +105,6 @@ export default function AppointmentForm() {
           <Input placeholder="Apellido" value={lastName} onChange={setLastName} />
           <Input placeholder="Teléfono" value={telefono} onChange={setTelefono} />
 
-          {/* SERVICIO */}
           <select
             value={serviceId}
             onChange={(e) => setServiceId(e.target.value)}
@@ -121,12 +129,12 @@ export default function AppointmentForm() {
             />
           </div>
 
-          {/* HORA (MAGIA 🔥) */}
+          {/* HORA — SOLUCIÓN DEFINITIVA */}
           <div className="space-y-1">
             <label className="text-xs text-gray-500">Hora</label>
 
-            {isMobile ? (
-              /* 📱 Mobile → picker nativo */
+            {isTouch ? (
+              /* 📱 MOBILE → NATIVO */
               <input
                 type="time"
                 value={time}
@@ -134,15 +142,13 @@ export default function AppointmentForm() {
                 className="minimal-input"
               />
             ) : (
-              /* 💻 Desktop → input limpio */
+              /* 💻 DESKTOP → TEXTO LIMPIO */
               <input
                 type="text"
+                inputMode="numeric"
                 placeholder="HH:mm"
                 value={time}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/[^\d:]/g, "");
-                  setTime(v);
-                }}
+                onChange={(e) => setTime(formatTime(e.target.value))}
                 className="minimal-input"
               />
             )}
