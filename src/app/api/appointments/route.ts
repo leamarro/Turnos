@@ -99,21 +99,23 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "ID requerido" }, { status: 400 });
     }
 
-    const { name, lastName, telefono, serviceId, date, time, status } =
-      await request.json();
+    const body = await request.json();
 
-    const dateTime = new Date(`${date}T${time}`);
+    const data: any = {
+      name: body.name,
+      lastName: body.lastName,
+      telefono: body.telefono,
+      serviceId: body.serviceId,
+      status: body.status,
+    };
+
+    if (body.date && body.time) {
+      data.date = new Date(`${body.date}T${body.time}`);
+    }
 
     const updated = await prisma.appointment.update({
       where: { id },
-      data: {
-        name,
-        lastName,
-        telefono,
-        serviceId,
-        date: dateTime,
-        status,
-      },
+      data,
       include: { service: true },
     });
 
@@ -126,6 +128,7 @@ export async function PUT(request: Request) {
     );
   }
 }
+
 
 // =========================
 // DELETE — eliminar turno

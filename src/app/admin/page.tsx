@@ -63,10 +63,17 @@ export default function AdminPanel() {
     );
 
     const normalized = Array.isArray(res.data)
-      ? res.data.map((a: Appointment) => ({
-          ...a,
-          status: STATUS_MAP[a.status] ?? a.status,
-        }))
+      ? res.data
+          .map((a: Appointment) => ({
+            ...a,
+            status: STATUS_MAP[a.status] ?? a.status,
+          }))
+          // 🔥 ORDEN POR FECHA + HORA
+          .sort(
+            (a: Appointment, b: Appointment) =>
+              new Date(a.date).getTime() -
+              new Date(b.date).getTime()
+          )
       : [];
 
     setAppointments(normalized);
@@ -150,12 +157,17 @@ export default function AdminPanel() {
 
             <p className="text-sm">{a.service?.name}</p>
 
-            <p className="text-sm flex items-center gap-2 text-gray-600">
-              <CalendarDays size={14} />
-              {format(new Date(a.date), "dd/MM/yyyy HH:mm", {
-                locale: es,
-              })}
-            </p>
+            <div className="text-sm text-gray-600 flex flex-col">
+              <span className="flex items-center gap-2">
+                <CalendarDays size={14} />
+                {format(new Date(a.date), "dd/MM/yyyy", {
+                  locale: es,
+                })}
+              </span>
+              <span className="text-xs text-gray-500 ml-6">
+                {format(new Date(a.date), "HH:mm")} hs
+              </span>
+            </div>
 
             <select
               value={a.status}
@@ -196,7 +208,7 @@ export default function AdminPanel() {
               <th className="p-3 text-left">Cliente</th>
               <th className="p-3 text-left">Teléfono</th>
               <th className="p-3 text-left">Servicio</th>
-              <th className="p-3 text-left">Fecha</th>
+              <th className="p-3 text-left">Fecha / Hora</th>
               <th className="p-3 text-left">Estado</th>
               <th className="p-3 text-center">Acciones</th>
             </tr>
@@ -208,12 +220,22 @@ export default function AdminPanel() {
                 <td className="p-3">
                   {a.name} {a.lastName}
                 </td>
+
                 <td className="p-3">{a.telefono}</td>
+
                 <td className="p-3">{a.service?.name}</td>
+
                 <td className="p-3">
-                  {format(new Date(a.date), "dd/MM/yyyy HH:mm", {
-                    locale: es,
-                  })}
+                  <div className="flex flex-col">
+                    <span>
+                      {format(new Date(a.date), "dd/MM/yyyy", {
+                        locale: es,
+                      })}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {format(new Date(a.date), "HH:mm")} hs
+                    </span>
+                  </div>
                 </td>
 
                 <td className="p-3">

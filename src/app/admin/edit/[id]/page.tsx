@@ -79,29 +79,35 @@ export default function EditAppointmentPage({
     loadData();
   }, [id]);
 
-  async function handleSave() {
-    if (!name.trim() || !lastName.trim() || !telefono.trim()) {
-      alert("Nombre, apellido y teléfono son obligatorios");
-      return;
-    }
-
-    try {
-      await axios.put(`/api/appointments?id=${id}`, {
-        name: name.trim(),
-        lastName: lastName.trim(),
-        telefono: telefono.trim(),
-        serviceId,
-        date,
-        time,
-        status,
-      });
-
-      router.push("/admin");
-    } catch (err) {
-      console.error(err);
-      alert("Error al guardar");
-    }
+async function handleSave() {
+  if (!name.trim() || !lastName.trim() || !telefono.trim()) {
+    alert("Nombre, apellido y teléfono son obligatorios");
+    return;
   }
+
+  try {
+    const payload: any = {
+      name: name.trim(),
+      lastName: lastName.trim(),
+      telefono: telefono.trim(),
+      serviceId,
+      status,
+    };
+
+    if (date && time) {
+      payload.date = date;
+      payload.time = time;
+    }
+
+    await axios.put(`/api/appointments?id=${id}`, payload);
+
+    router.push("/admin");
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar");
+  }
+}
+
 
   async function handleDelete() {
     if (!confirm("¿Eliminar el turno definitivamente?")) return;
