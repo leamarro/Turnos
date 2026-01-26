@@ -80,9 +80,17 @@ export async function PUT(request: Request) {
       instagram: body.instagram || null,
       status: body.status,
       serviceId: body.serviceId,
-      ...(body.date && body.time
-        ? { date: new Date(`${body.date}T${body.time}`) }
-        : {}),
+...(body.date && body.time
+  ? {
+      date: new Date(
+        Number(body.date.split("-")[0]),
+        Number(body.date.split("-")[1]) - 1,
+        Number(body.date.split("-")[2]),
+        Number(body.time.split(":")[0]),
+        Number(body.time.split(":")[1])
+      ),
+    }
+  : {}),
     },
   });
 

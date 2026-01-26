@@ -25,7 +25,6 @@ export default function AppointmentForm() {
 
   const [message, setMessage] = useState("");
 
-  const timeRef = useRef<HTMLDivElement>(null);
 
   /* ===================== */
   /* CARGAR SERVICIOS */
@@ -36,14 +35,6 @@ export default function AppointmentForm() {
     });
   }, []);
 
-  /* ===================== */
-  /* SINCRONIZAR HORA */
-  /* ===================== */
-  useEffect(() => {
-    if (timeRef.current && timeRef.current.textContent !== time) {
-      timeRef.current.textContent = time;
-    }
-  }, [time]);
 
   /* ===================== */
   /* HORA */
@@ -95,7 +86,7 @@ export default function AppointmentForm() {
         telefono: telefonoFinal,
         instagram: instagram || null,
         serviceId,
-        date: dateTime.toISOString(),
+        date: dateTime,
         status: "confirmado",
       });
 
@@ -157,32 +148,32 @@ export default function AppointmentForm() {
             />
           </div>
 
-          {/* HORA */}
-          <div className="space-y-1">
-            <label className="text-xs text-gray-500">Hora</label>
+{/* HORA */}
+<div className="space-y-1">
+  <label className="text-xs text-gray-500">Hora</label>
 
-            <div
-              ref={timeRef}
-              contentEditable
-              suppressContentEditableWarning
-              inputMode="numeric"
-              className="minimal-input"
-              onInput={(e) => {
-                const raw = e.currentTarget.textContent || "";
-                const formatted = formatTime(raw);
-                setTime(formatted);
-                e.currentTarget.textContent = formatted;
-              }}
-              onBlur={() => {
-                if (!isValidTime(time)) {
-                  setTime("");
-                  if (timeRef.current) {
-                    timeRef.current.textContent = "";
-                  }
-                }
-              }}
-            />
-          </div>
+  <input
+    type="text"
+    inputMode="numeric"
+    placeholder="HH:mm"
+    value={time}
+    onChange={(e) => {
+      let v = e.target.value.replace(/[^\d]/g, "");
+
+      if (v.length >= 3) {
+        v = v.slice(0, 2) + ":" + v.slice(2, 4);
+      }
+
+      setTime(v.slice(0, 5));
+    }}
+    onBlur={() => {
+      if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(time)) {
+        setTime("");
+      }
+    }}
+    className="minimal-input"
+  />
+</div>
 
           <button
             type="submit"

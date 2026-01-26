@@ -9,7 +9,7 @@ datasource db {
 
 model Appointment {
   id         String   @id @default(cuid())
-  date       DateTime
+  date DateTime @db.Timestamp
   status     String   @default("pending")
   createdAt  DateTime @default(now())
 
