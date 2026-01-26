@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -17,16 +17,15 @@ export default function AppointmentForm() {
 
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [telefono, setTelefono] = useState(""); // solo números
+  const [telefono, setTelefono] = useState("");
   const [instagram, setInstagram] = useState("");
 
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+
   const [message, setMessage] = useState("");
 
-  const isTouch =
-    typeof window !== "undefined" &&
-    window.matchMedia("(pointer: coarse)").matches;
+  const timeRef = useRef<HTMLDivElement>(null);
 
   /* ===================== */
   /* CARGAR SERVICIOS */
@@ -38,17 +37,26 @@ export default function AppointmentForm() {
   }, []);
 
   /* ===================== */
+  /* SINCRONIZAR HORA */
+  /* ===================== */
+  useEffect(() => {
+    if (timeRef.current && timeRef.current.textContent !== time) {
+      timeRef.current.textContent = time;
+    }
+  }, [time]);
+
+  /* ===================== */
   /* HORA */
   /* ===================== */
-function formatTime(value: string) {
-  let v = value.replace(/[^\d]/g, "");
-  if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
-  return v.slice(0, 5);
-}
+  function formatTime(value: string) {
+    let v = value.replace(/[^\d]/g, "");
+    if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
+    return v.slice(0, 5);
+  }
 
-function isValidTime(value: string) {
-  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
-}
+  function isValidTime(value: string) {
+    return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
+  }
 
   /* ===================== */
   /* SUBMIT */
@@ -70,7 +78,6 @@ function isValidTime(value: string) {
     try {
       const dateTime = new Date(`${date}T${time}`);
 
-      // formateo teléfono final
       const telefonoFinal = telefono.startsWith("54")
         ? `+${telefono}`
         : `+54${telefono}`;
@@ -103,24 +110,20 @@ function isValidTime(value: string) {
           <Input placeholder="Nombre" value={name} onChange={setName} />
           <Input placeholder="Apellido" value={lastName} onChange={setLastName} />
 
-          {/* TELÉFONO */}
           <Input
             placeholder="Teléfono (ej: 1123456789)"
             value={telefono}
-            onChange={(v) => {
-              const onlyNumbers = v.replace(/[^\d]/g, "");
-              setTelefono(onlyNumbers);
-            }}
+            onChange={(v) =>
+              setTelefono(v.replace(/[^\d]/g, ""))
+            }
           />
 
-          {/* INSTAGRAM */}
           <Input
             placeholder="Instagram (opcional)"
             value={instagram}
-            onChange={(v) => {
-              if (!v) return setInstagram("");
-              setInstagram("@" + v.replace(/@+/g, ""));
-            }}
+            onChange={(v) =>
+              setInstagram(v ? "@" + v.replace(/@+/g, "") : "")
+            }
           />
 
           <select
@@ -147,31 +150,32 @@ function isValidTime(value: string) {
             />
           </div>
 
-{/* HORA – sin input nativo */}
-<div className="space-y-1">
-  <label className="text-xs text-gray-500">Hora</label>
+          {/* HORA */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">Hora</label>
 
-  <div
-    contentEditable
-    suppressContentEditableWarning
-    inputMode="numeric"
-    className="minimal-input"
-    onInput={(e) => {
-      const text = e.currentTarget.textContent || "";
-      setTime(formatTime(text));
-      e.currentTarget.textContent = formatTime(text);
-    }}
-    onBlur={(e) => {
-      if (!isValidTime(time)) {
-        e.currentTarget.textContent = "";
-        setTime("");
-      }
-    }}
-  >
-    {time}
-  </div>
-</div>
-
+            <div
+              ref={timeRef}
+              contentEditable
+              suppressContentEditableWarning
+              inputMode="numeric"
+              className="minimal-input"
+              onInput={(e) => {
+                const raw = e.currentTarget.textContent || "";
+                const formatted = formatTime(raw);
+                setTime(formatted);
+                e.currentTarget.textContent = formatted;
+              }}
+              onBlur={() => {
+                if (!isValidTime(time)) {
+                  setTime("");
+                  if (timeRef.current) {
+                    timeRef.current.textContent = "";
+                  }
+                }
+              }}
+            />
+          </div>
 
           <button
             type="submit"
