@@ -55,7 +55,7 @@ export default function AppointmentForm() {
           telefono,
         },
         serviceId,
-        date: dateTime.toISOString(),
+        date: dateTime,
       });
 
       setMessage("✅ Turno reservado con éxito!");
