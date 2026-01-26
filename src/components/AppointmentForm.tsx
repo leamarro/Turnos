@@ -76,7 +76,14 @@ export default function AppointmentForm() {
     }
 
     try {
-      const dateTime = new Date(`${date}T${time}`);
+      const dateTime = new Date(
+  Number(date.split("-")[0]),
+  Number(date.split("-")[1]) - 1,
+  Number(date.split("-")[2]),
+  Number(time.split(":")[0]),
+  Number(time.split(":")[1])
+);
+
 
       const telefonoFinal = telefono.startsWith("54")
         ? `+${telefono}`
