@@ -65,13 +65,20 @@ export default function EditAppointmentPage({
         setServiceId(a.service?.id ?? "");
         setStatus(a.status ?? "pendiente");
 
-        if (a.date) {
-          const d = new Date(a.date);
-          if (!isNaN(d.getTime())) {
-            setDate(d.toISOString().slice(0, 10));
-            setTime(d.toTimeString().slice(0, 5));
-          }
-        }
+if (a.date) {
+  const d = new Date(a.date);
+  if (!isNaN(d.getTime())) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+
+    setDate(`${yyyy}-${mm}-${dd}`);
+    setTime(`${hh}:${mi}`);
+  }
+}
+
 
         setServices(Array.isArray(sv.data) ? sv.data : []);
       } catch (err) {
