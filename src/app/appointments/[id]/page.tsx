@@ -111,8 +111,6 @@ Tu turno está confirmado 💄
   /* ========================= */
 const handleSendInstagram = async () => {
   if (!appointment.instagram) return;
-  const [copied, setCopied] = useState(false);
-
   const username = appointment.instagram.replace("@", "");
 
   const message = `Hola ${appointment.name}! 💕✨
