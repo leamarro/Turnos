@@ -8,12 +8,34 @@ import StatCard from "@/components/StatCard";
 import TurnsTable from "@/components/TurnsTable";
 import MonthlyIncomeByServiceChart from "@/components/MonthlyIncomeByServiceChart";
 
+/* =========================
+   TYPES (alineados con Prisma)
+========================= */
 type Appointment = {
   id: string;
   date: string;
   status: string;
-  service: { id: string; name: string; price?: number } | null;
-  user: { id: string; name?: string | null; telefono?: string | null } | null;
+
+  // datos guardados directamente en Appointment
+  name?: string | null;
+  lastName?: string | null;
+  telefono?: string | null;
+  instagram?: string | null;
+
+  service: {
+    id: string;
+    name: string;
+    price?: number;
+  } | null;
+
+  // relación opcional
+  user: {
+    id: string;
+    name?: string | null;
+    lastName?: string | null;
+    telefono?: string | null;
+  } | null;
+
   servicePrice?: number | null;
 };
 
@@ -21,20 +43,24 @@ export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // filtros dashboard
+  /* =========================
+     FILTROS DASHBOARD
+  ========================= */
   const [q, setQ] = useState("");
   const [from, setFrom] = useState<string | null>(null);
   const [to, setTo] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  // filtros export
+  /* =========================
+     FILTROS EXPORT
+  ========================= */
   const [exportMonth, setExportMonth] = useState("all");
   const [exportService, setExportService] = useState("all");
 
-  // =========================
-  // FETCH
-  // =========================
+  /* =========================
+     FETCH
+  ========================= */
   useEffect(() => {
     const load = async () => {
       try {
@@ -51,17 +77,26 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  // =========================
-  // FILTROS DASHBOARD
-  // =========================
+  /* =========================
+     HELPERS
+  ========================= */
+  const getClientName = (a: Appointment) =>
+    `${a.name ?? a.user?.name ?? ""} ${a.lastName ?? a.user?.lastName ?? ""}`.trim();
+
+  const getClientPhone = (a: Appointment) =>
+    a.telefono ?? a.user?.telefono ?? "";
+
+  /* =========================
+     FILTROS DASHBOARD
+  ========================= */
   const filtered = useMemo(() => {
     return appointments.filter((a) => {
       const d = new Date(a.date);
       const qq = q.toLowerCase();
 
       if (q) {
-        const name = a.user?.name?.toLowerCase() ?? "";
-        const phone = a.user?.telefono ?? "";
+        const name = getClientName(a).toLowerCase();
+        const phone = getClientPhone(a);
         const service = a.service?.name?.toLowerCase() ?? "";
         if (!name.includes(qq) && !phone.includes(qq) && !service.includes(qq))
           return false;
@@ -82,33 +117,32 @@ export default function DashboardPage() {
     });
   }, [appointments, q, from, to, selectedMonth, selectedStatus]);
 
-  // =========================
-  // MÉTRICAS
-  // =========================
+  /* =========================
+     MÉTRICAS
+  ========================= */
   const totalTurns = filtered.length;
 
-  const incomeMonth = useMemo(() => {
-    return filtered.reduce(
-      (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
-      0
-    );
-  }, [filtered]);
+  const incomeMonth = useMemo(
+    () =>
+      filtered.reduce(
+        (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
+        0
+      ),
+    [filtered]
+  );
 
   const topService = useMemo(() => {
     const acc: Record<string, number> = {};
-
     filtered.forEach((a) => {
       const name = a.service?.name ?? "Sin servicio";
       acc[name] = (acc[name] ?? 0) + 1;
     });
-
-    const sorted = Object.entries(acc).sort((a, b) => b[1] - a[1]);
-    return sorted[0]?.[0] ?? "—";
+    return Object.entries(acc).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
   }, [filtered]);
 
-  // =========================
-  // OPCIONES
-  // =========================
+  /* =========================
+     OPCIONES
+  ========================= */
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
     appointments.forEach((a) => {
@@ -126,9 +160,9 @@ export default function DashboardPage() {
     return [...map.entries()];
   }, [appointments]);
 
-  // =========================
-  // EXPORT CSV
-  // =========================
+  /* =========================
+     EXPORT CSV
+  ========================= */
   const exportData = useMemo(() => {
     return appointments.filter((a) => {
       const d = new Date(a.date);
@@ -156,8 +190,8 @@ export default function DashboardPage() {
             hour: "2-digit",
             minute: "2-digit",
           }),
-          cliente:`${a.name ?? a.user?.name ?? ""} ${a.lastName ?? a.user?.lastName ?? ""}`.trim(),
-          telefono:a.telefono ?? a.user?.telefono ?? "",
+          cliente: getClientName(a),
+          telefono: getClientPhone(a),
           servicio: a.service?.name ?? "",
           precio: a.servicePrice ?? a.service?.price ?? 0,
         };
@@ -221,9 +255,7 @@ export default function DashboardPage() {
             >
               <option value="all">Todos los meses</option>
               {availableMonths.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
+                <option key={m} value={m}>{m}</option>
               ))}
             </select>
 
@@ -234,9 +266,7 @@ export default function DashboardPage() {
             >
               <option value="all">Todos los servicios</option>
               {services.map(([id, name]) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
+                <option key={id} value={id}>{name}</option>
               ))}
             </select>
 
