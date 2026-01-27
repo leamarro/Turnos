@@ -170,7 +170,7 @@ export default function DashboardPage() {
         {/* GRÁFICO */}
         <div className="bg-white rounded-2xl p-4 shadow">
           <h2 className="font-medium mb-3">Ingresos por servicio</h2>
-          <MonthlyIncomeByServiceChart selectedMonth={selectedMonth} />
+          <MonthlyIncomeByServiceChart data={filtered} />
         </div>
 
         {/* STATS */}
