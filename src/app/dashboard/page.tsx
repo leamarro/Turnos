@@ -52,33 +52,31 @@ export default function DashboardPage() {
   // FILTROS DASHBOARD
   // =========================
   const filtered = useMemo(() => {
-    return appointments
-      .filter((a) => {
-        const d = new Date(a.date);
-        const qq = q.toLowerCase();
+    return appointments.filter((a) => {
+      const d = new Date(a.date);
+      const qq = q.toLowerCase();
 
-        if (q) {
-          const name = a.user?.name?.toLowerCase() ?? "";
-          const phone = a.user?.telefono ?? "";
-          const service = a.service?.name?.toLowerCase() ?? "";
-          if (!name.includes(qq) && !phone.includes(qq) && !service.includes(qq))
-            return false;
-        }
-
-        if (from && d < new Date(`${from}T00:00:00`)) return false;
-        if (to && d > new Date(`${to}T23:59:59`)) return false;
-
-        if (selectedMonth !== "all") {
-          const [y, m] = selectedMonth.split("-").map(Number);
-          if (d.getFullYear() !== y || d.getMonth() + 1 !== m) return false;
-        }
-
-        if (selectedStatus !== "all" && a.status !== selectedStatus)
+      if (q) {
+        const name = a.user?.name?.toLowerCase() ?? "";
+        const phone = a.user?.telefono ?? "";
+        const service = a.service?.name?.toLowerCase() ?? "";
+        if (!name.includes(qq) && !phone.includes(qq) && !service.includes(qq))
           return false;
+      }
 
-        return true;
-      })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      if (from && d < new Date(`${from}T00:00:00`)) return false;
+      if (to && d > new Date(`${to}T23:59:59`)) return false;
+
+      if (selectedMonth !== "all") {
+        const [y, m] = selectedMonth.split("-").map(Number);
+        if (d.getFullYear() !== y || d.getMonth() + 1 !== m) return false;
+      }
+
+      if (selectedStatus !== "all" && a.status !== selectedStatus)
+        return false;
+
+      return true;
+    });
   }, [appointments, q, from, to, selectedMonth, selectedStatus]);
 
   // =========================
@@ -108,14 +106,14 @@ export default function DashboardPage() {
     0
   );
 
-  const topService =
-    filtered
-      .reduce<Record<string, number>>((acc, a) => {
-        const name = a.service?.name ?? "Sin servicio";
-        acc[name] = (acc[name] ?? 0) + 1;
-        return acc;
-      }, {})
-      |> Object.entries(#).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+  const topService = useMemo(() => {
+    const map = new Map<string, number>();
+    filtered.forEach((a) => {
+      const name = a.service?.name ?? "Sin servicio";
+      map.set(name, (map.get(name) ?? 0) + 1);
+    });
+    return [...map.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+  }, [filtered]);
 
   // =========================
   // OPCIONES
@@ -141,21 +139,13 @@ export default function DashboardPage() {
   // EXPORT CSV
   // =========================
   const handleExport = () => {
-    const nameParts = [
-      "turnos",
-      exportMonth !== "all" ? exportMonth : null,
-      exportService !== "all"
-        ? services.find(([id]) => id === exportService)?.[1]
-        : null,
-    ].filter(Boolean);
-
     exportToCsv(
-      `${nameParts.join("-")}.csv`,
+      "turnos.csv",
       exportData.map((a) => {
         const d = new Date(a.date);
         return {
-          fecha: d.toLocaleDateString(),
-          hora: d.toLocaleTimeString([], {
+          fecha: d.toLocaleDateString("es"),
+          hora: d.toLocaleTimeString("es", {
             hour: "2-digit",
             minute: "2-digit",
           }),
@@ -175,7 +165,10 @@ export default function DashboardPage() {
         {/* GRÁFICO */}
         <div className="bg-white rounded-2xl p-4 shadow">
           <h2 className="font-medium mb-3">Ingresos por servicio</h2>
-          <MonthlyIncomeByServiceChart data={filtered} />
+          <MonthlyIncomeByServiceChart
+            data={filtered}
+            selectedMonth={selectedMonth}
+          />
         </div>
 
         {/* STATS */}
