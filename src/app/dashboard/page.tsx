@@ -41,6 +41,9 @@ export default function DashboardPage() {
         const res = await fetch("/api/appointments", { cache: "no-store" });
         const data = await res.json();
         setAppointments(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+        setAppointments([]);
       } finally {
         setLoading(false);
       }
@@ -80,39 +83,27 @@ export default function DashboardPage() {
   }, [appointments, q, from, to, selectedMonth, selectedStatus]);
 
   // =========================
-  // FILTROS EXPORT
-  // =========================
-  const exportData = useMemo(() => {
-    return appointments.filter((a) => {
-      const d = new Date(a.date);
-
-      if (exportMonth !== "all") {
-        const [y, m] = exportMonth.split("-").map(Number);
-        if (d.getFullYear() !== y || d.getMonth() + 1 !== m) return false;
-      }
-
-      if (exportService !== "all" && a.service?.id !== exportService)
-        return false;
-
-      return true;
-    });
-  }, [appointments, exportMonth, exportService]);
-
-  // =========================
   // MÉTRICAS
   // =========================
-  const incomeMonth = filtered.reduce(
-    (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
-    0
-  );
+  const totalTurns = filtered.length;
+
+  const incomeMonth = useMemo(() => {
+    return filtered.reduce(
+      (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
+      0
+    );
+  }, [filtered]);
 
   const topService = useMemo(() => {
-    const map = new Map<string, number>();
+    const acc: Record<string, number> = {};
+
     filtered.forEach((a) => {
       const name = a.service?.name ?? "Sin servicio";
-      map.set(name, (map.get(name) ?? 0) + 1);
+      acc[name] = (acc[name] ?? 0) + 1;
     });
-    return [...map.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+
+    const sorted = Object.entries(acc).sort((a, b) => b[1] - a[1]);
+    return sorted[0]?.[0] ?? "—";
   }, [filtered]);
 
   // =========================
@@ -138,6 +129,22 @@ export default function DashboardPage() {
   // =========================
   // EXPORT CSV
   // =========================
+  const exportData = useMemo(() => {
+    return appointments.filter((a) => {
+      const d = new Date(a.date);
+
+      if (exportMonth !== "all") {
+        const [y, m] = exportMonth.split("-").map(Number);
+        if (d.getFullYear() !== y || d.getMonth() + 1 !== m) return false;
+      }
+
+      if (exportService !== "all" && a.service?.id !== exportService)
+        return false;
+
+      return true;
+    });
+  }, [appointments, exportMonth, exportService]);
+
   const handleExport = () => {
     exportToCsv(
       "turnos.csv",
@@ -162,6 +169,30 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 pt-20 pb-16 space-y-8">
 
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="minimal-input max-w-xs"
+          >
+            <option value="all">Todos los meses</option>
+            {availableMonths.map((m) => {
+              const [y, mo] = m.split("-");
+              return (
+                <option key={m} value={m}>
+                  {new Date(Number(y), Number(mo) - 1).toLocaleDateString("es", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
         {/* GRÁFICO */}
         <div className="bg-white rounded-2xl p-4 shadow">
           <h2 className="font-medium mb-3">Ingresos por servicio</h2>
@@ -173,7 +204,7 @@ export default function DashboardPage() {
 
         {/* STATS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Turnos" value={filtered.length.toString()} />
+          <StatCard title="Turnos" value={totalTurns.toString()} />
           <StatCard title="Ingresos" value={`$ ${incomeMonth}`} />
           <StatCard title="Servicio top" value={topService} />
         </div>
@@ -190,7 +221,9 @@ export default function DashboardPage() {
             >
               <option value="all">Todos los meses</option>
               {availableMonths.map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m} value={m}>
+                  {m}
+                </option>
               ))}
             </select>
 
@@ -201,7 +234,9 @@ export default function DashboardPage() {
             >
               <option value="all">Todos los servicios</option>
               {services.map(([id, name]) => (
-                <option key={id} value={id}>{name}</option>
+                <option key={id} value={id}>
+                  {name}
+                </option>
               ))}
             </select>
 
