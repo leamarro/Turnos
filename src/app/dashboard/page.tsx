@@ -156,8 +156,8 @@ export default function DashboardPage() {
             hour: "2-digit",
             minute: "2-digit",
           }),
-          cliente: a.user?.name ?? "",
-          telefono: a.user?.telefono ?? "",
+          cliente:`${a.name ?? a.user?.name ?? ""} ${a.lastName ?? a.user?.lastName ?? ""}`.trim(),
+          telefono:a.telefono ?? a.user?.telefono ?? "",
           servicio: a.service?.name ?? "",
           precio: a.servicePrice ?? a.service?.price ?? 0,
         };
