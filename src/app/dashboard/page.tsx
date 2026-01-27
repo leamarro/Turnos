@@ -37,8 +37,7 @@ export default function DashboardPage() {
         const res = await fetch("/api/appointments", { cache: "no-store" });
         const data = await res.json();
         setAppointments(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error(err);
+      } catch {
         setAppointments([]);
       } finally {
         setLoading(false);
@@ -121,19 +120,22 @@ export default function DashboardPage() {
   }, [appointments]);
 
   // =========================
-  // EXPORT
+  // EXPORT CSV
   // =========================
   const handleExport = () => {
     exportToCsv(
       "turnos.csv",
-      filtered.map((a) => ({
-        date: new Date(a.date).toLocaleString(),
-        client: a.user?.name ?? "",
-        telefono: a.user?.telefono ?? "",
-        service: a.service?.name ?? "",
-        price: a.servicePrice ?? a.service?.price ?? 0,
-        status: a.status,
-      }))
+      filtered.map((a) => {
+        const d = new Date(a.date);
+        return {
+          fecha: d.toLocaleDateString("es"),
+          hora: d.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" }),
+          cliente: a.user?.name ?? "",
+          telefono: a.user?.telefono ?? "",
+          servicio: a.service?.name ?? "",
+          precio: a.servicePrice ?? a.service?.price ?? 0,
+        };
+      })
     );
   };
 
@@ -167,8 +169,8 @@ export default function DashboardPage() {
 
         {/* GRÁFICO */}
         <div className="bg-white rounded-2xl p-4 shadow">
-          <h2 className="font-medium mb-3">Ingresos por mes</h2>
-          <MonthlyIncomeByServiceChart selectedMonth={selectedMonth} />
+          <h2 className="font-medium mb-3">Ingresos por servicio</h2>
+          <MonthlyIncomeByServiceChart data={filtered} />
         </div>
 
         {/* STATS */}
@@ -181,18 +183,26 @@ export default function DashboardPage() {
 
         {/* FILTROS */}
         <div className="bg-white rounded-2xl p-4 shadow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-          <input
-            type="date"
-            value={from ?? ""}
-            onChange={(e) => setFrom(e.target.value || null)}
-            className="minimal-input"
-          />
-          <input
-            type="date"
-            value={to ?? ""}
-            onChange={(e) => setTo(e.target.value || null)}
-            className="minimal-input"
-          />
+
+          <div>
+            <label className="text-xs text-gray-500">Desde</label>
+            <input
+              type="date"
+              value={from ?? ""}
+              onChange={(e) => setFrom(e.target.value || null)}
+              className="minimal-input w-full"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500">Hasta</label>
+            <input
+              type="date"
+              value={to ?? ""}
+              onChange={(e) => setTo(e.target.value || null)}
+              className="minimal-input w-full"
+            />
+          </div>
 
           <select
             value={selectedStatus}
