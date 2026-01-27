@@ -111,6 +111,7 @@ Tu turno está confirmado 💄
   /* ========================= */
 const handleSendInstagram = async () => {
   if (!appointment.instagram) return;
+  const [copied, setCopied] = useState(false);
 
   const username = appointment.instagram.replace("@", "");
 
@@ -126,14 +127,10 @@ Tu turno está confirmado 💄
   )}
 
 ¡Te esperamos! 💖`;
+  
+try { await navigator.clipboard.writeText(message); } catch (err) { console.warn("No se pudo copiar el mensaje"); }
 
-try {
-  await navigator.clipboard.writeText(message);
-  alert("📋 Mensaje copiado. Pegalo en el chat de Instagram 💕");
-} catch {
-  alert("Abrimos Instagram. Copiá el mensaje manualmente ✨");
-}
-
+  
 
   // DM directo
 window.open(
