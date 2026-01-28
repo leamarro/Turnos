@@ -20,45 +20,49 @@ type Appointment = {
   name?: string;
   lastName?: string;
   telefono?: string;
-  status?: string;
   date: string;
   service?: { name?: string };
 };
 
 /* ========================= */
-/* ⏱️ TIEMPO RELATIVO */
+/* ⏱️ ESTADO TEMPORAL REAL */
 /* ========================= */
-function getTimeState(date: string) {
-  const diff = new Date(date).getTime() - Date.now();
+function getTimeInfo(date: string) {
+  const now = new Date();
+  const d = new Date(date);
+  const diffMs = d.getTime() - now.getTime();
+  const diffMin = diffMs / 1000 / 60;
 
-  if (diff < 0) return "past";
-  if (diff < 1000 * 60 * 60) return "soon"; // < 1h
-  return "future";
+  if (diffMs < 0) return { state: "past", diffMin };
+  if (diffMin <= 60) return { state: "very-soon", diffMin };
+  if (diffMin <= 240) return { state: "soon", diffMin };
+  return { state: "future", diffMin };
 }
 
-const TIME_STYLE: Record<string, string> = {
-  past: "opacity-50 bg-gray-50",
-  soon: "bg-green-100 border-l-4 border-green-500",
-  future: "bg-white",
-};
+function getCardStyle(state: string) {
+  switch (state) {
+    case "very-soon":
+      return "bg-green-200 border-l-4 border-green-600";
+    case "soon":
+      return "bg-green-100 border-l-4 border-green-400";
+    case "future":
+      return "bg-white";
+    case "past":
+      return "bg-gray-50 opacity-50";
+    default:
+      return "bg-white";
+  }
+}
 
 /* ========================= */
-/* 📅 FILTRO FRONTEND */
+/* 📅 FILTRO POR DÍA (SAFE) */
 /* ========================= */
-function filterByDate(list: Appointment[], date?: string) {
-  if (!date) return list;
-
-  const selected = new Date(date);
-  selected.setHours(0, 0, 0, 0);
-
-  return list.filter((a) => {
-    const d = new Date(a.date);
-    return (
-      d.getFullYear() === selected.getFullYear() &&
-      d.getMonth() === selected.getMonth() &&
-      d.getDate() === selected.getDate()
-    );
-  });
+function sameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 export default function AdminPanel() {
@@ -73,7 +77,7 @@ export default function AdminPanel() {
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
 
-    const normalized = Array.isArray(res.data)
+    const ordered = Array.isArray(res.data)
       ? res.data.sort(
           (a: Appointment, b: Appointment) =>
             new Date(a.date).getTime() -
@@ -81,7 +85,7 @@ export default function AdminPanel() {
         )
       : [];
 
-    setAllAppointments(normalized);
+    setAllAppointments(ordered);
   }
 
   useEffect(() => {
@@ -92,11 +96,20 @@ export default function AdminPanel() {
   /* FILTRADO + ORDEN */
   /* ========================= */
   const appointments = useMemo(() => {
-    const filtered = filterByDate(allAppointments, filterDate);
+    let list = [...allAppointments];
 
-    return filtered.sort((a, b) => {
-      const ta = getTimeState(a.date);
-      const tb = getTimeState(b.date);
+    // 📅 FILTRO FRONTEND
+    if (filterDate) {
+      const selected = new Date(`${filterDate}T00:00:00`);
+      list = list.filter((a) =>
+        sameDay(new Date(a.date), selected)
+      );
+    }
+
+    // ⏱️ ORDEN: futuros primero, pasados al final
+    return list.sort((a, b) => {
+      const ta = getTimeInfo(a.date).state;
+      const tb = getTimeInfo(b.date).state;
 
       if (ta === "past" && tb !== "past") return 1;
       if (ta !== "past" && tb === "past") return -1;
@@ -155,24 +168,24 @@ export default function AdminPanel() {
         }`}
       >
         {appointments.map((a) => {
-          const timeState = getTimeState(a.date);
+          const info = getTimeInfo(a.date);
 
           return (
             <div
               key={a.id}
-              className={`rounded-2xl p-4 shadow transition ${TIME_STYLE[timeState]}`}
+              className={`rounded-2xl p-4 shadow transition ${getCardStyle(
+                info.state
+              )}`}
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold flex items-center gap-2">
-                    <User size={16} />
-                    {a.name} {a.lastName}
-                  </p>
-                  <p className="text-sm text-gray-600 flex items-center gap-2">
-                    <Phone size={14} />
-                    {a.telefono}
-                  </p>
-                </div>
+              <div>
+                <p className="font-semibold flex items-center gap-2">
+                  <User size={16} />
+                  {a.name} {a.lastName}
+                </p>
+                <p className="text-sm text-gray-600 flex items-center gap-2">
+                  <Phone size={14} />
+                  {a.telefono}
+                </p>
               </div>
 
               <p className="text-sm mt-2">
@@ -212,75 +225,6 @@ export default function AdminPanel() {
 
         {appointments.length === 0 && (
           <p className="text-center text-sm text-gray-500">
-            No hay turnos para esta fecha
-          </p>
-        )}
-      </div>
-
-      {/* ================= DESKTOP ================= */}
-      <div className="hidden sm:block bg-white rounded-2xl shadow overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 text-left">Cliente</th>
-              <th className="p-3 text-left">Teléfono</th>
-              <th className="p-3 text-left">Servicio</th>
-              <th className="p-3 text-left">Fecha / Hora</th>
-              <th className="p-3 text-center">Acciones</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {appointments.map((a) => (
-              <tr
-                key={a.id}
-                className={`border-t ${
-                  getTimeState(a.date) === "past"
-                    ? "opacity-50"
-                    : ""
-                }`}
-              >
-                <td className="p-3">
-                  {a.name} {a.lastName}
-                </td>
-                <td className="p-3">{a.telefono}</td>
-                <td className="p-3">{a.service?.name}</td>
-                <td className="p-3">
-                  <div className="flex flex-col">
-                    <span>
-                      {format(new Date(a.date), "dd/MM/yyyy", {
-                        locale: es,
-                      })}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {format(new Date(a.date), "HH:mm")} hs
-                    </span>
-                  </div>
-                </td>
-                <td className="p-3 text-center">
-                  <div className="flex justify-center gap-4">
-                    <button
-                      onClick={() =>
-                        router.push(`/admin/edit/${a.id}`)
-                      }
-                    >
-                      <Pencil size={18} />
-                    </button>
-                    <button
-                      onClick={() => deleteAppointment(a.id)}
-                      className="text-red-600"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {appointments.length === 0 && (
-          <p className="text-center p-6 text-gray-500">
             No hay turnos para esta fecha
           </p>
         )}
