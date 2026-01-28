@@ -74,15 +74,12 @@ export default function AdminPanel() {
   /* FETCH */
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
-
     const ordered = Array.isArray(res.data)
       ? res.data.sort(
           (a: Appointment, b: Appointment) =>
-            new Date(a.date).getTime() -
-            new Date(b.date).getTime()
+            new Date(a.date).getTime() - new Date(b.date).getTime()
         )
       : [];
-
     setAllAppointments(ordered);
   }
 
@@ -172,7 +169,13 @@ export default function AdminPanel() {
     // PINTAR FONDO COMPLETO
     const bg = card.querySelector(".card-bg") as HTMLDivElement;
     if (bg) {
-      bg.style.opacity = `${Math.min(Math.abs(dx)/100, 1)}`;
+      if (dx > 0) {
+        bg.style.backgroundColor = "#16a34a"; // verde editar
+        bg.style.opacity = `${Math.min(dx / 100, 1)}`;
+      } else {
+        bg.style.backgroundColor = "#dc2626"; // rojo eliminar
+        bg.style.opacity = `${Math.min(-dx / 100, 1)}`;
+      }
     }
   }
 
@@ -201,9 +204,7 @@ export default function AdminPanel() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
-      <h1 className="text-2xl font-semibold text-center mb-6">
-        Turnos
-      </h1>
+      <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
 
       {/* FILTROS */}
       <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
@@ -271,10 +272,7 @@ export default function AdminPanel() {
               onTouchEnd={e=>handleSwipeEnd(e,a.id)}
             >
               {/* FONDO COMPLETO */}
-              <div className="card-bg absolute inset-0 flex justify-between items-center px-4 bg-white">
-                <span className="text-green-600 font-bold">Editar</span>
-                <span className="text-red-600 font-bold">Eliminar</span>
-              </div>
+              <div className="card-bg absolute inset-0 flex justify-between items-center px-4 text-white"></div>
 
               {/* TARJETA MOVIBLE */}
               <div className={`card-content relative p-4 rounded-2xl shadow transition ${getCardStyle(info.state)} ${isNow ? "ring-2 ring-green-400" : ""}`}>
@@ -302,9 +300,7 @@ export default function AdminPanel() {
         })}
 
         {appointments.length === 0 && (
-          <p className="text-center text-sm text-gray-500">
-            No hay turnos para este filtro
-          </p>
+          <p className="text-center text-sm text-gray-500">No hay turnos para este filtro</p>
         )}
       </div>
 
