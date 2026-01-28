@@ -26,7 +26,7 @@ type Appointment = {
   service?: { name?: string };
 };
 
-/* ================= TIME HELPERS ================= */
+/* ================= TIME ================= */
 
 function getTimeInfo(date: string) {
   const now = new Date();
@@ -40,16 +40,18 @@ function getTimeInfo(date: string) {
 }
 
 function getCardStyle(state: string) {
-  switch (state) {
-    case "very-soon":
-      return "bg-green-300 border-l-4 border-green-700";
-    case "soon":
-      return "bg-green-200 border-l-4 border-green-500";
-    case "past":
-      return "bg-gray-50 opacity-40";
-    default:
-      return "bg-white";
-  }
+  if (state === "very-soon")
+    return "bg-green-300 border-l-4 border-green-700";
+  if (state === "soon")
+    return "bg-green-200 border-l-4 border-green-500";
+  if (state === "past") return "bg-gray-50 opacity-40";
+  return "bg-white";
+}
+
+/* ================= HAPTIC ================= */
+
+function vibrate(ms = 20) {
+  if ("vibrate" in navigator) navigator.vibrate(ms);
 }
 
 /* ================= COMPONENT ================= */
@@ -71,7 +73,7 @@ export default function AdminPanel() {
     fetchAppointments();
   }, []);
 
-  /* 🔁 Reordenar cada minuto */
+  /* 🔁 reorder every minute */
   useEffect(() => {
     const i = setInterval(() => {
       setAppointments((prev) =>
@@ -81,7 +83,7 @@ export default function AdminPanel() {
             new Date(b.date).getTime()
         )
       );
-    }, 60_000);
+    }, 60000);
     return () => clearInterval(i);
   }, []);
 
@@ -116,95 +118,138 @@ export default function AdminPanel() {
 
   function SwipeCard({ a }: { a: Appointment }) {
     const startX = useRef(0);
+    const startY = useRef(0);
+    const pressTimer = useRef<any>(null);
+
     const [offset, setOffset] = useState(0);
-    const [vibrated, setVibrated] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     const THRESHOLD = 90;
 
-    function vibrate(ms = 20) {
-      if ("vibrate" in navigator) {
-        navigator.vibrate(ms);
-      }
+    /* 🧲 Elastic resistance */
+    function elastic(dx: number) {
+      const limit = 120;
+      if (Math.abs(dx) < limit) return dx;
+      return limit + (dx - limit) * 0.25;
     }
 
     function onTouchStart(e: React.TouchEvent) {
       startX.current = e.touches[0].clientX;
-      setVibrated(false);
+      startY.current = e.touches[0].clientY;
+
+      pressTimer.current = setTimeout(() => {
+        vibrate(25);
+        setMenuOpen(true);
+      }, 500);
     }
 
     function onTouchMove(e: React.TouchEvent) {
       const dx = e.touches[0].clientX - startX.current;
-      setOffset(dx);
+      const dy = e.touches[0].clientY - startY.current;
 
-      if (Math.abs(dx) > THRESHOLD && !vibrated) {
-        vibrate(15);
-        setVibrated(true);
+      if (Math.abs(dy) > 10) {
+        clearTimeout(pressTimer.current);
+        return;
       }
+
+      clearTimeout(pressTimer.current);
+      setOffset(elastic(dx));
     }
 
     function onTouchEnd() {
+      clearTimeout(pressTimer.current);
+
       if (offset > THRESHOLD) {
-        vibrate(30);
+        vibrate(20);
         router.push(`/admin/edit/${a.id}`);
       } else if (offset < -THRESHOLD) {
-        vibrate(30);
+        vibrate(20);
         deleteAppointment(a.id);
       }
+
       setOffset(0);
     }
 
     const info = getTimeInfo(a.date);
 
     return (
-      <div className="relative overflow-hidden rounded-2xl">
-        {/* ACTION BACKGROUND */}
-        <div className="absolute inset-0 flex justify-between items-center px-5 text-white text-sm">
-          <div className="flex items-center gap-2 bg-blue-500 px-3 py-2 rounded-full">
-            <Pencil size={16} />
-            Editar
-          </div>
-          <div className="flex items-center gap-2 bg-red-500 px-3 py-2 rounded-full">
-            <Trash2 size={16} />
-            Eliminar
-          </div>
-        </div>
+      <>
+        {/* LONG PRESS MENU */}
+        {menuOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center"
+            onClick={() => setMenuOpen(false)}
+          >
+            <div
+              className="bg-white rounded-2xl p-4 w-64 space-y-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() =>
+                  router.push(`/admin/edit/${a.id}`)
+                }
+                className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-gray-100"
+              >
+                <Pencil size={18} /> Editar
+              </button>
 
-        {/* CARD */}
-        <div
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          style={{ transform: `translateX(${offset}px)` }}
-          className={`relative z-10 rounded-2xl p-4 shadow transition-transform duration-200 ${getCardStyle(
-            info.state
-          )}`}
-        >
-          <p className="font-semibold flex items-center gap-2">
-            <User size={16} />
-            {a.name} {a.lastName}
-          </p>
-
-          <p className="text-sm text-gray-600 flex items-center gap-2">
-            <Phone size={14} />
-            {a.telefono}
-          </p>
-
-          <p className="text-sm mt-2">{a.service?.name}</p>
-
-          <div className="text-sm text-gray-600 mt-2">
-            <div className="flex items-center gap-2">
-              <CalendarDays size={14} />
-              {format(new Date(a.date), "dd/MM/yyyy", {
-                locale: es,
-              })}
+              <button
+                onClick={() => deleteAppointment(a.id)}
+                className="flex items-center gap-3 w-full p-3 rounded-xl text-red-600 hover:bg-red-50"
+              >
+                <Trash2 size={18} /> Eliminar
+              </button>
             </div>
-            <p className="text-xs text-gray-500 ml-6">
-              {format(new Date(a.date), "HH:mm")} hs ·{" "}
-              {info.label}
+          </div>
+        )}
+
+        {/* SWIPE */}
+        <div className="relative overflow-hidden rounded-2xl">
+          <div className="absolute inset-0 flex justify-between items-center px-5 text-white text-sm">
+            <div className="bg-blue-500 px-3 py-2 rounded-full">
+              Editar
+            </div>
+            <div className="bg-red-500 px-3 py-2 rounded-full">
+              Eliminar
+            </div>
+          </div>
+
+          <div
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            style={{ transform: `translateX(${offset}px)` }}
+            className={`relative z-10 rounded-2xl p-4 shadow transition-transform duration-200 ${getCardStyle(
+              info.state
+            )}`}
+          >
+            <p className="font-semibold flex items-center gap-2">
+              <User size={16} />
+              {a.name} {a.lastName}
             </p>
+
+            <p className="text-sm text-gray-600 flex items-center gap-2">
+              <Phone size={14} />
+              {a.telefono}
+            </p>
+
+            <p className="text-sm mt-2">{a.service?.name}</p>
+
+            <div className="text-sm text-gray-600 mt-2">
+              <div className="flex items-center gap-2">
+                <CalendarDays size={14} />
+                {format(new Date(a.date), "dd/MM/yyyy", {
+                  locale: es,
+                })}
+              </div>
+              <p className="text-xs text-gray-500 ml-6">
+                {format(new Date(a.date), "HH:mm")} hs ·{" "}
+                {info.label}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
