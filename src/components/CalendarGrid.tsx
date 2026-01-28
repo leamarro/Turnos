@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   format,
   startOfWeek,
@@ -33,17 +33,21 @@ export default function CalendarGrid({
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isClient, setIsClient] = useState(false);
-  const todayRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const touchStartX = useRef<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    setIsMobile(window.innerWidth < 640);
+
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const today = startOfDay(new Date());
 
-  /* ================= DAYS ================= */
+  /* ================= FECHAS ================= */
+
   const getWeekDays = () => {
     const start = startOfWeek(currentDate, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -52,10 +56,20 @@ export default function CalendarGrid({
   const getMonthDays = () => {
     const start = startOfMonth(currentDate);
     const end = endOfMonth(currentDate);
-    return eachDayOfInterval({ start, end });
+
+    const allDays = eachDayOfInterval({ start, end });
+
+    // 🔑 MOBILE: arrancar desde hoy
+    if (isMobile) {
+      return allDays.filter((d) => d >= today);
+    }
+
+    return allDays;
   };
 
   const days = view === "week" ? getWeekDays() : getMonthDays();
+
+  /* ================= TURNOS ================= */
 
   const getAppointmentsByDay = (day: Date) =>
     appointments
@@ -69,7 +83,6 @@ export default function CalendarGrid({
           new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
-  /* ================= NAV ================= */
   const next = () =>
     setCurrentDate((d) =>
       view === "week" ? addDays(d, 7) : addDays(d, 30)
@@ -80,59 +93,17 @@ export default function CalendarGrid({
       view === "week" ? addDays(d, -7) : addDays(d, -30)
     );
 
-  const goToToday = () => {
-    setCurrentDate(new Date());
-    setTimeout(() => {
-      todayRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 150);
-  };
-
   if (!isClient) return null;
-
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-
-  /* ================= AUTO SCROLL A HOY ================= */
-  useEffect(() => {
-    if (isMobile && view === "month" && todayRef.current) {
-      todayRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }, [isMobile, view, currentDate]);
-
-  /* ================= SWIPE ================= */
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-
-    if (Math.abs(diff) > 60) {
-      diff > 0 ? next() : prev();
-    }
-    touchStartX.current = null;
-  };
 
   /* ================= MOBILE ================= */
   if (isMobile) {
     return (
-      <div
-        ref={containerRef}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        className="space-y-5 mt-4 transition-all duration-300"
-      >
+      <div className="space-y-5 mt-4">
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
 
-          <h2 className="font-semibold">
+          <h2 className="font-semibold capitalize">
             {format(
               currentDate,
               view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
@@ -143,19 +114,20 @@ export default function CalendarGrid({
           <button onClick={next} className="text-gray-500 text-lg">→</button>
         </div>
 
+        {/* DAYS */}
         {days.map((day) => {
           const items = getAppointmentsByDay(day);
           const isToday =
             format(day, "yyyy-MM-dd") ===
-            format(new Date(), "yyyy-MM-dd");
+            format(today, "yyyy-MM-dd");
 
           return (
             <div
-              ref={isToday ? todayRef : null}
               key={day.toISOString()}
               className="bg-white rounded-2xl p-4 shadow-sm"
             >
-              <h3 className="flex items-center gap-2 font-medium mb-2 capitalize">
+              {/* DAY HEADER */}
+              <h3 className="flex items-center gap-2 font-medium mb-3 capitalize">
                 <span>{format(day, "EEEE", { locale: es })}</span>
 
                 <span
@@ -200,25 +172,17 @@ export default function CalendarGrid({
             </div>
           );
         })}
-
-        {/* FLOATING TODAY BUTTON */}
-        <button
-          onClick={goToToday}
-          className="fixed bottom-6 right-4 bg-black text-white text-sm px-4 py-2 rounded-full shadow-lg active:scale-95 transition"
-        >
-          Hoy
-        </button>
       </div>
     );
   }
 
-  /* ================= DESKTOP (igual que antes) ================= */
+  /* ================= DESKTOP ================= */
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <button onClick={prev} className="text-gray-500 text-lg">←</button>
 
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg font-semibold capitalize">
           {format(
             currentDate,
             view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
@@ -232,14 +196,23 @@ export default function CalendarGrid({
       <div className="grid grid-cols-7 gap-3">
         {days.map((day) => {
           const items = getAppointmentsByDay(day);
+          const isToday =
+            format(day, "yyyy-MM-dd") ===
+            format(today, "yyyy-MM-dd");
 
           return (
             <div
               key={day.toISOString()}
               className="bg-white rounded-xl p-3 min-h-[140px] shadow-sm"
             >
-              <p className="text-sm font-medium mb-2 text-gray-700">
-                {format(day, "dd", { locale: es })}
+              <p
+                className={`text-sm font-medium mb-2 flex items-center justify-center w-6 h-6 rounded-full ${
+                  isToday
+                    ? "bg-black text-white"
+                    : "text-gray-700"
+                }`}
+              >
+                {format(day, "dd")}
               </p>
 
               {items.length === 0 && (
