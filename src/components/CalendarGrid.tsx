@@ -10,7 +10,6 @@ import {
   eachDayOfInterval,
   startOfDay,
   isSameWeek,
-  isSameMonth,
 } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -130,30 +129,15 @@ export default function CalendarGrid({
 
   if (!isClient) return null;
 
-  const showTodayBadge =
-    (view === "week" &&
-      isSameWeek(currentDate, today, { weekStartsOn: 1 })) ||
-    (view === "month" && isSameMonth(currentDate, today));
-
   /* ================= MOBILE ================= */
 
   if (isMobile) {
     return (
       <div
-        className="relative space-y-4 mt-4"
+        className="relative space-y-4 mt-4 pb-20"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* 🔴 STICKY HOY */}
-        {showTodayBadge && (
-          <div className="sticky top-2 z-10 flex justify-center pointer-events-none">
-            <div className="bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow text-xs font-medium text-gray-800">
-              Hoy ·{" "}
-              {format(today, "EEEE dd", { locale: es })}
-            </div>
-          </div>
-        )}
-
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
@@ -170,8 +154,8 @@ export default function CalendarGrid({
         </div>
 
         {/* ACTIONS */}
-        <div className="flex justify-between items-center">
-          {view === "month" && (
+        {view === "month" && (
+          <div>
             <button
               onClick={() => setShowPastDays((v) => !v)}
               className={`text-xs px-3 py-1.5 rounded-full border transition-all active:scale-95 ${
@@ -184,15 +168,8 @@ export default function CalendarGrid({
                 ? "Ocultar días anteriores"
                 : "Ver días anteriores"}
             </button>
-          )}
-
-          <button
-            onClick={goToday}
-            className="text-xs font-medium text-gray-700"
-          >
-            Hoy
-          </button>
-        </div>
+          </div>
+        )}
 
         {/* DAYS */}
         {days.map((day) => {
@@ -250,6 +227,14 @@ export default function CalendarGrid({
             </div>
           );
         })}
+
+        {/* 🔘 BOTÓN HOY FIJO */}
+        <button
+          onClick={goToday}
+          className="fixed bottom-6 right-4 z-50 bg-black text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium transition active:scale-95"
+        >
+          Hoy
+        </button>
       </div>
     );
   }
