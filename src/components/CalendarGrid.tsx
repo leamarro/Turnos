@@ -48,7 +48,7 @@ export default function CalendarGrid({
   const getMonthDays = () => {
     const start = startOfMonth(currentDate);
     const end = endOfMonth(currentDate);
-    return eachDayOfInterval({ start, end }).filter((d) => d >= today);
+    return eachDayOfInterval({ start, end }); // 👈 todos los días
   };
 
   const days = view === "week" ? getWeekDays() : getMonthDays();
@@ -86,7 +86,7 @@ export default function CalendarGrid({
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
 
-          <h2 className="font-semibold">
+          <h2 className="font-semibold capitalize">
             {format(
               currentDate,
               view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
@@ -101,21 +101,29 @@ export default function CalendarGrid({
           const items = getAppointmentsByDay(day);
           const isToday =
             format(day, "yyyy-MM-dd") ===
-            format(new Date(), "yyyy-MM-dd");
+            format(today, "yyyy-MM-dd");
 
           return (
             <div
               key={day.toISOString()}
-              className={`bg-white rounded-2xl p-4 shadow-sm ${
-                isToday ? "ring-2 ring-black" : ""
-              }`}
+              className="bg-white rounded-2xl p-4 shadow-sm"
             >
-              <h3 className="font-medium mb-2 capitalize">
-                {format(day, "EEEE dd", { locale: es })}
-                {isToday && (
-                  <span className="ml-2 text-xs text-gray-500">(Hoy)</span>
-                )}
-              </h3>
+              {/* HEADER DEL DÍA */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="capitalize font-medium text-gray-800">
+                  {format(day, "EEEE", { locale: es })}
+                </span>
+
+                <span
+                  className={`flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${
+                    isToday
+                      ? "bg-black text-white"
+                      : "text-gray-700"
+                  }`}
+                >
+                  {format(day, "dd")}
+                </span>
+              </div>
 
               {items.length === 0 && (
                 <p className="text-sm text-gray-400 italic">
@@ -158,7 +166,7 @@ export default function CalendarGrid({
       <div className="flex items-center justify-between mb-4">
         <button onClick={prev} className="text-gray-500 text-lg">←</button>
 
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg font-semibold capitalize">
           {format(
             currentDate,
             view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
