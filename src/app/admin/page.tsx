@@ -25,7 +25,8 @@ type Appointment = {
   service?: { name?: string };
 };
 
-/* 🔁 NORMALIZACIÓN DE ESTADOS */
+/* ================= ESTADOS ================= */
+
 const STATUS_MAP: Record<string, string> = {
   pending: "pendiente",
   confirmed: "confirmado",
@@ -55,9 +56,15 @@ const STATUS_STYLE: Record<string, string> = {
 export default function AdminPanel() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filterDate, setFilterDate] = useState("");
+  const [isFiltering, setIsFiltering] = useState(false);
+
   const router = useRouter();
 
+  /* ================= FETCH ================= */
+
   async function fetchAppointments(date?: string) {
+    setIsFiltering(true);
+
     const res = await axios.get(
       `/api/appointments${date ? `?date=${date}` : ""}`
     );
@@ -68,20 +75,24 @@ export default function AdminPanel() {
             ...a,
             status: STATUS_MAP[a.status] ?? a.status,
           }))
-          // 🔥 ORDEN POR FECHA + HORA
           .sort(
-            (a: Appointment, b: Appointment) =>
+            (a, b) =>
               new Date(a.date).getTime() -
               new Date(b.date).getTime()
           )
       : [];
 
     setAppointments(normalized);
+
+    // ✨ micro feedback
+    setTimeout(() => setIsFiltering(false), 200);
   }
 
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  /* ================= ACTIONS ================= */
 
   async function updateStatus(id: string, status: string) {
     await axios.put(`/api/appointments?id=${id}`, { status });
@@ -100,19 +111,31 @@ export default function AdminPanel() {
         Turnos
       </h1>
 
-      {/* FILTRO */}
-      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <input
-          type="date"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-          className="minimal-input max-w-xs"
-        />
+      {/* ================= FILTRO ================= */}
+      <div
+        className={`bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 sm:items-end sm:justify-between transition-all duration-200 ${
+          isFiltering ? "opacity-70 scale-[0.99]" : ""
+        }`}
+      >
+        {/* DATE */}
+        <div className="flex flex-col gap-1 max-w-xs">
+          <label className="text-xs text-gray-500">
+            Filtrar por fecha
+          </label>
 
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="minimal-input"
+          />
+        </div>
+
+        {/* BUTTONS */}
         <div className="flex gap-3">
           <button
             onClick={() => fetchAppointments(filterDate)}
-            className="bg-black text-white px-4 py-2 rounded-xl"
+            className="bg-black text-white px-4 py-2 rounded-xl active:scale-95 transition"
           >
             Filtrar
           </button>
@@ -122,7 +145,7 @@ export default function AdminPanel() {
               setFilterDate("");
               fetchAppointments();
             }}
-            className="px-4 py-2 rounded-xl border"
+            className="px-4 py-2 rounded-xl border active:scale-95 transition"
           >
             Limpiar
           </button>
@@ -220,11 +243,8 @@ export default function AdminPanel() {
                 <td className="p-3">
                   {a.name} {a.lastName}
                 </td>
-
                 <td className="p-3">{a.telefono}</td>
-
                 <td className="p-3">{a.service?.name}</td>
-
                 <td className="p-3">
                   <div className="flex flex-col">
                     <span>
@@ -237,7 +257,6 @@ export default function AdminPanel() {
                     </span>
                   </div>
                 </td>
-
                 <td className="p-3">
                   <select
                     value={a.status}
@@ -253,7 +272,6 @@ export default function AdminPanel() {
                     ))}
                   </select>
                 </td>
-
                 <td className="p-3 text-center">
                   <div className="flex justify-center gap-4">
                     <button
