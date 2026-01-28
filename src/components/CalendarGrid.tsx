@@ -9,6 +9,7 @@ import {
   endOfMonth,
   eachDayOfInterval,
   startOfDay,
+  isSameDay,
 } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -33,6 +34,7 @@ export default function CalendarGrid({
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isClient, setIsClient] = useState(false);
+  const [direction, setDirection] = useState<"next" | "prev">("next");
 
   useEffect(() => {
     setIsClient(true);
@@ -48,117 +50,129 @@ export default function CalendarGrid({
   const getMonthDays = () => {
     const start = startOfMonth(currentDate);
     const end = endOfMonth(currentDate);
-    return eachDayOfInterval({ start, end }).filter((d) => d >= today);
+    return eachDayOfInterval({ start, end });
   };
 
   const days = view === "week" ? getWeekDays() : getMonthDays();
 
   const getAppointmentsByDay = (day: Date) =>
     appointments
-      .filter(
-        (a) =>
-          format(new Date(a.date), "yyyy-MM-dd") ===
-          format(day, "yyyy-MM-dd")
+      .filter((a) =>
+        isSameDay(new Date(a.date), day)
       )
       .sort(
         (a, b) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
-  const next = () =>
+  const next = () => {
+    setDirection("next");
     setCurrentDate((d) =>
       view === "week" ? addDays(d, 7) : addDays(d, 30)
     );
+  };
 
-  const prev = () =>
+  const prev = () => {
+    setDirection("prev");
     setCurrentDate((d) =>
       view === "week" ? addDays(d, -7) : addDays(d, -30)
     );
+  };
 
   if (!isClient) return null;
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
-  /* ================= MOBILE ================= */
+  /* =========================
+     MOBILE — AGENDA VIEW
+  ========================= */
   if (isMobile) {
     return (
-      <div className="space-y-5 mt-4">
-        <div className="flex items-center justify-between">
-          <button onClick={prev} className="text-gray-500 text-lg">←</button>
+      <div className="mt-4">
+        {/* STICKY HEADER */}
+        <div className="sticky top-0 z-10 bg-gray-50 pb-3">
+          <div className="flex items-center justify-between px-1">
+            <button onClick={prev} className="text-lg">←</button>
 
-          <h2 className="font-semibold">
-            {format(
-              currentDate,
-              view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
-              { locale: es }
-            )}
-          </h2>
+            <h2 className="font-semibold capitalize">
+              {format(
+                currentDate,
+                view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
+                { locale: es }
+              )}
+            </h2>
 
-          <button onClick={next} className="text-gray-500 text-lg">→</button>
+            <button onClick={next} className="text-lg">→</button>
+          </div>
         </div>
 
-        {days.map((day) => {
-          const items = getAppointmentsByDay(day);
-          const isToday =
-            format(day, "yyyy-MM-dd") ===
-            format(new Date(), "yyyy-MM-dd");
+        {/* AGENDA */}
+        <div
+          className={`space-y-5 transition-all duration-300 ${
+            direction === "next"
+              ? "animate-slide-left"
+              : "animate-slide-right"
+          }`}
+        >
+          {days.map((day) => {
+            const items = getAppointmentsByDay(day);
+            const isToday = isSameDay(day, today);
 
-          return (
-            <div
-              key={day.toISOString()}
-              className={`bg-white rounded-2xl p-4 shadow-sm ${
-                isToday ? "ring-2 ring-black" : ""
-              }`}
-            >
-              <h3 className="font-medium mb-2 capitalize">
-                {format(day, "EEEE dd", { locale: es })}
-                {isToday && (
-                  <span className="ml-2 text-xs text-gray-500">(Hoy)</span>
-                )}
-              </h3>
+            if (items.length === 0) return null;
 
-              {items.length === 0 && (
-                <p className="text-sm text-gray-400 italic">
-                  No hay turnos este día
-                </p>
-              )}
+            return (
+              <div
+                key={day.toISOString()}
+                className={`bg-white rounded-2xl p-4 shadow-sm ${
+                  isToday ? "ring-2 ring-black" : ""
+                }`}
+              >
+                <h3 className="font-medium mb-3 capitalize">
+                  {format(day, "EEEE dd", { locale: es })}
+                  {isToday && (
+                    <span className="ml-2 text-xs text-gray-500">(Hoy)</span>
+                  )}
+                </h3>
 
-              <div className="space-y-2">
-                {items.map((a) => (
-                  <div
-                    key={a.id}
-                    onClick={() => onSelectAppointment?.(a.id)}
-                    className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-100 transition"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">
-                        {a.user.name} {a.user.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {a.service.name}
-                      </p>
+                <div className="space-y-3">
+                  {items.map((a) => (
+                    <div
+                      key={a.id}
+                      onClick={() => onSelectAppointment?.(a.id)}
+                      className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-3 cursor-pointer active:scale-[0.98] transition"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">
+                          {a.user.name} {a.user.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {a.service.name}
+                        </p>
+                      </div>
+
+                      <span className="text-base font-bold tabular-nums">
+                        {format(new Date(a.date), "HH:mm")}
+                      </span>
                     </div>
-
-                    <span className="text-sm font-bold tabular-nums">
-                      {format(new Date(a.date), "HH:mm")}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   }
 
-  /* ================= DESKTOP ================= */
+  /* =========================
+     DESKTOP — GRID (igual)
+  ========================= */
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <button onClick={prev} className="text-gray-500 text-lg">←</button>
+        <button onClick={prev} className="text-lg">←</button>
 
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg font-semibold capitalize">
           {format(
             currentDate,
             view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
@@ -166,7 +180,7 @@ export default function CalendarGrid({
           )}
         </h2>
 
-        <button onClick={next} className="text-gray-500 text-lg">→</button>
+        <button onClick={next} className="text-lg">→</button>
       </div>
 
       <div className="grid grid-cols-7 gap-3">
@@ -178,7 +192,7 @@ export default function CalendarGrid({
               key={day.toISOString()}
               className="bg-white rounded-xl p-3 min-h-[140px] shadow-sm"
             >
-              <p className="text-sm font-medium mb-2 text-gray-700">
+              <p className="text-sm font-medium mb-2">
                 {format(day, "dd", { locale: es })}
               </p>
 
