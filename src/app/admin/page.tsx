@@ -218,21 +218,26 @@ export default function AdminPanel() {
           ))}
         </div>
 
-        <div className="flex gap-3 items-center mt-2 sm:mt-0">
+        <div className="flex gap-3 items-center mt-2 sm:mt-0 relative">
           <input
             type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            className="minimal-input max-w-xs"
+            className="minimal-input max-w-xs peer"
+            aria-label="Filtrar por fecha"
           />
-          <label className="text-sm text-gray-600 flex items-center gap-1 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={showPast}
-              onChange={() => setShowPast(v=>!v)}
-            />
-            Mostrar pasados
-          </label>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none peer-empty:block peer-not-empty:hidden">
+            dd/mm/yyyy
+          </span>
+
+          <button
+            onClick={() => setShowPast(v => !v)}
+            className={`px-3 py-1 rounded-full text-sm border transition ${
+              showPast ? "bg-black text-white" : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            {showPast ? "Ocultar pasados" : "Mostrar pasados"}
+          </button>
         </div>
       </div>
 
