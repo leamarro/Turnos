@@ -104,6 +104,7 @@ export default function AdminPanel() {
 
     const weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
 
+    // FILTRO POR OPCIÓN
     if (filterOption === "today") {
       list = list.filter(a => {
         const d = new Date(a.date);
@@ -121,15 +122,18 @@ export default function AdminPanel() {
       });
     }
 
+    // FILTRO POR FECHA ESPECÍFICA
     if (filterDate) {
       const selected = new Date(`${filterDate}T00:00:00`);
       list = list.filter((a) => sameDay(new Date(a.date), selected));
     }
 
+    // OCULTAR PASADOS
     if (!showPast) {
       list = list.filter(a => new Date(a.date) >= todayStart);
     }
 
+    // ORDEN: futuros primero, pasados al final
     return list.sort((a, b) => {
       const ta = getTimeInfo(a.date).state;
       const tb = getTimeInfo(b.date).state;
@@ -137,10 +141,7 @@ export default function AdminPanel() {
       if (ta === "past" && tb !== "past") return 1;
       if (ta !== "past" && tb === "past") return -1;
 
-      return (
-        new Date(a.date).getTime() -
-        new Date(b.date).getTime()
-      );
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
   }, [allAppointments, filterDate, filterOption, showPast]);
 
@@ -197,11 +198,12 @@ export default function AdminPanel() {
 
       {/* FILTROS */}
       <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        {/* BOTONES FILTRO OPCIÓN */}
         <div className="flex gap-2">
           {["all","today","tomorrow","week"].map(opt => (
             <button
               key={opt}
-              onClick={() => setFilterOption(opt as any)}
+              onClick={() => { setFilterOption(opt as any); setFilterDate(""); }}
               className={`px-3 py-1 rounded-full text-sm transition ${
                 filterOption===opt
                   ? "bg-black text-white"
@@ -213,15 +215,26 @@ export default function AdminPanel() {
           ))}
         </div>
 
+        {/* FILTRO DE FECHA Y MOSTRAR PASADOS */}
         <div className="flex gap-3 items-center mt-2 sm:mt-0">
           <div className="flex flex-col">
             <label className="text-sm text-gray-500">Filtrar por fecha</label>
-            <input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="minimal-input max-w-xs"
-            />
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="minimal-input max-w-xs"
+              />
+              {filterDate && (
+                <button
+                  onClick={() => setFilterDate("")}
+                  className="px-2 py-1 border rounded text-sm text-gray-600 hover:bg-gray-100"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
           </div>
 
           <button
