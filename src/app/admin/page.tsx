@@ -4,12 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import {
-  format,
-  isToday,
-  isTomorrow,
-  isThisWeek,
-} from "date-fns";
+import { format, isToday, isTomorrow, isThisWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Pencil,
@@ -61,14 +56,11 @@ function getCardStyle(state: string) {
 
 export default function AdminPanel() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [filterDate, setFilterDate] = useState("");
   const [quickFilter, setQuickFilter] =
     useState<"all" | "today" | "tomorrow" | "week">("all");
   const [showPast, setShowPast] = useState(false);
 
   const router = useRouter();
-
-  /* ================= FETCH ================= */
 
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
@@ -79,10 +71,9 @@ export default function AdminPanel() {
     fetchAppointments();
   }, []);
 
-  /* ================= AUTO REORDER EACH MIN ================= */
-
+  /* 🔁 Reordenar cada minuto */
   useEffect(() => {
-    const interval = setInterval(() => {
+    const i = setInterval(() => {
       setAppointments((prev) =>
         [...prev].sort(
           (a, b) =>
@@ -91,11 +82,8 @@ export default function AdminPanel() {
         )
       );
     }, 60_000);
-
-    return () => clearInterval(interval);
+    return () => clearInterval(i);
   }, []);
-
-  /* ================= FILTER ================= */
 
   const filtered = useMemo(() => {
     let list = [...appointments];
@@ -103,14 +91,6 @@ export default function AdminPanel() {
     if (!showPast) {
       list = list.filter(
         (a) => new Date(a.date).getTime() >= Date.now()
-      );
-    }
-
-    if (filterDate) {
-      list = list.filter(
-        (a) =>
-          format(new Date(a.date), "yyyy-MM-dd") ===
-          filterDate
       );
     }
 
@@ -124,7 +104,7 @@ export default function AdminPanel() {
     });
 
     return list;
-  }, [appointments, filterDate, quickFilter, showPast]);
+  }, [appointments, quickFilter, showPast]);
 
   async function deleteAppointment(id: string) {
     if (!confirm("¿Eliminar turno?")) return;
@@ -135,61 +115,94 @@ export default function AdminPanel() {
   /* ================= SWIPE CARD ================= */
 
   function SwipeCard({ a }: { a: Appointment }) {
-    const ref = useRef<HTMLDivElement>(null);
     const startX = useRef(0);
     const [offset, setOffset] = useState(0);
+    const [vibrated, setVibrated] = useState(false);
+
+    const THRESHOLD = 90;
+
+    function vibrate(ms = 20) {
+      if ("vibrate" in navigator) {
+        navigator.vibrate(ms);
+      }
+    }
 
     function onTouchStart(e: React.TouchEvent) {
       startX.current = e.touches[0].clientX;
+      setVibrated(false);
     }
 
     function onTouchMove(e: React.TouchEvent) {
       const dx = e.touches[0].clientX - startX.current;
       setOffset(dx);
+
+      if (Math.abs(dx) > THRESHOLD && !vibrated) {
+        vibrate(15);
+        setVibrated(true);
+      }
     }
 
     function onTouchEnd() {
-      if (offset < -80) deleteAppointment(a.id);
-      if (offset > 80) router.push(`/admin/edit/${a.id}`);
+      if (offset > THRESHOLD) {
+        vibrate(30);
+        router.push(`/admin/edit/${a.id}`);
+      } else if (offset < -THRESHOLD) {
+        vibrate(30);
+        deleteAppointment(a.id);
+      }
       setOffset(0);
     }
 
     const info = getTimeInfo(a.date);
 
     return (
-      <div
-        ref={ref}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        style={{ transform: `translateX(${offset}px)` }}
-        className={`rounded-2xl p-4 shadow transition-transform duration-200 ${getCardStyle(
-          info.state
-        )}`}
-      >
-        <p className="font-semibold flex items-center gap-2">
-          <User size={16} />
-          {a.name} {a.lastName}
-        </p>
-
-        <p className="text-sm text-gray-600 flex items-center gap-2">
-          <Phone size={14} />
-          {a.telefono}
-        </p>
-
-        <p className="text-sm mt-2">{a.service?.name}</p>
-
-        <div className="text-sm text-gray-600 mt-2">
-          <div className="flex items-center gap-2">
-            <CalendarDays size={14} />
-            {format(new Date(a.date), "dd/MM/yyyy", {
-              locale: es,
-            })}
+      <div className="relative overflow-hidden rounded-2xl">
+        {/* ACTION BACKGROUND */}
+        <div className="absolute inset-0 flex justify-between items-center px-5 text-white text-sm">
+          <div className="flex items-center gap-2 bg-blue-500 px-3 py-2 rounded-full">
+            <Pencil size={16} />
+            Editar
           </div>
-          <p className="text-xs text-gray-500 ml-6">
-            {format(new Date(a.date), "HH:mm")} hs ·{" "}
-            {info.label}
+          <div className="flex items-center gap-2 bg-red-500 px-3 py-2 rounded-full">
+            <Trash2 size={16} />
+            Eliminar
+          </div>
+        </div>
+
+        {/* CARD */}
+        <div
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={{ transform: `translateX(${offset}px)` }}
+          className={`relative z-10 rounded-2xl p-4 shadow transition-transform duration-200 ${getCardStyle(
+            info.state
+          )}`}
+        >
+          <p className="font-semibold flex items-center gap-2">
+            <User size={16} />
+            {a.name} {a.lastName}
           </p>
+
+          <p className="text-sm text-gray-600 flex items-center gap-2">
+            <Phone size={14} />
+            {a.telefono}
+          </p>
+
+          <p className="text-sm mt-2">{a.service?.name}</p>
+
+          <div className="text-sm text-gray-600 mt-2">
+            <div className="flex items-center gap-2">
+              <CalendarDays size={14} />
+              {format(new Date(a.date), "dd/MM/yyyy", {
+                locale: es,
+              })}
+            </div>
+            <p className="text-xs text-gray-500 ml-6">
+              {format(new Date(a.date), "HH:mm")} hs ·{" "}
+              {info.label}
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -203,7 +216,6 @@ export default function AdminPanel() {
         Turnos
       </h1>
 
-      {/* FILTERS */}
       <div className="bg-white rounded-2xl p-4 mb-6 space-y-3">
         <div className="flex gap-2 overflow-x-auto">
           {[
@@ -226,23 +238,14 @@ export default function AdminPanel() {
           ))}
         </div>
 
-        <div className="flex justify-between items-center">
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            className="minimal-input max-w-xs"
-          />
-          <button
-            onClick={() => setShowPast((v) => !v)}
-            className="text-xs text-gray-600"
-          >
-            {showPast ? "Ocultar pasados" : "Mostrar pasados"}
-          </button>
-        </div>
+        <button
+          onClick={() => setShowPast((v) => !v)}
+          className="text-xs text-gray-600"
+        >
+          {showPast ? "Ocultar pasados" : "Mostrar pasados"}
+        </button>
       </div>
 
-      {/* MOBILE LIST */}
       <div className="sm:hidden space-y-4">
         {filtered.map((a) => (
           <SwipeCard key={a.id} a={a} />
