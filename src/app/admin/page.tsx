@@ -1,10 +1,8 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import axios from "axios";
-import { format, addDays, startOfDay, endOfDay } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Pencil,
@@ -24,42 +22,60 @@ type Appointment = {
   service?: { name?: string };
 };
 
+/* ========================= */
+/* ⏱️ ESTADO TEMPORAL REAL */
 function getTimeInfo(date: string) {
   const now = new Date();
   const d = new Date(date);
-  const diffMin = (d.getTime() - now.getTime()) / 60000;
+  const diffMs = d.getTime() - now.getTime();
+  const diffMin = diffMs / 1000 / 60;
 
-  if (diffMin < 0) return { state: "past", diffMin };
-  if (diffMin <= 30) return { state: "very-soon", diffMin };
-  if (diffMin <= 180) return { state: "soon", diffMin };
+  if (diffMs < 0) return { state: "past", diffMin };
+  if (diffMin <= 60) return { state: "very-soon", diffMin };
+  if (diffMin <= 240) return { state: "soon", diffMin };
   return { state: "future", diffMin };
 }
 
-function cardStyle(state: string) {
+function getCardStyle(state: string) {
   switch (state) {
     case "very-soon":
-      return "border-l-4 border-green-600 bg-green-50";
+      return "bg-green-200 border-l-4 border-green-600";
     case "soon":
-      return "border-l-4 border-green-400 bg-green-50";
+      return "bg-green-100 border-l-4 border-green-400";
+    case "future":
+      return "bg-white";
     case "past":
-      return "opacity-50 bg-gray-50";
+      return "bg-gray-50 opacity-50";
     default:
       return "bg-white";
   }
 }
 
-export default function AdminPanel() {
-  const [appointmentsRaw, setAppointmentsRaw] = useState<Appointment[]>([]);
-  const [rangeFilter, setRangeFilter] = useState<
-    "all" | "today" | "tomorrow" | "week"
-  >("all");
-  const [showPast, setShowPast] = useState(true);
-  const [filterDate, setFilterDate] = useState("");
+/* ========================= */
+/* 📅 FILTRO POR DÍA (SAFE) */
+function sameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
 
+export default function AdminPanel() {
+  const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
+  const [filterDate, setFilterDate] = useState("");
+  const [filterOption, setFilterOption] = useState<"all" | "today" | "tomorrow" | "week">("all");
+  const [showPast, setShowPast] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const today = new Date();
+
+  /* ========================= */
+  /* FETCH */
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
+
     const ordered = Array.isArray(res.data)
       ? res.data.sort(
           (a: Appointment, b: Appointment) =>
@@ -67,64 +83,69 @@ export default function AdminPanel() {
             new Date(b.date).getTime()
         )
       : [];
-    setAppointmentsRaw(ordered);
+
+    setAllAppointments(ordered);
   }
 
   useEffect(() => {
     fetchAppointments();
   }, []);
 
+  /* ========================= */
+  /* FILTRADO + ORDEN */
   const appointments = useMemo(() => {
-    const now = new Date();
-    let list = [...appointmentsRaw];
+    let list = [...allAppointments];
 
-    // 🌿 filtro por botones
-    if (rangeFilter !== "all") {
-      let from: Date;
-      let to: Date;
-      if (rangeFilter === "today") {
-        from = startOfDay(now);
-        to = endOfDay(now);
-      } else if (rangeFilter === "tomorrow") {
-        from = startOfDay(addDays(now, 1));
-        to = endOfDay(addDays(now, 1));
-      } else {
-        from = startOfDay(now);
-        to = endOfDay(addDays(now, 7));
-      }
-      list = list.filter((a) => {
+    // 📅 FILTRO FRONTEND
+    const todayStart = new Date(today); todayStart.setHours(0,0,0,0);
+    const todayEnd = new Date(today); todayEnd.setHours(23,59,59,999);
+
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+    const tomorrowStart = new Date(tomorrow); tomorrowStart.setHours(0,0,0,0);
+    const tomorrowEnd = new Date(tomorrow); tomorrowEnd.setHours(23,59,59,999);
+
+    const weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
+
+    if (filterOption === "today") {
+      list = list.filter(a => {
         const d = new Date(a.date);
-        return d >= from && d <= to;
+        return d >= todayStart && d <= todayEnd;
+      });
+    } else if (filterOption === "tomorrow") {
+      list = list.filter(a => {
+        const d = new Date(a.date);
+        return d >= tomorrowStart && d <= tomorrowEnd;
+      });
+    } else if (filterOption === "week") {
+      list = list.filter(a => {
+        const d = new Date(a.date);
+        return d >= todayStart && d <= weekEnd;
       });
     }
 
-    // 📅 filtro por fecha input
     if (filterDate) {
       const selected = new Date(`${filterDate}T00:00:00`);
-      list = list.filter((a) => {
-        const d = new Date(a.date);
-        return (
-          d.getFullYear() === selected.getFullYear() &&
-          d.getMonth() === selected.getMonth() &&
-          d.getDate() === selected.getDate()
-        );
-      });
+      list = list.filter((a) => sameDay(new Date(a.date), selected));
     }
 
-    // ⛔ ocultar pasados
     if (!showPast) {
-      list = list.filter((a) => new Date(a.date).getTime() >= now.getTime());
+      list = list.filter(a => new Date(a.date) >= todayStart);
     }
 
-    // 🔀 orden
+    // ⏱️ ORDEN: futuros primero, pasados al final
     return list.sort((a, b) => {
       const ta = getTimeInfo(a.date).state;
       const tb = getTimeInfo(b.date).state;
+
       if (ta === "past" && tb !== "past") return 1;
       if (ta !== "past" && tb === "past") return -1;
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
+
+      return (
+        new Date(a.date).getTime() -
+        new Date(b.date).getTime()
+      );
     });
-  }, [appointmentsRaw, rangeFilter, showPast, filterDate]);
+  }, [allAppointments, filterDate, filterOption, showPast]);
 
   async function deleteAppointment(id: string) {
     if (!confirm("¿Eliminar este turno?")) return;
@@ -132,101 +153,127 @@ export default function AdminPanel() {
     fetchAppointments();
   }
 
+  /* ========================= */
+  /* SWIPE LOGIC */
+  const swipeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  function handleSwipeStart(e: React.TouchEvent, id: string) {
+    const card = swipeRefs.current.get(id);
+    if (!card) return;
+    (card as any).startX = e.touches[0].clientX;
+  }
+
+  function handleSwipeMove(e: React.TouchEvent, id: string) {
+    const card = swipeRefs.current.get(id);
+    if (!card) return;
+    const startX = (card as any).startX ?? 0;
+    const dx = e.touches[0].clientX - startX;
+    (card as any).dx = dx;
+
+    const transform = Math.min(Math.max(dx, -100), 100); // limitar
+    card.style.transform = `translateX(${transform}px)`;
+    card.style.transition = "transform 0s";
+  }
+
+  function handleSwipeEnd(e: React.TouchEvent, id: string) {
+    const card = swipeRefs.current.get(id);
+    if (!card) return;
+    const dx = (card as any).dx ?? 0;
+
+    if (dx < -60) {
+      // eliminar
+      deleteAppointment(id);
+      return;
+    } else if (dx > 60) {
+      // editar
+      router.push(`/admin/edit/${id}`);
+      return;
+    }
+
+    card.style.transform = "translateX(0px)";
+    card.style.transition = "transform 0.3s ease";
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
-      <h1 className="text-2xl font-semibold text-center mb-4">
+      <h1 className="text-2xl font-semibold text-center mb-6">
         Turnos
       </h1>
 
-      {/* ================= FILTER BAR ================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        {/* botones */}
-        <div className="flex gap-2 flex-wrap">
-          {[
-            ["all", "Todos"],
-            ["today", "Hoy"],
-            ["tomorrow", "Mañana"],
-            ["week", "Semana"],
-          ].map(([key, label]) => (
+      {/* FILTROS */}
+      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <div className="flex gap-2">
+          {["all","today","tomorrow","week"].map(opt => (
             <button
-              key={key}
-              onClick={() => setRangeFilter(key as any)}
+              key={opt}
+              onClick={() => setFilterOption(opt as any)}
               className={`px-3 py-1 rounded-full text-sm transition ${
-                rangeFilter === key
+                filterOption===opt
                   ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-700"
+                  : "border text-gray-600 hover:bg-gray-100"
               }`}
             >
-              {label}
+              {opt==="all"?"Todos":opt==="today"?"Hoy":opt==="tomorrow"?"Mañana":"Semana"}
             </button>
           ))}
-
-          <button
-            onClick={() => setShowPast((p) => !p)}
-            className="px-3 py-1 rounded-full text-sm border border-gray-300"
-          >
-            {showPast ? "Ocultar pasados" : "Mostrar pasados"}
-          </button>
         </div>
 
-        {/* input de fecha */}
-        <input
-          type="date"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-          className="minimal-input max-w-xs"
-        />
+        <div className="flex gap-3 items-center mt-2 sm:mt-0">
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="minimal-input max-w-xs"
+          />
+          <label className="text-sm text-gray-600 flex items-center gap-1 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showPast}
+              onChange={() => setShowPast(v=>!v)}
+            />
+            Mostrar pasados
+          </label>
+        </div>
       </div>
 
-      {/* ================= LIST ================= */}
-      <div className="space-y-4">
+      {/* ================= MOBILE ================= */}
+      <div className="sm:hidden space-y-4">
         {appointments.map((a) => {
           const info = getTimeInfo(a.date);
-          const isFocus = info.state === "very-soon";
+          const isNow = info.state === "very-soon" || info.state === "soon";
 
           return (
             <div
               key={a.id}
-              className={`relative rounded-2xl p-4 shadow transition ${cardStyle(
-                info.state
-              )}`}
+              ref={(el)=>{if(el) swipeRefs.current.set(a.id, el)}}
+              className={`rounded-2xl p-4 shadow transition ${getCardStyle(info.state)} ${
+                isNow?"ring-2 ring-green-400": ""
+              }`}
+              onTouchStart={e=>handleSwipeStart(e,a.id)}
+              onTouchMove={e=>handleSwipeMove(e,a.id)}
+              onTouchEnd={e=>handleSwipeEnd(e,a.id)}
             >
-              {isFocus && (
-                <span className="absolute -top-2 right-3 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full">
-                  Turno actual
-                </span>
-              )}
-
-              <p className="font-semibold flex items-center gap-2">
-                <User size={16} />
-                {a.name} {a.lastName}
-              </p>
-
-              <p className="text-sm text-gray-600 flex items-center gap-2">
-                <Phone size={14} />
-                {a.telefono}
-              </p>
+              <div>
+                <p className="font-semibold flex items-center gap-2">
+                  <User size={16} />
+                  {a.name} {a.lastName}
+                </p>
+                <p className="text-sm text-gray-600 flex items-center gap-2">
+                  <Phone size={14} />
+                  {a.telefono}
+                </p>
+              </div>
 
               <p className="text-sm mt-2">{a.service?.name}</p>
 
-              <div className="text-sm text-gray-600 mt-2">
+              <div className="text-sm text-gray-600 mt-2 flex flex-col">
                 <span className="flex items-center gap-2">
                   <CalendarDays size={14} />
-                  {format(new Date(a.date), "dd/MM/yyyy", { locale: es })} –{" "}
-                  {format(new Date(a.date), "HH:mm")}
+                  {format(new Date(a.date), "dd/MM/yyyy", { locale: es })}
                 </span>
-              </div>
-
-              <div className="flex justify-end gap-4 pt-3">
-                <button onClick={() => router.push(`/admin/edit/${a.id}`)}>
-                  <Pencil size={18} />
-                </button>
-                <button
-                  onClick={() => deleteAppointment(a.id)}
-                  className="text-red-600"
-                >
-                  <Trash2 size={18} />
-                </button>
+                <span className="text-xs text-gray-500 ml-6">
+                  {format(new Date(a.date), "HH:mm")} hs
+                </span>
               </div>
             </div>
           );
@@ -236,6 +283,46 @@ export default function AdminPanel() {
           <p className="text-center text-sm text-gray-500">
             No hay turnos para este filtro
           </p>
+        )}
+      </div>
+
+      {/* ================= DESKTOP ================= */}
+      <div className="hidden sm:block bg-white rounded-2xl shadow overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 text-left">Cliente</th>
+              <th className="p-3 text-left">Teléfono</th>
+              <th className="p-3 text-left">Servicio</th>
+              <th className="p-3 text-left">Fecha / Hora</th>
+              <th className="p-3 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {appointments.map((a) => (
+              <tr key={a.id} className="border-t">
+                <td className="p-3">{a.name} {a.lastName}</td>
+                <td className="p-3">{a.telefono}</td>
+                <td className="p-3">{a.service?.name}</td>
+                <td className="p-3">
+                  <div className="flex flex-col">
+                    <span>{format(new Date(a.date), "dd/MM/yyyy", { locale: es })}</span>
+                    <span className="text-xs text-gray-500">{format(new Date(a.date), "HH:mm")} hs</span>
+                  </div>
+                </td>
+                <td className="p-3 text-center">
+                  <div className="flex justify-center gap-4">
+                    <button onClick={()=>router.push(`/admin/edit/${a.id}`)}><Pencil size={18} /></button>
+                    <button onClick={()=>deleteAppointment(a.id)} className="text-red-600"><Trash2 size={18} /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {appointments.length === 0 && (
+          <p className="text-center p-6 text-gray-500">No hay turnos para este filtro</p>
         )}
       </div>
     </div>
