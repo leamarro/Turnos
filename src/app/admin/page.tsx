@@ -104,7 +104,6 @@ export default function AdminPanel() {
 
     const weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
 
-    // FILTRO POR OPCIÓN
     if (filterOption === "today") {
       list = list.filter(a => {
         const d = new Date(a.date);
@@ -122,18 +121,15 @@ export default function AdminPanel() {
       });
     }
 
-    // FILTRO POR FECHA ESPECÍFICA
     if (filterDate) {
       const selected = new Date(`${filterDate}T00:00:00`);
       list = list.filter((a) => sameDay(new Date(a.date), selected));
     }
 
-    // OCULTAR PASADOS
     if (!showPast) {
       list = list.filter(a => new Date(a.date) >= todayStart);
     }
 
-    // ORDEN: futuros primero, pasados al final
     return list.sort((a, b) => {
       const ta = getTimeInfo(a.date).state;
       const tb = getTimeInfo(b.date).state;
@@ -168,9 +164,10 @@ export default function AdminPanel() {
     const dx = e.touches[0].clientX - startX;
     (card as any).dx = dx;
 
-    const transform = Math.min(Math.max(dx, -100), 100); 
-    card.style.transform = `translateX(${transform}px)`;
-    card.style.transition = "transform 0s";
+    const transform = Math.min(Math.max(dx, -100), 100);
+    const content = card.querySelector(".card-content") as HTMLDivElement;
+    if (content) content.style.transform = `translateX(${transform}px)`;
+    if (content) content.style.transition = "transform 0s";
   }
 
   function handleSwipeEnd(e: React.TouchEvent, id: string) {
@@ -186,8 +183,11 @@ export default function AdminPanel() {
       return;
     }
 
-    card.style.transform = "translateX(0px)";
-    card.style.transition = "transform 0.3s ease";
+    const content = card.querySelector(".card-content") as HTMLDivElement;
+    if (content) {
+      content.style.transform = "translateX(0px)";
+      content.style.transition = "transform 0.3s ease";
+    }
   }
 
   return (
@@ -198,7 +198,6 @@ export default function AdminPanel() {
 
       {/* FILTROS */}
       <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        {/* BOTONES FILTRO OPCIÓN */}
         <div className="flex gap-2">
           {["all","today","tomorrow","week"].map(opt => (
             <button
@@ -215,7 +214,6 @@ export default function AdminPanel() {
           ))}
         </div>
 
-        {/* FILTRO DE FECHA Y MOSTRAR PASADOS */}
         <div className="flex gap-3 items-center mt-2 sm:mt-0">
           <div className="flex flex-col">
             <label className="text-sm text-gray-500">Filtrar por fecha</label>
@@ -258,14 +256,19 @@ export default function AdminPanel() {
             <div
               key={a.id}
               ref={(el)=>{if(el) swipeRefs.current.set(a.id, el)}}
-              className={`rounded-2xl p-4 shadow transition ${getCardStyle(info.state)} ${
-                isNow?"ring-2 ring-green-400": ""
-              }`}
+              className="relative rounded-2xl overflow-hidden"
               onTouchStart={e=>handleSwipeStart(e,a.id)}
               onTouchMove={e=>handleSwipeMove(e,a.id)}
               onTouchEnd={e=>handleSwipeEnd(e,a.id)}
             >
-              <div>
+              {/* FONDO COLORES */}
+              <div className="absolute inset-0 flex justify-between items-center px-4">
+                <span className="text-green-600 font-bold">Editar</span>
+                <span className="text-red-600 font-bold">Eliminar</span>
+              </div>
+
+              {/* TARJETA MOVIBLE */}
+              <div className={`card-content p-4 rounded-2xl shadow transition ${getCardStyle(info.state)} ${isNow ? "ring-2 ring-green-400" : ""}`}>
                 <p className="font-semibold flex items-center gap-2">
                   <User size={16} />
                   {a.name} {a.lastName}
@@ -274,18 +277,16 @@ export default function AdminPanel() {
                   <Phone size={14} />
                   {a.telefono}
                 </p>
-              </div>
-
-              <p className="text-sm mt-2">{a.service?.name}</p>
-
-              <div className="text-sm text-gray-600 mt-2 flex flex-col">
-                <span className="flex items-center gap-2">
-                  <CalendarDays size={14} />
-                  {format(new Date(a.date), "dd/MM/yyyy", { locale: es })}
-                </span>
-                <span className="text-xs text-gray-500 ml-6">
-                  {format(new Date(a.date), "HH:mm")} hs
-                </span>
+                <p className="text-sm mt-2">{a.service?.name}</p>
+                <div className="text-sm text-gray-600 mt-2 flex flex-col">
+                  <span className="flex items-center gap-2">
+                    <CalendarDays size={14} />
+                    {format(new Date(a.date), "dd/MM/yyyy", { locale: es })}
+                  </span>
+                  <span className="text-xs text-gray-500 ml-6">
+                    {format(new Date(a.date), "HH:mm")} hs
+                  </span>
+                </div>
               </div>
             </div>
           );
