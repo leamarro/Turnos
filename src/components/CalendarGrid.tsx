@@ -34,7 +34,6 @@ export default function CalendarGrid({
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isClient, setIsClient] = useState(false);
-  const [direction, setDirection] = useState<"next" | "prev">("next");
 
   useEffect(() => {
     setIsClient(true);
@@ -57,89 +56,77 @@ export default function CalendarGrid({
 
   const getAppointmentsByDay = (day: Date) =>
     appointments
-      .filter((a) =>
-        isSameDay(new Date(a.date), day)
-      )
+      .filter((a) => isSameDay(new Date(a.date), day))
       .sort(
         (a, b) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
-  const next = () => {
-    setDirection("next");
+  const next = () =>
     setCurrentDate((d) =>
       view === "week" ? addDays(d, 7) : addDays(d, 30)
     );
-  };
 
-  const prev = () => {
-    setDirection("prev");
+  const prev = () =>
     setCurrentDate((d) =>
       view === "week" ? addDays(d, -7) : addDays(d, -30)
     );
-  };
 
   if (!isClient) return null;
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
   /* =========================
-     MOBILE — AGENDA VIEW
+     MOBILE — AGENDA LIVIANA
   ========================= */
   if (isMobile) {
     return (
-      <div className="mt-4">
-        {/* STICKY HEADER */}
-        <div className="sticky top-0 z-10 bg-gray-50 pb-3">
-          <div className="flex items-center justify-between px-1">
-            <button onClick={prev} className="text-lg">←</button>
+      <div className="mt-4 space-y-6">
+        {/* HEADER (sin recuadro) */}
+        <div className="flex items-center justify-between px-1">
+          <button onClick={prev} className="text-lg">←</button>
 
-            <h2 className="font-semibold capitalize">
-              {format(
-                currentDate,
-                view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
-                { locale: es }
-              )}
-            </h2>
+          <h2 className="font-semibold capitalize">
+            {format(
+              currentDate,
+              view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
+              { locale: es }
+            )}
+          </h2>
 
-            <button onClick={next} className="text-lg">→</button>
-          </div>
+          <button onClick={next} className="text-lg">→</button>
         </div>
 
-        {/* AGENDA */}
-        <div
-          className={`space-y-5 transition-all duration-300 ${
-            direction === "next"
-              ? "animate-slide-left"
-              : "animate-slide-right"
-          }`}
-        >
-          {days.map((day) => {
-            const items = getAppointmentsByDay(day);
-            const isToday = isSameDay(day, today);
+        {/* LISTA DE DÍAS */}
+        {days.map((day) => {
+          const items = getAppointmentsByDay(day);
+          const isToday = isSameDay(day, today);
 
-            if (items.length === 0) return null;
-
-            return (
-              <div
-                key={day.toISOString()}
-                className={`bg-white rounded-2xl p-4 shadow-sm ${
-                  isToday ? "ring-2 ring-black" : ""
-                }`}
-              >
-                <h3 className="font-medium mb-3 capitalize">
+          return (
+            <div key={day.toISOString()} className="space-y-2">
+              {/* DÍA */}
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium capitalize">
                   {format(day, "EEEE dd", { locale: es })}
-                  {isToday && (
-                    <span className="ml-2 text-xs text-gray-500">(Hoy)</span>
-                  )}
                 </h3>
 
-                <div className="space-y-3">
+                {isToday && (
+                  <span className="text-xs text-gray-500">(Hoy)</span>
+                )}
+              </div>
+
+              {/* TURNOS */}
+              {items.length === 0 ? (
+                <p className="text-sm text-gray-400 pl-1">
+                  Sin turnos
+                </p>
+              ) : (
+                <div className="space-y-2">
                   {items.map((a) => (
                     <div
                       key={a.id}
                       onClick={() => onSelectAppointment?.(a.id)}
-                      className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-3 cursor-pointer active:scale-[0.98] transition"
+                      className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 cursor-pointer active:scale-[0.98] transition"
                     >
                       <div>
                         <p className="text-sm font-medium">
@@ -150,16 +137,16 @@ export default function CalendarGrid({
                         </p>
                       </div>
 
-                      <span className="text-base font-bold tabular-nums">
+                      <span className="text-sm font-semibold tabular-nums">
                         {format(new Date(a.date), "HH:mm")}
                       </span>
                     </div>
                   ))}
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   }
