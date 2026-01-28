@@ -53,9 +53,6 @@ export default function CalendarGrid({
 
   const days = view === "week" ? getWeekDays() : getMonthDays();
 
-  /* ============================= */
-  /* TURNOS POR DÍA + ORDEN HORA */
-  /* ============================= */
   const getAppointmentsByDay = (day: Date) =>
     appointments
       .filter(
@@ -102,18 +99,28 @@ export default function CalendarGrid({
 
         {days.map((day) => {
           const items = getAppointmentsByDay(day);
+          const isToday =
+            format(day, "yyyy-MM-dd") ===
+            format(new Date(), "yyyy-MM-dd");
 
           return (
             <div
               key={day.toISOString()}
-              className="bg-white rounded-2xl p-4 shadow-sm"
+              className={`bg-white rounded-2xl p-4 shadow-sm ${
+                isToday ? "ring-2 ring-black" : ""
+              }`}
             >
-              <h3 className="font-medium mb-2">
+              <h3 className="font-medium mb-2 capitalize">
                 {format(day, "EEEE dd", { locale: es })}
+                {isToday && (
+                  <span className="ml-2 text-xs text-gray-500">(Hoy)</span>
+                )}
               </h3>
 
               {items.length === 0 && (
-                <p className="text-sm text-gray-400">Sin turnos</p>
+                <p className="text-sm text-gray-400 italic">
+                  No hay turnos este día
+                </p>
               )}
 
               <div className="space-y-2">
@@ -121,7 +128,7 @@ export default function CalendarGrid({
                   <div
                     key={a.id}
                     onClick={() => onSelectAppointment?.(a.id)}
-                    className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 cursor-pointer hover:bg-gray-100 transition"
+                    className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-100 transition"
                   >
                     <div>
                       <p className="text-sm font-medium">
@@ -132,7 +139,7 @@ export default function CalendarGrid({
                       </p>
                     </div>
 
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-bold tabular-nums">
                       {format(new Date(a.date), "HH:mm")}
                     </span>
                   </div>
@@ -190,7 +197,7 @@ export default function CalendarGrid({
                       <p className="font-medium truncate">
                         {a.user.name} {a.user.lastName}
                       </p>
-                      <span className="font-semibold">
+                      <span className="font-semibold tabular-nums">
                         {format(new Date(a.date), "HH:mm")}
                       </span>
                     </div>
