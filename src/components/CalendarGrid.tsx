@@ -184,14 +184,17 @@ export default function CalendarGrid({
         {/* ACTIONS */}
         <div className="flex justify-between items-center">
           {view === "month" && (
-            <button
-              onClick={() => setShowPastDays((v) => !v)}
-              className="text-xs text-gray-600 underline"
-            >
-              {showPastDays
-                ? "Ocultar días anteriores"
-                : "Ver días anteriores"}
-            </button>
+        <button
+          onClick={() => setShowPastDays((v) => !v)}
+          className={`text-xs px-3 py-1.5 rounded-full border transition ${
+            showPastDays
+              ? "bg-black text-white border-black"
+              : "text-gray-600 border-gray-300 hover:bg-gray-100"
+          }`}
+        >
+          {showPastDays ? "Ocultar días anteriores" : "Ver días anteriores"}
+        </button>
+
           )}
 
           <button onClick={goToday} className="text-xs font-medium">
