@@ -10,6 +10,7 @@ import {
   eachDayOfInterval,
   startOfDay,
   isSameWeek,
+  isSameMonth,
 } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -129,15 +130,30 @@ export default function CalendarGrid({
 
   if (!isClient) return null;
 
+  const showTodayBadge =
+    (view === "week" &&
+      isSameWeek(currentDate, today, { weekStartsOn: 1 })) ||
+    (view === "month" && isSameMonth(currentDate, today));
+
   /* ================= MOBILE ================= */
 
   if (isMobile) {
     return (
       <div
-        className="space-y-4 mt-4"
+        className="relative space-y-4 mt-4"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
+        {/* 🔴 STICKY HOY */}
+        {showTodayBadge && (
+          <div className="sticky top-2 z-10 flex justify-center pointer-events-none">
+            <div className="bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow text-xs font-medium text-gray-800">
+              Hoy ·{" "}
+              {format(today, "EEEE dd", { locale: es })}
+            </div>
+          </div>
+        )}
+
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
@@ -158,10 +174,10 @@ export default function CalendarGrid({
           {view === "month" && (
             <button
               onClick={() => setShowPastDays((v) => !v)}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-150 active:scale-95 ${
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all active:scale-95 ${
                 showPastDays
                   ? "bg-black text-white border-black"
-                  : "text-gray-600 border-gray-300 hover:bg-gray-100"
+                  : "border-gray-300 text-gray-600"
               }`}
             >
               {showPastDays
