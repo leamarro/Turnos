@@ -4,7 +4,11 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { format, isToday, isTomorrow, isThisWeek } from "date-fns";
+import {
+  format,
+  isToday,
+  differenceInMinutes,
+} from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Pencil,
@@ -26,87 +30,79 @@ type Appointment = {
   service?: { name?: string };
 };
 
-/* ================= TIME ================= */
-
-function getTimeInfo(date: string) {
-  const now = new Date();
-  const d = new Date(date);
-  const diffMin = (d.getTime() - now.getTime()) / 60000;
-
-  if (diffMin < 0) return { state: "past", label: "Ya pasó" };
-  if (diffMin <= 30) return { state: "very-soon", label: "En minutos" };
-  if (diffMin <= 180) return { state: "soon", label: "Próximo" };
-  return { state: "future", label: "Más adelante" };
-}
-
-function getCardStyle(state: string) {
-  if (state === "very-soon")
-    return "bg-green-300 border-l-4 border-green-700";
-  if (state === "soon")
-    return "bg-green-200 border-l-4 border-green-500";
-  if (state === "past") return "bg-gray-50 opacity-40";
-  return "bg-white";
-}
-
 /* ================= HAPTIC ================= */
 
 function vibrate(ms = 20) {
   if ("vibrate" in navigator) navigator.vibrate(ms);
 }
 
+/* ================= TIME ================= */
+
+function getTimeInfo(date: string) {
+  const now = new Date();
+  const d = new Date(date);
+  const diff = differenceInMinutes(d, now);
+
+  if (diff < -10) return { state: "past" };
+  if (diff >= -10 && diff <= 10)
+    return { state: "focus" }; // 🔥 turno actual
+  if (diff <= 60) return { state: "very-soon" };
+  if (diff <= 240) return { state: "soon" };
+  return { state: "future" };
+}
+
+function cardStyle(state: string) {
+  if (state === "focus")
+    return "bg-green-300 ring-4 ring-green-500 scale-[1.02]";
+  if (state === "very-soon")
+    return "bg-green-200 border-l-4 border-green-600";
+  if (state === "soon")
+    return "bg-green-100 border-l-4 border-green-400";
+  if (state === "past") return "bg-gray-50 opacity-40";
+  return "bg-white";
+}
+
 /* ================= COMPONENT ================= */
 
 export default function AdminPanel() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [quickFilter, setQuickFilter] =
-    useState<"all" | "today" | "tomorrow" | "week">("all");
-  const [showPast, setShowPast] = useState(false);
+  const [items, setItems] = useState<Appointment[]>([]);
+  const [focusedId, setFocusedId] = useState<string | null>(
+    null
+  );
 
   const router = useRouter();
 
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
-    setAppointments(res.data ?? []);
+    setItems(res.data ?? []);
   }
 
   useEffect(() => {
     fetchAppointments();
   }, []);
 
-  /* 🔁 reorder every minute */
+  /* 🔁 reorden dinámico */
   useEffect(() => {
     const i = setInterval(() => {
-      setAppointments((prev) =>
-        [...prev].sort(
-          (a, b) =>
-            new Date(a.date).getTime() -
-            new Date(b.date).getTime()
-        )
-      );
+      setItems((prev) => [...prev]);
     }, 60000);
     return () => clearInterval(i);
   }, []);
 
-  const filtered = useMemo(() => {
-    let list = [...appointments];
+  const ordered = useMemo(() => {
+    const list = [...items].sort(
+      (a, b) =>
+        new Date(a.date).getTime() -
+        new Date(b.date).getTime()
+    );
 
-    if (!showPast) {
-      list = list.filter(
-        (a) => new Date(a.date).getTime() >= Date.now()
-      );
-    }
-
-    list = list.filter((a) => {
-      const d = new Date(a.date);
-      if (quickFilter === "today") return isToday(d);
-      if (quickFilter === "tomorrow") return isTomorrow(d);
-      if (quickFilter === "week")
-        return isThisWeek(d, { weekStartsOn: 1 });
-      return true;
-    });
+    const focus = list.find(
+      (a) => getTimeInfo(a.date).state === "focus"
+    );
+    if (focus && !focusedId) setFocusedId(focus.id);
 
     return list;
-  }, [appointments, quickFilter, showPast]);
+  }, [items]);
 
   async function deleteAppointment(id: string) {
     if (!confirm("¿Eliminar turno?")) return;
@@ -114,142 +110,140 @@ export default function AdminPanel() {
     fetchAppointments();
   }
 
-  /* ================= SWIPE CARD ================= */
+  /* ================= SWIPE + DRAG CARD ================= */
 
-  function SwipeCard({ a }: { a: Appointment }) {
+  function Card({ a, index }: { a: Appointment; index: number }) {
     const startX = useRef(0);
     const startY = useRef(0);
-    const pressTimer = useRef<any>(null);
+    const dragging = useRef(false);
 
     const [offset, setOffset] = useState(0);
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [snap, setSnap] = useState(false);
 
-    const THRESHOLD = 90;
-
-    /* 🧲 Elastic resistance */
-    function elastic(dx: number) {
-      const limit = 120;
-      if (Math.abs(dx) < limit) return dx;
-      return limit + (dx - limit) * 0.25;
-    }
+    const info = getTimeInfo(a.date);
+    const isFocus = info.state === "focus";
 
     function onTouchStart(e: React.TouchEvent) {
       startX.current = e.touches[0].clientX;
       startY.current = e.touches[0].clientY;
-
-      pressTimer.current = setTimeout(() => {
-        vibrate(25);
-        setMenuOpen(true);
-      }, 500);
     }
 
     function onTouchMove(e: React.TouchEvent) {
       const dx = e.touches[0].clientX - startX.current;
       const dy = e.touches[0].clientY - startY.current;
 
-      if (Math.abs(dy) > 10) {
-        clearTimeout(pressTimer.current);
-        return;
-      }
+      if (Math.abs(dy) > 12) return;
 
-      clearTimeout(pressTimer.current);
-      setOffset(elastic(dx));
+      setOffset(dx * 0.7); // 🧲 elastic
     }
 
     function onTouchEnd() {
-      clearTimeout(pressTimer.current);
+      if (offset > 80) {
+        setSnap(true);
+        setOffset(70);
+        vibrate(15);
+        return;
+      }
 
-      if (offset > THRESHOLD) {
-        vibrate(20);
-        router.push(`/admin/edit/${a.id}`);
-      } else if (offset < -THRESHOLD) {
+      if (offset < -120) {
         vibrate(20);
         deleteAppointment(a.id);
+        return;
       }
 
       setOffset(0);
+      setSnap(false);
     }
 
-    const info = getTimeInfo(a.date);
+    /* ================= DRAG ================= */
+
+    function onLongPress() {
+      dragging.current = true;
+      vibrate(30);
+    }
+
+    function onDragOver(e: React.DragEvent) {
+      e.preventDefault();
+      if (!dragging.current) return;
+
+      setItems((prev) => {
+        const arr = [...prev];
+        const dragged = arr.splice(index, 1)[0];
+        arr.splice(index, 0, dragged);
+        return arr;
+      });
+    }
 
     return (
-      <>
-        {/* LONG PRESS MENU */}
-        {menuOpen && (
-          <div
-            className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center"
-            onClick={() => setMenuOpen(false)}
+      <div
+        draggable
+        onDragStart={onLongPress}
+        onDragOver={onDragOver}
+        className="relative overflow-hidden rounded-2xl"
+      >
+        {/* ACTIONS */}
+        <div className="absolute inset-0 flex justify-end items-center pr-4 gap-3">
+          <button
+            onClick={() =>
+              router.push(`/admin/edit/${a.id}`)
+            }
+            className="bg-blue-500 text-white px-3 py-2 rounded-full"
           >
-            <div
-              className="bg-white rounded-2xl p-4 w-64 space-y-2"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() =>
-                  router.push(`/admin/edit/${a.id}`)
-                }
-                className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-gray-100"
-              >
-                <Pencil size={18} /> Editar
-              </button>
-
-              <button
-                onClick={() => deleteAppointment(a.id)}
-                className="flex items-center gap-3 w-full p-3 rounded-xl text-red-600 hover:bg-red-50"
-              >
-                <Trash2 size={18} /> Eliminar
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* SWIPE */}
-        <div className="relative overflow-hidden rounded-2xl">
-          <div className="absolute inset-0 flex justify-between items-center px-5 text-white text-sm">
-            <div className="bg-blue-500 px-3 py-2 rounded-full">
-              Editar
-            </div>
-            <div className="bg-red-500 px-3 py-2 rounded-full">
-              Eliminar
-            </div>
-          </div>
-
-          <div
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-            style={{ transform: `translateX(${offset}px)` }}
-            className={`relative z-10 rounded-2xl p-4 shadow transition-transform duration-200 ${getCardStyle(
-              info.state
-            )}`}
+            Editar
+          </button>
+          <button
+            onClick={() => deleteAppointment(a.id)}
+            className="bg-red-500 text-white px-3 py-2 rounded-full"
           >
-            <p className="font-semibold flex items-center gap-2">
-              <User size={16} />
-              {a.name} {a.lastName}
-            </p>
-
-            <p className="text-sm text-gray-600 flex items-center gap-2">
-              <Phone size={14} />
-              {a.telefono}
-            </p>
-
-            <p className="text-sm mt-2">{a.service?.name}</p>
-
-            <div className="text-sm text-gray-600 mt-2">
-              <div className="flex items-center gap-2">
-                <CalendarDays size={14} />
-                {format(new Date(a.date), "dd/MM/yyyy", {
-                  locale: es,
-                })}
-              </div>
-              <p className="text-xs text-gray-500 ml-6">
-                {format(new Date(a.date), "HH:mm")} hs ·{" "}
-                {info.label}
-              </p>
-            </div>
-          </div>
+            Eliminar
+          </button>
         </div>
-      </>
+
+        {/* CARD */}
+        <div
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={{
+            transform: `translateX(${offset}px)`,
+          }}
+          className={`relative z-10 p-4 rounded-2xl shadow transition-all duration-300 ${cardStyle(
+            info.state
+          )}`}
+        >
+          <p className="font-semibold flex items-center gap-2">
+            <User size={16} />
+            {a.name} {a.lastName}
+          </p>
+
+          <p className="text-sm text-gray-600 flex items-center gap-2">
+            <Phone size={14} />
+            {a.telefono}
+          </p>
+
+          <p className="text-sm mt-2">
+            {a.service?.name}
+          </p>
+
+          <div className="text-sm text-gray-600 mt-2">
+            <div className="flex items-center gap-2">
+              <CalendarDays size={14} />
+              {format(new Date(a.date), "dd/MM/yyyy", {
+                locale: es,
+              })}
+            </div>
+            <p className="text-xs text-gray-500 ml-6">
+              {format(new Date(a.date), "HH:mm")} hs
+            </p>
+          </div>
+
+          {isFocus && (
+            <p className="mt-2 text-xs font-semibold text-green-800">
+              🔥 Turno actual
+            </p>
+          )}
+        </div>
+      </div>
     );
   }
 
@@ -261,42 +255,12 @@ export default function AdminPanel() {
         Turnos
       </h1>
 
-      <div className="bg-white rounded-2xl p-4 mb-6 space-y-3">
-        <div className="flex gap-2 overflow-x-auto">
-          {[
-            ["all", "Todos"],
-            ["today", "Hoy"],
-            ["tomorrow", "Mañana"],
-            ["week", "Semana"],
-          ].map(([k, label]) => (
-            <button
-              key={k}
-              onClick={() => setQuickFilter(k as any)}
-              className={`px-3 py-1 rounded-full text-sm ${
-                quickFilter === k
-                  ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <button
-          onClick={() => setShowPast((v) => !v)}
-          className="text-xs text-gray-600"
-        >
-          {showPast ? "Ocultar pasados" : "Mostrar pasados"}
-        </button>
-      </div>
-
       <div className="sm:hidden space-y-4">
-        {filtered.map((a) => (
-          <SwipeCard key={a.id} a={a} />
+        {ordered.map((a, i) => (
+          <Card key={a.id} a={a} index={i} />
         ))}
 
-        {filtered.length === 0 && (
+        {ordered.length === 0 && (
           <p className="text-center text-sm text-gray-500">
             No hay turnos
           </p>
