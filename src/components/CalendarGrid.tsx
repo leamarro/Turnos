@@ -34,6 +34,8 @@ export default function CalendarGrid({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isClient, setIsClient] = useState(false);
   const todayRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -41,6 +43,7 @@ export default function CalendarGrid({
 
   const today = startOfDay(new Date());
 
+  /* ================= DAYS ================= */
   const getWeekDays = () => {
     const start = startOfWeek(currentDate, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -66,6 +69,7 @@ export default function CalendarGrid({
           new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
+  /* ================= NAV ================= */
   const next = () =>
     setCurrentDate((d) =>
       view === "week" ? addDays(d, 7) : addDays(d, 30)
@@ -75,6 +79,16 @@ export default function CalendarGrid({
     setCurrentDate((d) =>
       view === "week" ? addDays(d, -7) : addDays(d, -30)
     );
+
+  const goToToday = () => {
+    setCurrentDate(new Date());
+    setTimeout(() => {
+      todayRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 150);
+  };
 
   if (!isClient) return null;
 
@@ -88,12 +102,32 @@ export default function CalendarGrid({
         block: "start",
       });
     }
-  }, [isMobile, view]);
+  }, [isMobile, view, currentDate]);
+
+  /* ================= SWIPE ================= */
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+
+    if (Math.abs(diff) > 60) {
+      diff > 0 ? next() : prev();
+    }
+    touchStartX.current = null;
+  };
 
   /* ================= MOBILE ================= */
   if (isMobile) {
     return (
-      <div className="space-y-5 mt-4">
+      <div
+        ref={containerRef}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        className="space-y-5 mt-4 transition-all duration-300"
+      >
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
@@ -121,11 +155,8 @@ export default function CalendarGrid({
               key={day.toISOString()}
               className="bg-white rounded-2xl p-4 shadow-sm"
             >
-              {/* DAY HEADER */}
               <h3 className="flex items-center gap-2 font-medium mb-2 capitalize">
-                <span>
-                  {format(day, "EEEE", { locale: es })}
-                </span>
+                <span>{format(day, "EEEE", { locale: es })}</span>
 
                 <span
                   className={`flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${
@@ -169,11 +200,19 @@ export default function CalendarGrid({
             </div>
           );
         })}
+
+        {/* FLOATING TODAY BUTTON */}
+        <button
+          onClick={goToToday}
+          className="fixed bottom-6 right-4 bg-black text-white text-sm px-4 py-2 rounded-full shadow-lg active:scale-95 transition"
+        >
+          Hoy
+        </button>
       </div>
     );
   }
 
-  /* ================= DESKTOP ================= */
+  /* ================= DESKTOP (igual que antes) ================= */
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
