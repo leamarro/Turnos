@@ -25,7 +25,7 @@ type Appointment = {
 };
 
 /* ========================= */
-/* ⏱️ ESTADO TEMPORAL REAL */
+/* 🕒 ESTADO TEMPORAL */
 /* ========================= */
 function getTimeInfo(date: string) {
   const now = new Date();
@@ -55,9 +55,9 @@ function getCardStyle(state: string) {
 }
 
 /* ========================= */
-/* 📅 FILTRO POR DÍA (SAFE) */
+/* 📅 COMPARAR MISMO DÍA */
 /* ========================= */
-function sameDay(a: Date, b: Date) {
+function isSameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
@@ -93,20 +93,21 @@ export default function AdminPanel() {
   }, []);
 
   /* ========================= */
-  /* FILTRADO + ORDEN */
+  /* FILTRO FRONTEND REAL */
   /* ========================= */
   const appointments = useMemo(() => {
     let list = [...allAppointments];
 
-    // 📅 FILTRO FRONTEND
     if (filterDate) {
-      const selected = new Date(`${filterDate}T00:00:00`);
+      const [y, m, d] = filterDate.split("-").map(Number);
+      const selected = new Date(y, m - 1, d);
+
       list = list.filter((a) =>
-        sameDay(new Date(a.date), selected)
+        isSameDay(new Date(a.date), selected)
       );
     }
 
-    // ⏱️ ORDEN: futuros primero, pasados al final
+    // futuros primero, pasados al final
     return list.sort((a, b) => {
       const ta = getTimeInfo(a.date).state;
       const tb = getTimeInfo(b.date).state;
@@ -134,7 +135,7 @@ export default function AdminPanel() {
       </h1>
 
       {/* FILTRO */}
-      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col gap-3">
         <div className="relative">
           <input
             type="date"
@@ -142,9 +143,9 @@ export default function AdminPanel() {
             onChange={(e) => {
               setLoading(true);
               setFilterDate(e.target.value);
-              setTimeout(() => setLoading(false), 250);
+              setTimeout(() => setLoading(false), 200);
             }}
-            className="minimal-input max-w-xs"
+            className="minimal-input w-full"
           />
           {!filterDate && (
             <span className="absolute left-3 top-2.5 text-xs text-gray-400 pointer-events-none sm:hidden">
@@ -153,17 +154,19 @@ export default function AdminPanel() {
           )}
         </div>
 
-        <button
-          onClick={() => setFilterDate("")}
-          className="text-sm underline text-gray-600"
-        >
-          Limpiar
-        </button>
+        {filterDate && (
+          <button
+            onClick={() => setFilterDate("")}
+            className="text-xs text-gray-600 underline self-end"
+          >
+            Limpiar filtro
+          </button>
+        )}
       </div>
 
-      {/* ================= MOBILE ================= */}
+      {/* MOBILE */}
       <div
-        className={`sm:hidden space-y-4 transition-opacity duration-300 ${
+        className={`sm:hidden space-y-4 transition-opacity ${
           loading ? "opacity-50" : "opacity-100"
         }`}
       >
@@ -173,35 +176,34 @@ export default function AdminPanel() {
           return (
             <div
               key={a.id}
-              className={`rounded-2xl p-4 shadow transition ${getCardStyle(
+              className={`rounded-2xl p-4 shadow ${getCardStyle(
                 info.state
               )}`}
             >
-              <div>
-                <p className="font-semibold flex items-center gap-2">
-                  <User size={16} />
-                  {a.name} {a.lastName}
-                </p>
-                <p className="text-sm text-gray-600 flex items-center gap-2">
-                  <Phone size={14} />
-                  {a.telefono}
-                </p>
-              </div>
+              <p className="font-semibold flex items-center gap-2">
+                <User size={16} />
+                {a.name} {a.lastName}
+              </p>
+
+              <p className="text-sm text-gray-600 flex items-center gap-2">
+                <Phone size={14} />
+                {a.telefono}
+              </p>
 
               <p className="text-sm mt-2">
                 {a.service?.name}
               </p>
 
-              <div className="text-sm text-gray-600 mt-2 flex flex-col">
-                <span className="flex items-center gap-2">
+              <div className="text-sm text-gray-600 mt-2">
+                <div className="flex items-center gap-2">
                   <CalendarDays size={14} />
                   {format(new Date(a.date), "dd/MM/yyyy", {
                     locale: es,
                   })}
-                </span>
-                <span className="text-xs text-gray-500 ml-6">
+                </div>
+                <div className="text-xs text-gray-500 ml-6">
                   {format(new Date(a.date), "HH:mm")} hs
-                </span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-4 pt-3">
