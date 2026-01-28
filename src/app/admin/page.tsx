@@ -168,6 +168,12 @@ export default function AdminPanel() {
     const content = card.querySelector(".card-content") as HTMLDivElement;
     if (content) content.style.transform = `translateX(${transform}px)`;
     if (content) content.style.transition = "transform 0s";
+
+    // PINTAR FONDO COMPLETO
+    const bg = card.querySelector(".card-bg") as HTMLDivElement;
+    if (bg) {
+      bg.style.opacity = `${Math.min(Math.abs(dx)/100, 1)}`;
+    }
   }
 
   function handleSwipeEnd(e: React.TouchEvent, id: string) {
@@ -188,6 +194,9 @@ export default function AdminPanel() {
       content.style.transform = "translateX(0px)";
       content.style.transition = "transform 0.3s ease";
     }
+
+    const bg = card.querySelector(".card-bg") as HTMLDivElement;
+    if (bg) bg.style.opacity = "0";
   }
 
   return (
@@ -256,19 +265,19 @@ export default function AdminPanel() {
             <div
               key={a.id}
               ref={(el)=>{if(el) swipeRefs.current.set(a.id, el)}}
-              className="relative rounded-2xl overflow-hidden"
+              className="relative rounded-2xl overflow-hidden h-full"
               onTouchStart={e=>handleSwipeStart(e,a.id)}
               onTouchMove={e=>handleSwipeMove(e,a.id)}
               onTouchEnd={e=>handleSwipeEnd(e,a.id)}
             >
-              {/* FONDO COLORES */}
-              <div className="absolute inset-0 flex justify-between items-center px-4">
+              {/* FONDO COMPLETO */}
+              <div className="card-bg absolute inset-0 flex justify-between items-center px-4 bg-white">
                 <span className="text-green-600 font-bold">Editar</span>
                 <span className="text-red-600 font-bold">Eliminar</span>
               </div>
 
               {/* TARJETA MOVIBLE */}
-              <div className={`card-content p-4 rounded-2xl shadow transition ${getCardStyle(info.state)} ${isNow ? "ring-2 ring-green-400" : ""}`}>
+              <div className={`card-content relative p-4 rounded-2xl shadow transition ${getCardStyle(info.state)} ${isNow ? "ring-2 ring-green-400" : ""}`}>
                 <p className="font-semibold flex items-center gap-2">
                   <User size={16} />
                   {a.name} {a.lastName}
@@ -329,7 +338,7 @@ export default function AdminPanel() {
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex justify-center gap-4">
-                      <button onClick={()=>router.push(`/admin/edit/${a.id}`)}><Pencil size={18} /></button>
+                      <button onClick={()=>router.push(`/admin/edit/${a.id}`)} className="text-green-600"><Pencil size={18} /></button>
                       <button onClick={()=>deleteAppointment(a.id)} className="text-red-600"><Trash2 size={18} /></button>
                     </div>
                   </td>
