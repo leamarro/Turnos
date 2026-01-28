@@ -16,7 +16,6 @@ import { es } from "date-fns/locale";
 type Appointment = {
   id: string;
   date: string;
-  status?: "pending" | "confirmed" | "cancelled";
   user: {
     name: string;
     lastName: string;
@@ -37,10 +36,8 @@ export default function CalendarGrid({
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showPastDays, setShowPastDays] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
 
   const today = startOfDay(new Date());
-  const todayRef = useRef<HTMLDivElement | null>(null);
   const touchStartX = useRef<number | null>(null);
 
   /* ================= INIT ================= */
@@ -54,25 +51,10 @@ export default function CalendarGrid({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  /* ================= AUTO SCROLL (solo si hubo interacción) ================= */
-
-  useEffect(() => {
-    if (!hasInteracted) return;
-
-    if (isMobile && todayRef.current) {
-      todayRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }, [isMobile, view, currentDate, hasInteracted]);
-
   /* ================= FECHAS ================= */
 
   const getWeekDays = () => {
-    const isCurrentWeek = isSameWeek(currentDate, today, {
-      weekStartsOn: 1,
-    });
+    const isCurrentWeek = isSameWeek(currentDate, today, { weekStartsOn: 1 });
 
     if (isMobile && isCurrentWeek) {
       return Array.from({ length: 7 }, (_, i) => addDays(today, i));
@@ -112,22 +94,17 @@ export default function CalendarGrid({
 
   /* ================= NAV ================= */
 
-  const next = () => {
-    setHasInteracted(true);
+  const next = () =>
     setCurrentDate((d) =>
       view === "week" ? addDays(d, 7) : addDays(d, 30)
     );
-  };
 
-  const prev = () => {
-    setHasInteracted(true);
+  const prev = () =>
     setCurrentDate((d) =>
       view === "week" ? addDays(d, -7) : addDays(d, -30)
     );
-  };
 
   const goToday = () => {
-    setHasInteracted(true);
     setCurrentDate(new Date());
     setShowPastDays(false);
   };
@@ -144,7 +121,6 @@ export default function CalendarGrid({
     const diff = touchStartX.current - e.changedTouches[0].clientX;
 
     if (Math.abs(diff) > 60) {
-      setHasInteracted(true);
       diff > 0 ? next() : prev();
     }
 
@@ -164,9 +140,7 @@ export default function CalendarGrid({
       >
         {/* HEADER */}
         <div className="flex items-center justify-between">
-          <button onClick={prev} className="text-gray-500 text-lg">
-            ←
-          </button>
+          <button onClick={prev} className="text-gray-500 text-lg">←</button>
 
           <h2 className="font-semibold capitalize">
             {format(
@@ -176,28 +150,30 @@ export default function CalendarGrid({
             )}
           </h2>
 
-          <button onClick={next} className="text-gray-500 text-lg">
-            →
-          </button>
+          <button onClick={next} className="text-gray-500 text-lg">→</button>
         </div>
 
         {/* ACTIONS */}
         <div className="flex justify-between items-center">
           {view === "month" && (
-        <button
-          onClick={() => setShowPastDays((v) => !v)}
-          className={`text-xs px-3 py-1.5 rounded-full border transition ${
-            showPastDays
-              ? "bg-black text-white border-black"
-              : "text-gray-600 border-gray-300 hover:bg-gray-100"
-          }`}
-        >
-          {showPastDays ? "Ocultar días anteriores" : "Ver días anteriores"}
-        </button>
-
+            <button
+              onClick={() => setShowPastDays((v) => !v)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-150 active:scale-95 ${
+                showPastDays
+                  ? "bg-black text-white border-black"
+                  : "text-gray-600 border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              {showPastDays
+                ? "Ocultar días anteriores"
+                : "Ver días anteriores"}
+            </button>
           )}
 
-          <button onClick={goToday} className="text-xs font-medium">
+          <button
+            onClick={goToday}
+            className="text-xs font-medium text-gray-700"
+          >
             Hoy
           </button>
         </div>
@@ -212,17 +188,13 @@ export default function CalendarGrid({
           return (
             <div
               key={day.toISOString()}
-              ref={isToday ? todayRef : null}
               className="bg-white rounded-2xl p-4 shadow-sm"
             >
               <h3 className="flex items-center gap-2 font-medium mb-3 capitalize">
                 <span>{format(day, "EEEE", { locale: es })}</span>
-
                 <span
                   className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-semibold ${
-                    isToday
-                      ? "bg-black text-white"
-                      : "text-gray-700"
+                    isToday ? "bg-black text-white" : "text-gray-700"
                   }`}
                 >
                   {format(day, "dd")}
@@ -252,29 +224,9 @@ export default function CalendarGrid({
                         </p>
                       </div>
 
-                      <div className="text-right">
-                        <p className="text-sm font-bold tabular-nums">
-                          {format(new Date(a.date), "HH:mm")}
-                        </p>
-
-                        {a.status && (
-                          <span
-                            className={`text-[10px] font-medium ${
-                              a.status === "confirmed"
-                                ? "text-green-600"
-                                : a.status === "cancelled"
-                                ? "text-red-500"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {a.status === "confirmed"
-                              ? "✓ Confirmado"
-                              : a.status === "cancelled"
-                              ? "✕ Cancelado"
-                              : "• Pendiente"}
-                          </span>
-                        )}
-                      </div>
+                      <p className="text-sm font-bold tabular-nums">
+                        {format(new Date(a.date), "HH:mm")}
+                      </p>
                     </div>
                   </div>
                 ))}
