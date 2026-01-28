@@ -172,9 +172,19 @@ export default function AdminPanel() {
       if (dx > 0) {
         bg.style.backgroundColor = "#16a34a"; // verde editar
         bg.style.opacity = `${Math.min(dx / 100, 1)}`;
+        bg.innerHTML = `<span class="font-semibold text-white">Editar</span>`;
+        bg.style.display = "flex";
+        bg.style.alignItems = "center";
+        bg.style.justifyContent = "flex-start";
+        bg.style.paddingLeft = "16px";
       } else {
         bg.style.backgroundColor = "#dc2626"; // rojo eliminar
         bg.style.opacity = `${Math.min(-dx / 100, 1)}`;
+        bg.innerHTML = `<span class="font-semibold text-white">Eliminar</span>`;
+        bg.style.display = "flex";
+        bg.style.alignItems = "center";
+        bg.style.justifyContent = "flex-end";
+        bg.style.paddingRight = "16px";
       }
     }
   }
@@ -199,7 +209,10 @@ export default function AdminPanel() {
     }
 
     const bg = card.querySelector(".card-bg") as HTMLDivElement;
-    if (bg) bg.style.opacity = "0";
+    if (bg) {
+      bg.style.opacity = "0";
+      bg.innerHTML = ""; // limpiar texto al volver
+    }
   }
 
   return (
@@ -272,7 +285,7 @@ export default function AdminPanel() {
               onTouchEnd={e=>handleSwipeEnd(e,a.id)}
             >
               {/* FONDO COMPLETO */}
-              <div className="card-bg absolute inset-0 flex justify-between items-center px-4 text-white"></div>
+              <div className="card-bg absolute inset-0"></div>
 
               {/* TARJETA MOVIBLE */}
               <div className={`card-content relative p-4 rounded-2xl shadow transition ${getCardStyle(info.state)} ${isNow ? "ring-2 ring-green-400" : ""}`}>
