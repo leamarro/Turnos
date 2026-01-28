@@ -9,6 +9,7 @@ import {
   endOfMonth,
   eachDayOfInterval,
   startOfDay,
+  isSameWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -34,6 +35,7 @@ export default function CalendarGrid({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showPastDays, setShowPastDays] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -49,6 +51,13 @@ export default function CalendarGrid({
   /* ================= FECHAS ================= */
 
   const getWeekDays = () => {
+    const isCurrentWeek = isSameWeek(currentDate, today, { weekStartsOn: 1 });
+
+    // 📱 Mobile + semana actual → arrancar desde HOY
+    if (isMobile && isCurrentWeek) {
+      return Array.from({ length: 7 }, (_, i) => addDays(today, i));
+    }
+
     const start = startOfWeek(currentDate, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
   };
@@ -56,11 +65,10 @@ export default function CalendarGrid({
   const getMonthDays = () => {
     const start = startOfMonth(currentDate);
     const end = endOfMonth(currentDate);
-
     const allDays = eachDayOfInterval({ start, end });
 
-    // 🔑 MOBILE: arrancar desde hoy
-    if (isMobile) {
+    // 📱 Mobile → arrancar desde HOY salvo que el usuario pida ver anteriores
+    if (isMobile && !showPastDays) {
       return allDays.filter((d) => d >= today);
     }
 
@@ -93,12 +101,17 @@ export default function CalendarGrid({
       view === "week" ? addDays(d, -7) : addDays(d, -30)
     );
 
+  const goToday = () => {
+    setCurrentDate(new Date());
+    setShowPastDays(false);
+  };
+
   if (!isClient) return null;
 
   /* ================= MOBILE ================= */
   if (isMobile) {
     return (
-      <div className="space-y-5 mt-4">
+      <div className="space-y-4 mt-4">
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
@@ -114,6 +127,25 @@ export default function CalendarGrid({
           <button onClick={next} className="text-gray-500 text-lg">→</button>
         </div>
 
+        {/* ACTIONS */}
+        <div className="flex justify-between items-center">
+          {view === "month" && (
+            <button
+              onClick={() => setShowPastDays((v) => !v)}
+              className="text-xs text-gray-600 underline"
+            >
+              {showPastDays ? "Ocultar días anteriores" : "Ver días anteriores"}
+            </button>
+          )}
+
+          <button
+            onClick={goToday}
+            className="text-xs font-medium text-black"
+          >
+            Hoy
+          </button>
+        </div>
+
         {/* DAYS */}
         {days.map((day) => {
           const items = getAppointmentsByDay(day);
@@ -126,10 +158,8 @@ export default function CalendarGrid({
               key={day.toISOString()}
               className="bg-white rounded-2xl p-4 shadow-sm"
             >
-              {/* DAY HEADER */}
               <h3 className="flex items-center gap-2 font-medium mb-3 capitalize">
                 <span>{format(day, "EEEE", { locale: es })}</span>
-
                 <span
                   className={`flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${
                     isToday
