@@ -8,7 +8,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
-  // 👉 LISTADO
   if (!id) {
     const appointments = await prisma.appointment.findMany({
       orderBy: { date: "desc" },
@@ -18,7 +17,6 @@ export async function GET(request: Request) {
     return NextResponse.json(appointments);
   }
 
-  // 👉 DETALLE
   const appointment = await prisma.appointment.findUnique({
     where: { id },
     include: { service: true },
@@ -35,7 +33,7 @@ export async function GET(request: Request) {
 }
 
 /* ========================= */
-/* POST — crear */
+/* POST */
 /* ========================= */
 export async function POST(request: Request) {
   const body = await request.json();
@@ -56,7 +54,7 @@ export async function POST(request: Request) {
 }
 
 /* ========================= */
-/* PUT — actualizar */
+/* PUT */
 /* ========================= */
 export async function PUT(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -80,12 +78,13 @@ export async function PUT(request: Request) {
       instagram: body.instagram || null,
       status: body.status,
       serviceId: body.serviceId,
-...(body.date && body.time
-  ? {
-      date: new Date(`${body.date}T${body.time}:00-03:00`),
-    }
-  : {}),
-
+      ...(body.date && body.time
+        ? {
+            date: new Date(
+              `${body.date}T${body.time}:00-03:00`
+            ),
+          }
+        : {}),
     },
   });
 
