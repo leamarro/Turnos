@@ -168,11 +168,6 @@ export default function AdminPanel() {
     const content = card.querySelector(".card-content") as HTMLDivElement;
     if (content) content.style.transform = `translateX(${transform}px)`;
     if (content) content.style.transition = "transform 0s";
-
-    // pintar el fondo según la dirección
-    if (dx > 0) card.style.backgroundColor = `rgba(34,197,94,0.3)`; // verde claro
-    else if (dx < 0) card.style.backgroundColor = `rgba(239,68,68,0.3)`; // rojo claro
-    else card.style.backgroundColor = "transparent";
   }
 
   function handleSwipeEnd(e: React.TouchEvent, id: string) {
@@ -193,8 +188,6 @@ export default function AdminPanel() {
       content.style.transform = "translateX(0px)";
       content.style.transition = "transform 0.3s ease";
     }
-
-    card.style.backgroundColor = "transparent"; // reset fondo
   }
 
   return (
@@ -268,14 +261,10 @@ export default function AdminPanel() {
               onTouchMove={e=>handleSwipeMove(e,a.id)}
               onTouchEnd={e=>handleSwipeEnd(e,a.id)}
             >
-              {/* FONDO COMPLETO ACCIONES */}
-              <div className="absolute inset-0 flex justify-between items-center rounded-2xl">
-                <div className="w-1/2 h-full bg-green-500 flex justify-center items-center text-white font-bold rounded-l-2xl">
-                  Editar
-                </div>
-                <div className="w-1/2 h-full bg-red-500 flex justify-center items-center text-white font-bold rounded-r-2xl">
-                  Eliminar
-                </div>
+              {/* FONDO COLORES */}
+              <div className="absolute inset-0 flex justify-between items-center px-4">
+                <span className="text-green-600 font-bold">Editar</span>
+                <span className="text-red-600 font-bold">Eliminar</span>
               </div>
 
               {/* TARJETA MOVIBLE */}
