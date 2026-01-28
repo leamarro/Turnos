@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   format,
   startOfWeek,
@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 type Appointment = {
   id: string;
   date: string;
+  status?: "pending" | "confirmed" | "cancelled";
   user: {
     name: string;
     lastName: string;
@@ -37,6 +38,12 @@ export default function CalendarGrid({
   const [isMobile, setIsMobile] = useState(false);
   const [showPastDays, setShowPastDays] = useState(false);
 
+  const today = startOfDay(new Date());
+  const todayRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef<number | null>(null);
+
+  /* ================= INIT ================= */
+
   useEffect(() => {
     setIsClient(true);
     setIsMobile(window.innerWidth < 640);
@@ -46,14 +53,22 @@ export default function CalendarGrid({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const today = startOfDay(new Date());
+  /* ================= AUTO SCROLL ================= */
+
+  useEffect(() => {
+    if (isMobile && todayRef.current) {
+      todayRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [isMobile, view, currentDate]);
 
   /* ================= FECHAS ================= */
 
   const getWeekDays = () => {
     const isCurrentWeek = isSameWeek(currentDate, today, { weekStartsOn: 1 });
 
-    // 📱 Mobile + semana actual → arrancar desde HOY
     if (isMobile && isCurrentWeek) {
       return Array.from({ length: 7 }, (_, i) => addDays(today, i));
     }
@@ -67,7 +82,6 @@ export default function CalendarGrid({
     const end = endOfMonth(currentDate);
     const allDays = eachDayOfInterval({ start, end });
 
-    // 📱 Mobile → arrancar desde HOY salvo que el usuario pida ver anteriores
     if (isMobile && !showPastDays) {
       return allDays.filter((d) => d >= today);
     }
@@ -91,6 +105,8 @@ export default function CalendarGrid({
           new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
+  /* ================= NAV ================= */
+
   const next = () =>
     setCurrentDate((d) =>
       view === "week" ? addDays(d, 7) : addDays(d, 30)
@@ -106,12 +122,35 @@ export default function CalendarGrid({
     setShowPastDays(false);
   };
 
+  /* ================= SWIPE ================= */
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+
+    if (Math.abs(diff) > 60) {
+      diff > 0 ? next() : prev();
+    }
+
+    touchStartX.current = null;
+  };
+
   if (!isClient) return null;
 
   /* ================= MOBILE ================= */
+
   if (isMobile) {
     return (
-      <div className="space-y-4 mt-4">
+      <div
+        className="space-y-4 mt-4"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
@@ -138,10 +177,7 @@ export default function CalendarGrid({
             </button>
           )}
 
-          <button
-            onClick={goToday}
-            className="text-xs font-medium text-black"
-          >
+          <button onClick={goToday} className="text-xs font-medium">
             Hoy
           </button>
         </div>
@@ -156,15 +192,14 @@ export default function CalendarGrid({
           return (
             <div
               key={day.toISOString()}
+              ref={isToday ? todayRef : null}
               className="bg-white rounded-2xl p-4 shadow-sm"
             >
               <h3 className="flex items-center gap-2 font-medium mb-3 capitalize">
                 <span>{format(day, "EEEE", { locale: es })}</span>
                 <span
-                  className={`flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${
-                    isToday
-                      ? "bg-black text-white"
-                      : "text-gray-700"
+                  className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-semibold ${
+                    isToday ? "bg-black text-white" : "text-gray-700"
                   }`}
                 >
                   {format(day, "dd")}
@@ -182,20 +217,42 @@ export default function CalendarGrid({
                   <div
                     key={a.id}
                     onClick={() => onSelectAppointment?.(a.id)}
-                    className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-100 transition"
+                    className="bg-gray-50 rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-100 transition"
                   >
-                    <div>
-                      <p className="text-sm font-medium">
-                        {a.user.name} {a.user.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {a.service.name}
-                      </p>
-                    </div>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {a.user.name} {a.user.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {a.service.name}
+                        </p>
+                      </div>
 
-                    <span className="text-sm font-bold tabular-nums">
-                      {format(new Date(a.date), "HH:mm")}
-                    </span>
+                      <div className="text-right">
+                        <p className="text-sm font-bold tabular-nums">
+                          {format(new Date(a.date), "HH:mm")}
+                        </p>
+
+                        {a.status && (
+                          <span
+                            className={`text-[10px] font-medium ${
+                              a.status === "confirmed"
+                                ? "text-green-600"
+                                : a.status === "cancelled"
+                                ? "text-red-500"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {a.status === "confirmed"
+                              ? "✓ Confirmado"
+                              : a.status === "cancelled"
+                              ? "✕ Cancelado"
+                              : "• Pendiente"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -207,74 +264,5 @@ export default function CalendarGrid({
   }
 
   /* ================= DESKTOP ================= */
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={prev} className="text-gray-500 text-lg">←</button>
-
-        <h2 className="text-lg font-semibold capitalize">
-          {format(
-            currentDate,
-            view === "week" ? "dd MMM yyyy" : "MMMM yyyy",
-            { locale: es }
-          )}
-        </h2>
-
-        <button onClick={next} className="text-gray-500 text-lg">→</button>
-      </div>
-
-      <div className="grid grid-cols-7 gap-3">
-        {days.map((day) => {
-          const items = getAppointmentsByDay(day);
-          const isToday =
-            format(day, "yyyy-MM-dd") ===
-            format(today, "yyyy-MM-dd");
-
-          return (
-            <div
-              key={day.toISOString()}
-              className="bg-white rounded-xl p-3 min-h-[140px] shadow-sm"
-            >
-              <p
-                className={`text-sm font-medium mb-2 flex items-center justify-center w-6 h-6 rounded-full ${
-                  isToday
-                    ? "bg-black text-white"
-                    : "text-gray-700"
-                }`}
-              >
-                {format(day, "dd")}
-              </p>
-
-              {items.length === 0 && (
-                <p className="text-xs text-gray-400">—</p>
-              )}
-
-              <div className="space-y-1">
-                {items.map((a) => (
-                  <div
-                    key={a.id}
-                    onClick={() => onSelectAppointment?.(a.id)}
-                    className="bg-gray-50 rounded-lg px-2 py-1 text-xs cursor-pointer hover:bg-gray-100 transition"
-                  >
-                    <div className="flex justify-between">
-                      <p className="font-medium truncate">
-                        {a.user.name} {a.user.lastName}
-                      </p>
-                      <span className="font-semibold tabular-nums">
-                        {format(new Date(a.date), "HH:mm")}
-                      </span>
-                    </div>
-
-                    <p className="text-gray-500 truncate">
-                      {a.service.name}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  return null;
 }
