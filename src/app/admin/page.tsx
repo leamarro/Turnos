@@ -2,13 +2,9 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import {
-  format,
-  isToday,
-  differenceInMinutes,
-} from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Pencil,
@@ -30,239 +26,200 @@ type Appointment = {
   service?: { name?: string };
 };
 
-/* ================= HAPTIC ================= */
-
-function vibrate(ms = 20) {
-  if ("vibrate" in navigator) navigator.vibrate(ms);
-}
-
-/* ================= TIME ================= */
+/* ================= TIME LOGIC ================= */
 
 function getTimeInfo(date: string) {
   const now = new Date();
   const d = new Date(date);
-  const diff = differenceInMinutes(d, now);
+  const diffMs = d.getTime() - now.getTime();
+  const diffMin = diffMs / 1000 / 60;
 
-  if (diff < -10) return { state: "past" };
-  if (diff >= -10 && diff <= 10)
-    return { state: "focus" }; // 🔥 turno actual
-  if (diff <= 60) return { state: "very-soon" };
-  if (diff <= 240) return { state: "soon" };
-  return { state: "future" };
+  if (diffMs < 0) return { state: "past", diffMin };
+  if (diffMin <= 30) return { state: "very-soon", diffMin };
+  if (diffMin <= 180) return { state: "soon", diffMin };
+  return { state: "future", diffMin };
 }
 
-function cardStyle(state: string) {
-  if (state === "focus")
-    return "bg-green-300 ring-4 ring-green-500 scale-[1.02]";
-  if (state === "very-soon")
-    return "bg-green-200 border-l-4 border-green-600";
-  if (state === "soon")
-    return "bg-green-100 border-l-4 border-green-400";
-  if (state === "past") return "bg-gray-50 opacity-40";
-  return "bg-white";
+function getCardStyle(state: string) {
+  switch (state) {
+    case "very-soon":
+      return "border-l-4 border-green-600 bg-green-50";
+    case "soon":
+      return "border-l-4 border-green-400 bg-green-50";
+    case "past":
+      return "opacity-50 bg-gray-50";
+    default:
+      return "bg-white";
+  }
+}
+
+/* ================= DATE FILTER ================= */
+
+function sameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 /* ================= COMPONENT ================= */
 
 export default function AdminPanel() {
-  const [items, setItems] = useState<Appointment[]>([]);
-  const [focusedId, setFocusedId] = useState<string | null>(
-    null
-  );
-
+  const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
+  const [filterDate, setFilterDate] = useState("");
   const router = useRouter();
+
+  /* ============ FETCH ============ */
 
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
-    setItems(res.data ?? []);
+
+    const ordered = Array.isArray(res.data)
+      ? res.data.sort(
+          (a: Appointment, b: Appointment) =>
+            new Date(a.date).getTime() -
+            new Date(b.date).getTime()
+        )
+      : [];
+
+    setAllAppointments(ordered);
   }
 
   useEffect(() => {
     fetchAppointments();
   }, []);
 
-  /* 🔁 reorden dinámico */
-  useEffect(() => {
-    const i = setInterval(() => {
-      setItems((prev) => [...prev]);
-    }, 60000);
-    return () => clearInterval(i);
-  }, []);
+  /* ============ FILTER + ORDER ============ */
 
-  const ordered = useMemo(() => {
-    const list = [...items].sort(
-      (a, b) =>
+  const appointments = useMemo(() => {
+    let list = [...allAppointments];
+
+    // 📅 filtro frontend por fecha
+    if (filterDate) {
+      const selected = new Date(`${filterDate}T00:00:00`);
+      list = list.filter((a) =>
+        sameDay(new Date(a.date), selected)
+      );
+    }
+
+    // ⏱️ futuros primero, pasados al final
+    return list.sort((a, b) => {
+      const ta = getTimeInfo(a.date).state;
+      const tb = getTimeInfo(b.date).state;
+
+      if (ta === "past" && tb !== "past") return 1;
+      if (ta !== "past" && tb === "past") return -1;
+
+      return (
         new Date(a.date).getTime() -
         new Date(b.date).getTime()
-    );
+      );
+    });
+  }, [allAppointments, filterDate]);
 
-    const focus = list.find(
-      (a) => getTimeInfo(a.date).state === "focus"
-    );
-    if (focus && !focusedId) setFocusedId(focus.id);
-
-    return list;
-  }, [items]);
+  /* ============ DELETE ============ */
 
   async function deleteAppointment(id: string) {
-    if (!confirm("¿Eliminar turno?")) return;
+    if (!confirm("¿Eliminar este turno?")) return;
     await axios.delete(`/api/appointments?id=${id}`);
     fetchAppointments();
   }
 
-  /* ================= SWIPE + DRAG CARD ================= */
-
-  function Card({ a, index }: { a: Appointment; index: number }) {
-    const startX = useRef(0);
-    const startY = useRef(0);
-    const dragging = useRef(false);
-
-    const [offset, setOffset] = useState(0);
-    const [snap, setSnap] = useState(false);
-
-    const info = getTimeInfo(a.date);
-    const isFocus = info.state === "focus";
-
-    function onTouchStart(e: React.TouchEvent) {
-      startX.current = e.touches[0].clientX;
-      startY.current = e.touches[0].clientY;
-    }
-
-    function onTouchMove(e: React.TouchEvent) {
-      const dx = e.touches[0].clientX - startX.current;
-      const dy = e.touches[0].clientY - startY.current;
-
-      if (Math.abs(dy) > 12) return;
-
-      setOffset(dx * 0.7); // 🧲 elastic
-    }
-
-    function onTouchEnd() {
-      if (offset > 80) {
-        setSnap(true);
-        setOffset(70);
-        vibrate(15);
-        return;
-      }
-
-      if (offset < -120) {
-        vibrate(20);
-        deleteAppointment(a.id);
-        return;
-      }
-
-      setOffset(0);
-      setSnap(false);
-    }
-
-    /* ================= DRAG ================= */
-
-    function onLongPress() {
-      dragging.current = true;
-      vibrate(30);
-    }
-
-    function onDragOver(e: React.DragEvent) {
-      e.preventDefault();
-      if (!dragging.current) return;
-
-      setItems((prev) => {
-        const arr = [...prev];
-        const dragged = arr.splice(index, 1)[0];
-        arr.splice(index, 0, dragged);
-        return arr;
-      });
-    }
-
-    return (
-      <div
-        draggable
-        onDragStart={onLongPress}
-        onDragOver={onDragOver}
-        className="relative overflow-hidden rounded-2xl"
-      >
-        {/* ACTIONS */}
-        <div className="absolute inset-0 flex justify-end items-center pr-4 gap-3">
-          <button
-            onClick={() =>
-              router.push(`/admin/edit/${a.id}`)
-            }
-            className="bg-blue-500 text-white px-3 py-2 rounded-full"
-          >
-            Editar
-          </button>
-          <button
-            onClick={() => deleteAppointment(a.id)}
-            className="bg-red-500 text-white px-3 py-2 rounded-full"
-          >
-            Eliminar
-          </button>
-        </div>
-
-        {/* CARD */}
-        <div
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          style={{
-            transform: `translateX(${offset}px)`,
-          }}
-          className={`relative z-10 p-4 rounded-2xl shadow transition-all duration-300 ${cardStyle(
-            info.state
-          )}`}
-        >
-          <p className="font-semibold flex items-center gap-2">
-            <User size={16} />
-            {a.name} {a.lastName}
-          </p>
-
-          <p className="text-sm text-gray-600 flex items-center gap-2">
-            <Phone size={14} />
-            {a.telefono}
-          </p>
-
-          <p className="text-sm mt-2">
-            {a.service?.name}
-          </p>
-
-          <div className="text-sm text-gray-600 mt-2">
-            <div className="flex items-center gap-2">
-              <CalendarDays size={14} />
-              {format(new Date(a.date), "dd/MM/yyyy", {
-                locale: es,
-              })}
-            </div>
-            <p className="text-xs text-gray-500 ml-6">
-              {format(new Date(a.date), "HH:mm")} hs
-            </p>
-          </div>
-
-          {isFocus && (
-            <p className="mt-2 text-xs font-semibold text-green-800">
-              🔥 Turno actual
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  /* ================= UI ================= */
+  /* ================= RENDER ================= */
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-28">
-      <h1 className="text-2xl font-semibold text-center my-6">
+    <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
+      <h1 className="text-2xl font-semibold text-center mb-6">
         Turnos
       </h1>
 
-      <div className="sm:hidden space-y-4">
-        {ordered.map((a, i) => (
-          <Card key={a.id} a={a} index={i} />
-        ))}
+      {/* ================= FILTER ================= */}
+      <div className="bg-white rounded-2xl p-4 mb-6 flex items-center justify-between gap-3">
+        <input
+          type="date"
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+          className="minimal-input max-w-xs"
+        />
 
-        {ordered.length === 0 && (
+        {filterDate && (
+          <button
+            onClick={() => setFilterDate("")}
+            className="text-sm text-gray-600 underline"
+          >
+            Limpiar
+          </button>
+        )}
+      </div>
+
+      {/* ================= MOBILE ================= */}
+      <div className="sm:hidden space-y-4">
+        {appointments.map((a) => {
+          const info = getTimeInfo(a.date);
+          const isFocus = info.state === "very-soon";
+
+          return (
+            <div
+              key={a.id}
+              className={`relative rounded-2xl p-4 shadow transition ${getCardStyle(
+                info.state
+              )}`}
+            >
+              {isFocus && (
+                <span className="absolute -top-2 right-3 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow">
+                  Turno actual
+                </span>
+              )}
+
+              <p className="font-semibold flex items-center gap-2">
+                <User size={16} />
+                {a.name} {a.lastName}
+              </p>
+
+              <p className="text-sm text-gray-600 flex items-center gap-2">
+                <Phone size={14} />
+                {a.telefono}
+              </p>
+
+              <p className="text-sm mt-2">
+                {a.service?.name}
+              </p>
+
+              <div className="text-sm text-gray-600 mt-2 flex flex-col">
+                <span className="flex items-center gap-2">
+                  <CalendarDays size={14} />
+                  {format(new Date(a.date), "dd/MM/yyyy", {
+                    locale: es,
+                  })}
+                </span>
+                <span className="text-xs text-gray-500 ml-6">
+                  {format(new Date(a.date), "HH:mm")} hs
+                </span>
+              </div>
+
+              <div className="flex justify-end gap-4 pt-3">
+                <button
+                  onClick={() =>
+                    router.push(`/admin/edit/${a.id}`)
+                  }
+                >
+                  <Pencil size={18} />
+                </button>
+                <button
+                  onClick={() => deleteAppointment(a.id)}
+                  className="text-red-600"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+
+        {appointments.length === 0 && (
           <p className="text-center text-sm text-gray-500">
-            No hay turnos
+            No hay turnos para esta fecha
           </p>
         )}
       </div>
