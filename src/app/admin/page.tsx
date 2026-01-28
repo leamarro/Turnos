@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { format } from "date-fns";
+import { format, isToday, isTomorrow, isThisWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Pencil,
@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+/* ================= TYPES ================= */
+
 type Appointment = {
   id: string;
   name?: string;
@@ -24,19 +26,17 @@ type Appointment = {
   service?: { name?: string };
 };
 
-/* ========================= */
-/* 🕒 ESTADO TEMPORAL */
-/* ========================= */
+/* ================= TIME HELPERS ================= */
+
 function getTimeInfo(date: string) {
   const now = new Date();
   const d = new Date(date);
-  const diffMs = d.getTime() - now.getTime();
-  const diffMin = diffMs / 1000 / 60;
+  const diffMin = (d.getTime() - now.getTime()) / 60000;
 
-  if (diffMs < 0) return { state: "past", diffMin };
-  if (diffMin <= 60) return { state: "very-soon", diffMin };
-  if (diffMin <= 240) return { state: "soon", diffMin };
-  return { state: "future", diffMin };
+  if (diffMin < 0) return { state: "past", label: "Ya pasó" };
+  if (diffMin <= 60) return { state: "very-soon", label: "Empieza pronto" };
+  if (diffMin <= 240) return { state: "soon", label: "En el día" };
+  return { state: "future", label: "Próximo" };
 }
 
 function getCardStyle(state: string) {
@@ -45,35 +45,27 @@ function getCardStyle(state: string) {
       return "bg-green-200 border-l-4 border-green-600";
     case "soon":
       return "bg-green-100 border-l-4 border-green-400";
-    case "future":
-      return "bg-white";
     case "past":
-      return "bg-gray-50 opacity-50";
+      return "bg-gray-50 opacity-40";
     default:
       return "bg-white";
   }
 }
 
-/* ========================= */
-/* 📅 COMPARAR MISMO DÍA */
-/* ========================= */
-function isSameDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
+/* ================= COMPONENT ================= */
 
 export default function AdminPanel() {
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [filterDate, setFilterDate] = useState("");
+  const [quickFilter, setQuickFilter] =
+    useState<"all" | "today" | "tomorrow" | "week">("all");
+  const [showPast, setShowPast] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
-  /* ========================= */
-  /* FETCH */
-  /* ========================= */
+  /* ================= FETCH ================= */
+
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
 
@@ -92,35 +84,39 @@ export default function AdminPanel() {
     fetchAppointments();
   }, []);
 
-  /* ========================= */
-  /* FILTRO FRONTEND REAL */
-  /* ========================= */
+  /* ================= FILTER LOGIC ================= */
+
   const appointments = useMemo(() => {
     let list = [...allAppointments];
 
-    if (filterDate) {
-      const [y, m, d] = filterDate.split("-").map(Number);
-      const selected = new Date(y, m - 1, d);
-
-      list = list.filter((a) =>
-        isSameDay(new Date(a.date), selected)
+    // ⛔ ocultar pasados
+    if (!showPast) {
+      list = list.filter(
+        (a) => new Date(a.date).getTime() >= Date.now()
       );
     }
 
-    // futuros primero, pasados al final
-    return list.sort((a, b) => {
-      const ta = getTimeInfo(a.date).state;
-      const tb = getTimeInfo(b.date).state;
-
-      if (ta === "past" && tb !== "past") return 1;
-      if (ta !== "past" && tb === "past") return -1;
-
-      return (
-        new Date(a.date).getTime() -
-        new Date(b.date).getTime()
+    // 📅 filtro input date
+    if (filterDate) {
+      const selected = new Date(`${filterDate}T00:00:00`);
+      list = list.filter(
+        (a) =>
+          format(new Date(a.date), "yyyy-MM-dd") ===
+          format(selected, "yyyy-MM-dd")
       );
+    }
+
+    // ⚡ filtros rápidos
+    list = list.filter((a) => {
+      const d = new Date(a.date);
+      if (quickFilter === "today") return isToday(d);
+      if (quickFilter === "tomorrow") return isTomorrow(d);
+      if (quickFilter === "week") return isThisWeek(d, { weekStartsOn: 1 });
+      return true;
     });
-  }, [allAppointments, filterDate]);
+
+    return list;
+  }, [allAppointments, filterDate, quickFilter, showPast]);
 
   async function deleteAppointment(id: string) {
     if (!confirm("¿Eliminar este turno?")) return;
@@ -128,15 +124,44 @@ export default function AdminPanel() {
     fetchAppointments();
   }
 
+  /* ================= UI ================= */
+
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
+    <div className="max-w-6xl mx-auto px-4 pt-6 pb-28">
       <h1 className="text-2xl font-semibold text-center mb-6">
         Turnos
       </h1>
 
-      {/* FILTRO */}
-      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col gap-3">
-        <div className="relative">
+      {/* ================= FILTER BAR ================= */}
+      <div className="bg-white rounded-2xl p-4 mb-6 space-y-3">
+        {/* QUICK FILTERS */}
+        <div className="flex gap-2 overflow-x-auto">
+          {[
+            ["all", "Todos"],
+            ["today", "Hoy"],
+            ["tomorrow", "Mañana"],
+            ["week", "Semana"],
+          ].map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => {
+                setLoading(true);
+                setQuickFilter(k as any);
+                setTimeout(() => setLoading(false), 200);
+              }}
+              className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition ${
+                quickFilter === k
+                  ? "bg-black text-white"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* DATE + TOGGLE */}
+        <div className="flex justify-between items-center">
           <input
             type="date"
             value={filterDate}
@@ -145,29 +170,22 @@ export default function AdminPanel() {
               setFilterDate(e.target.value);
               setTimeout(() => setLoading(false), 200);
             }}
-            className="minimal-input w-full"
+            className="minimal-input max-w-xs"
           />
-          {!filterDate && (
-            <span className="absolute left-3 top-2.5 text-xs text-gray-400 pointer-events-none sm:hidden">
-              Filtrar por fecha
-            </span>
-          )}
-        </div>
 
-        {filterDate && (
           <button
-            onClick={() => setFilterDate("")}
-            className="text-xs text-gray-600 underline self-end"
+            onClick={() => setShowPast((v) => !v)}
+            className="text-xs text-gray-600 flex items-center gap-1 transition hover:scale-105"
           >
-            Limpiar filtro
+            {showPast ? "Ocultar pasados" : "Mostrar pasados"}
           </button>
-        )}
+        </div>
       </div>
 
-      {/* MOBILE */}
+      {/* ================= MOBILE ================= */}
       <div
-        className={`sm:hidden space-y-4 transition-opacity ${
-          loading ? "opacity-50" : "opacity-100"
+        className={`sm:hidden space-y-4 transition-all duration-300 ${
+          loading ? "opacity-50 scale-[0.99]" : "opacity-100 scale-100"
         }`}
       >
         {appointments.map((a) => {
@@ -176,7 +194,7 @@ export default function AdminPanel() {
           return (
             <div
               key={a.id}
-              className={`rounded-2xl p-4 shadow ${getCardStyle(
+              className={`rounded-2xl p-4 shadow transition-all duration-300 ${getCardStyle(
                 info.state
               )}`}
             >
@@ -201,9 +219,9 @@ export default function AdminPanel() {
                     locale: es,
                   })}
                 </div>
-                <div className="text-xs text-gray-500 ml-6">
-                  {format(new Date(a.date), "HH:mm")} hs
-                </div>
+                <p className="text-xs text-gray-500 ml-6">
+                  {format(new Date(a.date), "HH:mm")} hs · {info.label}
+                </p>
               </div>
 
               <div className="flex justify-end gap-4 pt-3">
@@ -227,7 +245,7 @@ export default function AdminPanel() {
 
         {appointments.length === 0 && (
           <p className="text-center text-sm text-gray-500">
-            No hay turnos para esta fecha
+            No hay turnos para este filtro
           </p>
         )}
       </div>
