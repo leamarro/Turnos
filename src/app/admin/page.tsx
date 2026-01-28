@@ -168,6 +168,11 @@ export default function AdminPanel() {
     const content = card.querySelector(".card-content") as HTMLDivElement;
     if (content) content.style.transform = `translateX(${transform}px)`;
     if (content) content.style.transition = "transform 0s";
+
+    // pintar el fondo según la dirección
+    if (dx > 0) card.style.backgroundColor = `rgba(34,197,94,0.3)`; // verde claro
+    else if (dx < 0) card.style.backgroundColor = `rgba(239,68,68,0.3)`; // rojo claro
+    else card.style.backgroundColor = "transparent";
   }
 
   function handleSwipeEnd(e: React.TouchEvent, id: string) {
@@ -188,6 +193,8 @@ export default function AdminPanel() {
       content.style.transform = "translateX(0px)";
       content.style.transition = "transform 0.3s ease";
     }
+
+    card.style.backgroundColor = "transparent"; // reset fondo
   }
 
   return (
@@ -261,10 +268,14 @@ export default function AdminPanel() {
               onTouchMove={e=>handleSwipeMove(e,a.id)}
               onTouchEnd={e=>handleSwipeEnd(e,a.id)}
             >
-              {/* FONDO COLORES */}
-              <div className="absolute inset-0 flex justify-between items-center px-4">
-                <span className="text-green-600 font-bold">Editar</span>
-                <span className="text-red-600 font-bold">Eliminar</span>
+              {/* FONDO COMPLETO ACCIONES */}
+              <div className="absolute inset-0 flex justify-between items-center rounded-2xl">
+                <div className="w-1/2 h-full bg-green-500 flex justify-center items-center text-white font-bold rounded-l-2xl">
+                  Editar
+                </div>
+                <div className="w-1/2 h-full bg-red-500 flex justify-center items-center text-white font-bold rounded-r-2xl">
+                  Eliminar
+                </div>
               </div>
 
               {/* TARJETA MOVIBLE */}
@@ -312,25 +323,30 @@ export default function AdminPanel() {
             </tr>
           </thead>
           <tbody>
-            {appointments.map((a) => (
-              <tr key={a.id} className="border-t">
-                <td className="p-3">{a.name} {a.lastName}</td>
-                <td className="p-3">{a.telefono}</td>
-                <td className="p-3">{a.service?.name}</td>
-                <td className="p-3">
-                  <div className="flex flex-col">
-                    <span>{format(new Date(a.date), "dd/MM/yyyy", { locale: es })}</span>
-                    <span className="text-xs text-gray-500">{format(new Date(a.date), "HH:mm")} hs</span>
-                  </div>
-                </td>
-                <td className="p-3 text-center">
-                  <div className="flex justify-center gap-4">
-                    <button onClick={()=>router.push(`/admin/edit/${a.id}`)}><Pencil size={18} /></button>
-                    <button onClick={()=>deleteAppointment(a.id)} className="text-red-600"><Trash2 size={18} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {appointments.map((a) => {
+              const info = getTimeInfo(a.date);
+              const isNow = info.state === "very-soon" || info.state === "soon";
+
+              return (
+                <tr key={a.id} className={`border-t transition ${isNow ? "bg-green-100" : ""}`}>
+                  <td className="p-3">{a.name} {a.lastName}</td>
+                  <td className="p-3">{a.telefono}</td>
+                  <td className="p-3">{a.service?.name}</td>
+                  <td className="p-3">
+                    <div className="flex flex-col">
+                      <span>{format(new Date(a.date), "dd/MM/yyyy", { locale: es })}</span>
+                      <span className="text-xs text-gray-500">{format(new Date(a.date), "HH:mm")} hs</span>
+                    </div>
+                  </td>
+                  <td className="p-3 text-center">
+                    <div className="flex justify-center gap-4">
+                      <button onClick={()=>router.push(`/admin/edit/${a.id}`)}><Pencil size={18} /></button>
+                      <button onClick={()=>deleteAppointment(a.id)} className="text-red-600"><Trash2 size={18} /></button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
