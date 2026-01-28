@@ -66,7 +66,6 @@ export default function AdminPanel() {
   const [filterDate, setFilterDate] = useState("");
   const [filterOption, setFilterOption] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [showPast, setShowPast] = useState(false);
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const today = new Date();
@@ -96,7 +95,6 @@ export default function AdminPanel() {
   const appointments = useMemo(() => {
     let list = [...allAppointments];
 
-    // 📅 FILTRO FRONTEND
     const todayStart = new Date(today); todayStart.setHours(0,0,0,0);
     const todayEnd = new Date(today); todayEnd.setHours(23,59,59,999);
 
@@ -132,7 +130,6 @@ export default function AdminPanel() {
       list = list.filter(a => new Date(a.date) >= todayStart);
     }
 
-    // ⏱️ ORDEN: futuros primero, pasados al final
     return list.sort((a, b) => {
       const ta = getTimeInfo(a.date).state;
       const tb = getTimeInfo(b.date).state;
@@ -170,7 +167,7 @@ export default function AdminPanel() {
     const dx = e.touches[0].clientX - startX;
     (card as any).dx = dx;
 
-    const transform = Math.min(Math.max(dx, -100), 100); // limitar
+    const transform = Math.min(Math.max(dx, -100), 100); 
     card.style.transform = `translateX(${transform}px)`;
     card.style.transition = "transform 0s";
   }
@@ -181,11 +178,9 @@ export default function AdminPanel() {
     const dx = (card as any).dx ?? 0;
 
     if (dx < -60) {
-      // eliminar
       deleteAppointment(id);
       return;
     } else if (dx > 60) {
-      // editar
       router.push(`/admin/edit/${id}`);
       return;
     }
@@ -218,17 +213,16 @@ export default function AdminPanel() {
           ))}
         </div>
 
-        <div className="flex gap-3 items-center mt-2 sm:mt-0 relative">
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            className="minimal-input max-w-xs peer"
-            aria-label="Filtrar por fecha"
-          />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none peer-empty:block peer-not-empty:hidden">
-            dd/mm/yyyy
-          </span>
+        <div className="flex gap-3 items-center mt-2 sm:mt-0">
+          <div className="flex flex-col">
+            <label className="text-sm text-gray-500">Filtrar por fecha</label>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="minimal-input max-w-xs"
+            />
+          </div>
 
           <button
             onClick={() => setShowPast(v => !v)}
