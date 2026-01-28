@@ -4,7 +4,12 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { format } from "date-fns";
+import {
+  format,
+  isToday,
+  isTomorrow,
+  differenceInMinutes,
+} from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Pencil,
@@ -55,6 +60,37 @@ export default function AdminPanel() {
     fetchAppointments(filterDate);
   }
 
+  /* ================= HELPERS ================= */
+
+  function getTimeLabel(date: string) {
+    const diffMin = differenceInMinutes(new Date(date), new Date());
+
+    if (diffMin < 0) return null;
+    if (diffMin < 60) return `En ${diffMin} min`;
+    if (diffMin < 1440) return `En ${Math.floor(diffMin / 60)}h`;
+    if (isTomorrow(new Date(date))) return "Mañana";
+
+    return null;
+  }
+
+  function groupAppointments() {
+    return {
+      hoy: appointments.filter((a) =>
+        isToday(new Date(a.date))
+      ),
+      manana: appointments.filter((a) =>
+        isTomorrow(new Date(a.date))
+      ),
+      proximos: appointments.filter(
+        (a) =>
+          !isToday(new Date(a.date)) &&
+          !isTomorrow(new Date(a.date))
+      ),
+    };
+  }
+
+  const groups = groupAppointments();
+
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 pb-16">
       <h1 className="text-2xl font-semibold text-center mb-6">
@@ -80,7 +116,7 @@ export default function AdminPanel() {
         <div className="flex gap-3">
           <button
             onClick={() => fetchAppointments(filterDate)}
-            className="bg-black text-white px-4 py-2 rounded-xl transition hover:scale-[1.02]"
+            className="bg-black text-white px-4 py-2 rounded-xl transition hover:scale-[1.03]"
           >
             Filtrar
           </button>
@@ -98,80 +134,116 @@ export default function AdminPanel() {
       </div>
 
       {/* ================= MOBILE ================= */}
-      <div className="sm:hidden space-y-4">
-        {appointments.map((a) => {
-          const isPast = new Date(a.date) < new Date();
+      <div className="sm:hidden space-y-8">
+        {(
+          [
+            ["Hoy", groups.hoy],
+            ["Mañana", groups.manana],
+            ["Próximos", groups.proximos],
+          ] as const
+        ).map(
+          ([title, items]) =>
+            items.length > 0 && (
+              <div key={title} className="space-y-4">
+                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                  {title}
+                </h2>
 
-          return (
-            <div
-              key={a.id}
-              className={`relative bg-white rounded-2xl p-4 shadow transition ${
-                isPast ? "opacity-60" : ""
-              }`}
-            >
-              {/* BARRA LATERAL */}
-              <span
-                className={`absolute left-0 top-0 h-full w-1 rounded-l-2xl ${
-                  isPast ? "bg-gray-300" : "bg-green-500"
-                }`}
-              />
+                {items.map((a, i) => {
+                  const isPast =
+                    new Date(a.date) < new Date();
+                  const label = getTimeLabel(a.date);
 
-              <div className="space-y-3 pl-2">
-                <div>
-                  <p className="font-semibold flex items-center gap-2">
-                    <User size={16} />
-                    {a.name} {a.lastName}
-                  </p>
+                  return (
+                    <div
+                      key={a.id}
+                      style={{
+                        animationDelay: `${i * 60}ms`,
+                      }}
+                      className={`relative bg-white rounded-2xl p-4 shadow animate-fade-up ${
+                        isPast ? "opacity-60" : ""
+                      }`}
+                    >
+                      {/* BARRA */}
+                      <span
+                        className={`absolute left-0 top-0 h-full w-1 rounded-l-2xl ${
+                          isPast
+                            ? "bg-gray-300"
+                            : "bg-green-500"
+                        }`}
+                      />
 
-                  {a.telefono && (
-                    <p className="text-sm text-gray-600 flex items-center gap-2">
-                      <Phone size={14} />
-                      {a.telefono}
-                    </p>
-                  )}
-                </div>
+                      <div className="space-y-3 pl-2">
+                        <div className="flex justify-between">
+                          <div>
+                            <p className="font-semibold flex items-center gap-2">
+                              <User size={16} />
+                              {a.name} {a.lastName}
+                            </p>
 
-                <p className="text-sm">{a.service?.name}</p>
+                            {a.telefono && (
+                              <p className="text-sm text-gray-600 flex items-center gap-2">
+                                <Phone size={14} />
+                                {a.telefono}
+                              </p>
+                            )}
+                          </div>
 
-                <div className="text-sm text-gray-600 flex flex-col">
-                  <span className="flex items-center gap-2">
-                    <CalendarDays size={14} />
-                    {format(new Date(a.date), "dd/MM/yyyy", {
-                      locale: es,
-                    })}
-                  </span>
-                  <span className="text-xs text-gray-500 ml-6">
-                    {format(new Date(a.date), "HH:mm")} hs
-                  </span>
-                </div>
+                          {label && (
+                            <span className="text-xs font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                              {label}
+                            </span>
+                          )}
+                        </div>
 
-                <p
-                  className={`text-xs font-medium ${
-                    isPast ? "text-gray-500" : "text-green-600"
-                  }`}
-                >
-                  {isPast ? "Turno pasado" : "Próximo turno"}
-                </p>
+                        <p className="text-sm">
+                          {a.service?.name}
+                        </p>
 
-                <div className="flex justify-end gap-4 pt-2">
-                  <button
-                    onClick={() =>
-                      router.push(`/admin/edit/${a.id}`)
-                    }
-                  >
-                    <Pencil size={18} />
-                  </button>
-                  <button
-                    onClick={() => deleteAppointment(a.id)}
-                    className="text-red-600"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
+                        <div className="text-sm text-gray-600 flex flex-col">
+                          <span className="flex items-center gap-2">
+                            <CalendarDays size={14} />
+                            {format(
+                              new Date(a.date),
+                              "dd/MM/yyyy",
+                              { locale: es }
+                            )}
+                          </span>
+                          <span className="text-xs text-gray-500 ml-6">
+                            {format(
+                              new Date(a.date),
+                              "HH:mm"
+                            )}{" "}
+                            hs
+                          </span>
+                        </div>
+
+                        <div className="flex justify-end gap-4 pt-2">
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/admin/edit/${a.id}`
+                              )
+                            }
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              deleteAppointment(a.id)
+                            }
+                            className="text-red-600"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          );
-        })}
+            )
+        )}
       </div>
 
       {/* ================= DESKTOP ================= */}
@@ -194,16 +266,24 @@ export default function AdminPanel() {
                   {a.name} {a.lastName}
                 </td>
                 <td className="p-3">{a.telefono}</td>
-                <td className="p-3">{a.service?.name}</td>
+                <td className="p-3">
+                  {a.service?.name}
+                </td>
                 <td className="p-3">
                   <div className="flex flex-col">
                     <span>
-                      {format(new Date(a.date), "dd/MM/yyyy", {
-                        locale: es,
-                      })}
+                      {format(
+                        new Date(a.date),
+                        "dd/MM/yyyy",
+                        { locale: es }
+                      )}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {format(new Date(a.date), "HH:mm")} hs
+                      {format(
+                        new Date(a.date),
+                        "HH:mm"
+                      )}{" "}
+                      hs
                     </span>
                   </div>
                 </td>
@@ -211,13 +291,17 @@ export default function AdminPanel() {
                   <div className="flex justify-center gap-4">
                     <button
                       onClick={() =>
-                        router.push(`/admin/edit/${a.id}`)
+                        router.push(
+                          `/admin/edit/${a.id}`
+                        )
                       }
                     >
                       <Pencil size={18} />
                     </button>
                     <button
-                      onClick={() => deleteAppointment(a.id)}
+                      onClick={() =>
+                        deleteAppointment(a.id)
+                      }
                       className="text-red-600"
                     >
                       <Trash2 size={18} />
@@ -228,12 +312,6 @@ export default function AdminPanel() {
             ))}
           </tbody>
         </table>
-
-        {appointments.length === 0 && (
-          <p className="text-center p-6 text-gray-500">
-            No hay turnos cargados.
-          </p>
-        )}
       </div>
     </div>
   );
