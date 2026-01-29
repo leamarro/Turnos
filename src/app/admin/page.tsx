@@ -1,16 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import {
-  Pencil,
-  Trash2,
-  CalendarDays,
-  Phone,
-  User,
-} from "lucide-react";
+import { Pencil, Trash2, CalendarDays, Phone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type Appointment = {
@@ -67,7 +61,6 @@ export default function AdminPanel() {
   const [filterOption, setFilterOption] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [showPast, setShowPast] = useState(false);
   const router = useRouter();
-
   const today = new Date();
 
   /* ========================= */
@@ -75,9 +68,8 @@ export default function AdminPanel() {
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
     const ordered = Array.isArray(res.data)
-      ? res.data.sort(
-          (a: Appointment, b: Appointment) =>
-            new Date(a.date).getTime() - new Date(b.date).getTime()
+      ? res.data.sort((a: Appointment, b: Appointment) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
         )
       : [];
     setAllAppointments(ordered);
@@ -144,77 +136,6 @@ export default function AdminPanel() {
     fetchAppointments();
   }
 
-  /* ========================= */
-  /* SWIPE LOGIC */
-  const swipeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-
-  function handleSwipeStart(e: React.TouchEvent, id: string) {
-    const card = swipeRefs.current.get(id);
-    if (!card) return;
-    (card as any).startX = e.touches[0].clientX;
-  }
-
-  function handleSwipeMove(e: React.TouchEvent, id: string) {
-    const card = swipeRefs.current.get(id);
-    if (!card) return;
-    const startX = (card as any).startX ?? 0;
-    const dx = e.touches[0].clientX - startX;
-    (card as any).dx = dx;
-
-    const transform = Math.min(Math.max(dx, -100), 100);
-    const content = card.querySelector(".card-content") as HTMLDivElement;
-    if (content) content.style.transform = `translateX(${transform}px)`;
-    if (content) content.style.transition = "transform 0s";
-
-    // PINTAR FONDO COMPLETO
-    const bg = card.querySelector(".card-bg") as HTMLDivElement;
-    if (bg) {
-      if (dx > 0) {
-        bg.style.backgroundColor = "#16a34a"; // verde editar
-        bg.style.opacity = `${Math.min(dx / 100, 1)}`;
-        bg.innerHTML = `<span class="font-semibold text-white">Editar</span>`;
-        bg.style.display = "flex";
-        bg.style.alignItems = "center";
-        bg.style.justifyContent = "flex-start";
-        bg.style.paddingLeft = "16px";
-      } else {
-        bg.style.backgroundColor = "#dc2626"; // rojo eliminar
-        bg.style.opacity = `${Math.min(-dx / 100, 1)}`;
-        bg.innerHTML = `<span class="font-semibold text-white">Eliminar</span>`;
-        bg.style.display = "flex";
-        bg.style.alignItems = "center";
-        bg.style.justifyContent = "flex-end";
-        bg.style.paddingRight = "16px";
-      }
-    }
-  }
-
-  function handleSwipeEnd(e: React.TouchEvent, id: string) {
-    const card = swipeRefs.current.get(id);
-    if (!card) return;
-    const dx = (card as any).dx ?? 0;
-
-    if (dx < -60) {
-      deleteAppointment(id);
-      return;
-    } else if (dx > 60) {
-      router.push(`/admin/edit/${id}`);
-      return;
-    }
-
-    const content = card.querySelector(".card-content") as HTMLDivElement;
-    if (content) {
-      content.style.transform = "translateX(0px)";
-      content.style.transition = "transform 0.3s ease";
-    }
-
-    const bg = card.querySelector(".card-bg") as HTMLDivElement;
-    if (bg) {
-      bg.style.opacity = "0";
-      bg.innerHTML = ""; // limpiar texto al volver
-    }
-  }
-
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
@@ -276,36 +197,39 @@ export default function AdminPanel() {
           const isNow = info.state === "very-soon" || info.state === "soon";
 
           return (
-            <div
-              key={a.id}
-              ref={(el)=>{if(el) swipeRefs.current.set(a.id, el)}}
-              className="relative rounded-2xl overflow-hidden h-full"
-              onTouchStart={e=>handleSwipeStart(e,a.id)}
-              onTouchMove={e=>handleSwipeMove(e,a.id)}
-              onTouchEnd={e=>handleSwipeEnd(e,a.id)}
-            >
-              {/* FONDO COMPLETO */}
-              <div className="card-bg absolute inset-0"></div>
+            <div key={a.id} className={`relative rounded-2xl overflow-hidden shadow ${getCardStyle(info.state)}`}>
+              <div className="p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold flex items-center gap-2">
+                      <User size={16} /> {a.name} {a.lastName}
+                    </p>
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      <Phone size={14} /> {a.telefono}
+                    </p>
+                    <p className="text-sm mt-2">{a.service?.name}</p>
+                    <div className="text-sm text-gray-600 mt-2 flex flex-col">
+                      <span className="flex items-center gap-2">
+                        <CalendarDays size={14} /> {format(new Date(a.date), "dd/MM/yyyy", { locale: es })}
+                      </span>
+                      <span className="text-xs text-gray-500 ml-6">{format(new Date(a.date), "HH:mm")} hs</span>
+                    </div>
+                  </div>
 
-              {/* TARJETA MOVIBLE */}
-              <div className={`card-content relative p-4 rounded-2xl shadow transition ${getCardStyle(info.state)} ${isNow ? "ring-2 ring-green-400" : ""}`}>
-                <p className="font-semibold flex items-center gap-2">
-                  <User size={16} />
-                  {a.name} {a.lastName}
-                </p>
-                <p className="text-sm text-gray-600 flex items-center gap-2">
-                  <Phone size={14} />
-                  {a.telefono}
-                </p>
-                <p className="text-sm mt-2">{a.service?.name}</p>
-                <div className="text-sm text-gray-600 mt-2 flex flex-col">
-                  <span className="flex items-center gap-2">
-                    <CalendarDays size={14} />
-                    {format(new Date(a.date), "dd/MM/yyyy", { locale: es })}
-                  </span>
-                  <span className="text-xs text-gray-500 ml-6">
-                    {format(new Date(a.date), "HH:mm")} hs
-                  </span>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => router.push(`/admin/edit/${a.id}`)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => deleteAppointment(a.id)}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -313,7 +237,9 @@ export default function AdminPanel() {
         })}
 
         {appointments.length === 0 && (
-          <p className="text-center text-sm text-gray-500">No hay turnos para este filtro</p>
+          <p className="text-center text-sm text-gray-500">
+            No hay turnos para este filtro
+          </p>
         )}
       </div>
 
@@ -347,8 +273,12 @@ export default function AdminPanel() {
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex justify-center gap-4">
-                      <button onClick={()=>router.push(`/admin/edit/${a.id}`)} className="text-green-600"><Pencil size={18} /></button>
-                      <button onClick={()=>deleteAppointment(a.id)} className="text-red-600"><Trash2 size={18} /></button>
+                      <button onClick={() => router.push(`/admin/edit/${a.id}`)} className="text-green-600">
+                        <Pencil size={18} />
+                      </button>
+                      <button onClick={() => deleteAppointment(a.id)} className="text-red-600">
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </td>
                 </tr>
