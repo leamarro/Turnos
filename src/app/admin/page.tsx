@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -137,49 +137,6 @@ export default function AdminPanel() {
   }
 
   /* ========================= */
-  /* SWIPE LOGIC SUAVE */
-  const swipeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-
-  function handleSwipeStart(e: React.TouchEvent, id: string) {
-    const card = swipeRefs.current.get(id);
-    if (!card) return;
-    (card as any).startX = e.touches[0].clientX;
-  }
-
-  function handleSwipeMove(e: React.TouchEvent, id: string) {
-    const card = swipeRefs.current.get(id);
-    if (!card) return;
-    const startX = (card as any).startX ?? 0;
-    const dx = e.touches[0].clientX - startX;
-    (card as any).dx = dx;
-
-    const transform = Math.min(Math.max(dx, -60), 60); // menos sensible
-    const content = card.querySelector(".card-content") as HTMLDivElement;
-    if (content) content.style.transform = `translateX(${transform}px)`;
-    if (content) content.style.transition = "transform 0s";
-  }
-
-  function handleSwipeEnd(e: React.TouchEvent, id: string) {
-    const card = swipeRefs.current.get(id);
-    if (!card) return;
-    const dx = (card as any).dx ?? 0;
-
-    const threshold = 50; // swipe solo si moviste mucho
-    if (dx < -threshold) {
-      deleteAppointment(id);
-      return;
-    } else if (dx > threshold) {
-      router.push(`/admin/edit/${id}`);
-      return;
-    }
-
-    const content = card.querySelector(".card-content") as HTMLDivElement;
-    if (content) {
-      content.style.transform = "translateX(0px)";
-      content.style.transition = "transform 0.3s ease";
-    }
-  }
-
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
@@ -243,45 +200,39 @@ export default function AdminPanel() {
           return (
             <div
               key={a.id}
-              ref={(el)=>{if(el) swipeRefs.current.set(a.id, el)}}
-              className={`relative rounded-2xl overflow-hidden shadow ${getCardStyle(info.state)}`}
-              onTouchStart={e => handleSwipeStart(e, a.id)}
-              onTouchMove={e => handleSwipeMove(e, a.id)}
-              onTouchEnd={e => handleSwipeEnd(e, a.id)}
+              className={`relative rounded-2xl overflow-hidden shadow transition ${getCardStyle(info.state)} ${isNow ? "ring-2 ring-green-400" : ""}`}
             >
-              <div className="card-content relative p-4 transition">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold flex items-center gap-2">
-                      <User size={16} /> {a.name} {a.lastName}
-                    </p>
-                    <p className="text-sm text-gray-600 flex items-center gap-2">
-                      <Phone size={14} /> {a.telefono}
-                    </p>
-                    <p className="text-sm mt-2">{a.service?.name}</p>
-                    <div className="text-sm text-gray-600 mt-2 flex flex-col">
-                      <span className="flex items-center gap-2">
-                        <CalendarDays size={14} /> {format(new Date(a.date), "dd/MM/yyyy", { locale: es })}
-                      </span>
-                      <span className="text-xs text-gray-500 ml-6">{format(new Date(a.date), "HH:mm")} hs</span>
-                    </div>
+              <div className="p-4 flex justify-between items-start">
+                <div>
+                  <p className="font-semibold flex items-center gap-2">
+                    <User size={16} /> {a.name} {a.lastName}
+                  </p>
+                  <p className="text-sm text-gray-600 flex items-center gap-2">
+                    <Phone size={14} /> {a.telefono}
+                  </p>
+                  <p className="text-sm mt-2">{a.service?.name}</p>
+                  <div className="text-sm text-gray-600 mt-2 flex flex-col">
+                    <span className="flex items-center gap-2">
+                      <CalendarDays size={14} /> {format(new Date(a.date), "dd/MM/yyyy", { locale: es })}
+                    </span>
+                    <span className="text-xs text-gray-500 ml-6">{format(new Date(a.date), "HH:mm")} hs</span>
                   </div>
+                </div>
 
-                  {/* BOTONES FIJOS */}
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => router.push(`/admin/edit/${a.id}`)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => deleteAppointment(a.id)}
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
+                {/* BOTONES MINIMALISTAS */}
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => router.push(`/admin/edit/${a.id}`)}
+                    className="text-green-600 hover:bg-green-50 p-2 rounded"
+                  >
+                    <Pencil size={18} />
+                  </button>
+                  <button
+                    onClick={() => deleteAppointment(a.id)}
+                    className="text-red-600 hover:bg-red-50 p-2 rounded"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </div>
             </div>
