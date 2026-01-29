@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -136,6 +136,50 @@ export default function AdminPanel() {
     fetchAppointments();
   }
 
+  /* ========================= */
+  /* SWIPE LOGIC SUAVE */
+  const swipeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  function handleSwipeStart(e: React.TouchEvent, id: string) {
+    const card = swipeRefs.current.get(id);
+    if (!card) return;
+    (card as any).startX = e.touches[0].clientX;
+  }
+
+  function handleSwipeMove(e: React.TouchEvent, id: string) {
+    const card = swipeRefs.current.get(id);
+    if (!card) return;
+    const startX = (card as any).startX ?? 0;
+    const dx = e.touches[0].clientX - startX;
+    (card as any).dx = dx;
+
+    const transform = Math.min(Math.max(dx, -60), 60); // menos sensible
+    const content = card.querySelector(".card-content") as HTMLDivElement;
+    if (content) content.style.transform = `translateX(${transform}px)`;
+    if (content) content.style.transition = "transform 0s";
+  }
+
+  function handleSwipeEnd(e: React.TouchEvent, id: string) {
+    const card = swipeRefs.current.get(id);
+    if (!card) return;
+    const dx = (card as any).dx ?? 0;
+
+    const threshold = 50; // swipe solo si moviste mucho
+    if (dx < -threshold) {
+      deleteAppointment(id);
+      return;
+    } else if (dx > threshold) {
+      router.push(`/admin/edit/${id}`);
+      return;
+    }
+
+    const content = card.querySelector(".card-content") as HTMLDivElement;
+    if (content) {
+      content.style.transform = "translateX(0px)";
+      content.style.transition = "transform 0.3s ease";
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
@@ -197,8 +241,15 @@ export default function AdminPanel() {
           const isNow = info.state === "very-soon" || info.state === "soon";
 
           return (
-            <div key={a.id} className={`relative rounded-2xl overflow-hidden shadow ${getCardStyle(info.state)}`}>
-              <div className="p-4">
+            <div
+              key={a.id}
+              ref={(el)=>{if(el) swipeRefs.current.set(a.id, el)}}
+              className={`relative rounded-2xl overflow-hidden shadow ${getCardStyle(info.state)}`}
+              onTouchStart={e => handleSwipeStart(e, a.id)}
+              onTouchMove={e => handleSwipeMove(e, a.id)}
+              onTouchEnd={e => handleSwipeEnd(e, a.id)}
+            >
+              <div className="card-content relative p-4 transition">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="font-semibold flex items-center gap-2">
@@ -216,6 +267,7 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
+                  {/* BOTONES FIJOS */}
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => router.push(`/admin/edit/${a.id}`)}
