@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   format,
   startOfWeek,
@@ -38,7 +38,6 @@ export default function CalendarGrid({
   const [showPastDays, setShowPastDays] = useState(false);
 
   const today = startOfDay(new Date());
-  const touchStartX = useRef<number | null>(null);
 
   /* ================= INIT ================= */
 
@@ -87,10 +86,7 @@ export default function CalendarGrid({
           format(new Date(a.date), "yyyy-MM-dd") ===
           format(day, "yyyy-MM-dd")
       )
-      .sort(
-        (a, b) =>
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   /* ================= NAV ================= */
 
@@ -109,35 +105,12 @@ export default function CalendarGrid({
     setShowPastDays(false);
   };
 
-  /* ================= SWIPE ================= */
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-
-    if (Math.abs(diff) > 60) {
-      diff > 0 ? next() : prev();
-    }
-
-    touchStartX.current = null;
-  };
-
   if (!isClient) return null;
 
   /* ================= MOBILE ================= */
-
   if (isMobile) {
     return (
-      <div
-        className="relative space-y-4 mt-4 pb-20"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
+      <div className="relative space-y-4 mt-4 pb-20">
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
@@ -164,9 +137,7 @@ export default function CalendarGrid({
                   : "border-gray-300 text-gray-600"
               }`}
             >
-              {showPastDays
-                ? "Ocultar días anteriores"
-                : "Ver días anteriores"}
+              {showPastDays ? "Ocultar días anteriores" : "Ver días anteriores"}
             </button>
           </div>
         )}
@@ -175,8 +146,7 @@ export default function CalendarGrid({
         {days.map((day) => {
           const items = getAppointmentsByDay(day);
           const isToday =
-            format(day, "yyyy-MM-dd") ===
-            format(today, "yyyy-MM-dd");
+            format(day, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
 
           return (
             <div
@@ -195,9 +165,7 @@ export default function CalendarGrid({
               </h3>
 
               {items.length === 0 && (
-                <p className="text-sm text-gray-400 italic">
-                  No hay turnos
-                </p>
+                <p className="text-sm text-gray-400 italic">No hay turnos</p>
               )}
 
               <div className="space-y-2">
@@ -212,9 +180,7 @@ export default function CalendarGrid({
                         <p className="text-sm font-medium">
                           {a.user.name} {a.user.lastName}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {a.service.name}
-                        </p>
+                        <p className="text-xs text-gray-500">{a.service.name}</p>
                       </div>
 
                       <p className="text-sm font-bold tabular-nums">
