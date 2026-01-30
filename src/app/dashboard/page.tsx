@@ -11,7 +11,6 @@ type Appointment = {
   id: string;
   date: string;
   service?: {
-    name?: string;
     price?: number;
   } | null;
   servicePrice?: number | null;
@@ -50,17 +49,17 @@ function startOfWeek(d: Date) {
 }
 
 /* =========================
-   SPARKLINE (MINI)
+   SPARKLINE PREMIUM
 ========================= */
 function Sparkline({ values }: { values: number[] }) {
   const max = Math.max(...values, 1);
 
   return (
-    <div className="flex items-end gap-1 h-10 mt-2">
+    <div className="flex items-end gap-1 h-10 mt-3">
       {values.map((v, i) => (
         <div
           key={i}
-          className="w-2 rounded bg-black/70 transition-all"
+          className="w-2 rounded-full bg-black/70 transition-all duration-300"
           style={{ height: `${(v / max) * 100}%` }}
         />
       ))}
@@ -153,7 +152,7 @@ export default function DashboardPage() {
     return [...map.entries()].sort((a, b) => b[1] - a[1])[0];
   }, [appointments]);
 
-  /* ================= TENDENCIA 3 MESES ================= */
+  /* ================= TENDENCIA ================= */
   const trendValues = useMemo(() => {
     return [2, 1, 0].map((i) => {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -166,20 +165,29 @@ export default function DashboardPage() {
   }, [appointments]);
 
   if (loading) {
-    return <p className="p-6 text-sm">Cargando dashboard…</p>;
+    return <p className="p-6 text-sm text-gray-500">Cargando dashboard…</p>;
   }
 
   return (
-    <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-6">
+    <main className="max-w-md mx-auto px-4 pt-6 pb-24 space-y-6">
 
       {/* INGRESOS MES */}
-      <div className="bg-white rounded-2xl p-4 shadow transition-all active:scale-[0.98]">
-        <p className="text-sm text-gray-500">Ingresos del mes</p>
-        <p className="text-2xl font-semibold mt-1">
+      <div className="
+        bg-white/90 backdrop-blur
+        rounded-3xl p-5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)]
+        transition-all duration-300
+        active:scale-[0.97]
+      ">
+        <p className="text-xs uppercase tracking-wide text-gray-400">
+          Ingresos del mes
+        </p>
+
+        <p className="text-3xl font-semibold mt-2">
           {formatMoney(incomeCurrent)}
         </p>
+
         <p
-          className={`text-xs mt-2 ${
+          className={`text-sm mt-2 ${
             monthlyVariation === null
               ? "text-gray-400"
               : monthlyVariation >= 0
@@ -188,38 +196,49 @@ export default function DashboardPage() {
           }`}
         >
           {monthlyVariation === null
-            ? "Sin datos del mes anterior"
+            ? "Sin referencia previa"
             : `${monthlyVariation > 0 ? "↑" : "↓"} ${Math.abs(
                 monthlyVariation
-              ).toFixed(1)}% vs mes anterior`}
+              ).toFixed(1)}% respecto al mes anterior`}
         </p>
 
         <Sparkline values={trendValues} />
+
         <p className="text-xs text-gray-400 mt-1">
           Tendencia últimos 3 meses
         </p>
       </div>
 
       {/* SEMANA */}
-      <div className="bg-white rounded-2xl p-4 shadow transition-all active:scale-[0.98]">
-        <p className="text-sm text-gray-500">Ingresos esta semana</p>
+      <div className="
+        bg-white rounded-2xl p-4 shadow-sm
+        transition-all active:scale-[0.98]
+      ">
+        <p className="text-xs uppercase tracking-wide text-gray-400">
+          Semana actual
+        </p>
+
         <p className="text-xl font-semibold mt-1">
           {formatMoney(thisWeekIncome)}
         </p>
+
         <p className="text-xs text-gray-400 mt-1">
           Semana anterior: {formatMoney(lastWeekIncome)}
         </p>
       </div>
 
-      {/* CLIENTE FRECUENTE */}
+      {/* CLIENTE */}
       {topClient && (
-        <div className="bg-white rounded-2xl p-4 shadow">
-          <p className="text-sm text-gray-500 mb-2">
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wide text-gray-400 mb-2">
             Cliente más frecuente
           </p>
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">{topClient[0]}</span>
-            <span className="text-gray-500">
+
+          <div className="flex justify-between items-center">
+            <span className="font-medium text-sm">
+              {topClient[0]}
+            </span>
+            <span className="text-xs text-gray-500">
               {topClient[1]} turnos
             </span>
           </div>
