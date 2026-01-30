@@ -3,12 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
-
-// COMPONENTES
-import TodayAlertCard from "@/components/TodayAlertCard";
-import FrequentClientsCard from "@/components/FrequentClientsCard";
-import WeeklyMiniChart from "@/components/WeeklyMiniChart";
-import TurnsTable from "@/components/TurnsTable";
+import StatCard from "@/components/StatCard";
 
 /* =========================
    TYPES
@@ -16,24 +11,22 @@ import TurnsTable from "@/components/TurnsTable";
 type Appointment = {
   id: string;
   date: string;
-  status: string;
-
-  name?: string | null;
-  lastName?: string | null;
-  telefono?: string | null;
-
   service: {
-    id: string;
-    name: string;
     price?: number;
   } | null;
-
   servicePrice?: number | null;
 };
 
 /* =========================
-   PAGE
+   HELPERS
 ========================= */
+const isSameMonth = (d: Date, ref: Date) =>
+  d.getFullYear() === ref.getFullYear() &&
+  d.getMonth() === ref.getMonth();
+
+const formatMoney = (n: number) =>
+  `$ ${n.toLocaleString("es-AR")}`;
+
 export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,9 +37,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/appointments", {
-          cache: "no-store",
-        });
+        const res = await fetch("/api/appointments", { cache: "no-store" });
         const data = await res.json();
         setAppointments(Array.isArray(data) ? data : []);
       } catch (e) {
@@ -56,83 +47,124 @@ export default function DashboardPage() {
         setLoading(false);
       }
     };
-
     load();
   }, []);
 
   /* =========================
-     MÉTRICAS SIMPLES
+     FECHAS CLAVE
   ========================= */
-  const totalTurns = appointments.length;
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const totalIncome = useMemo(
+  /* =========================
+     DATA POR MES
+  ========================= */
+  const currentMonthData = useMemo(
     () =>
-      appointments.reduce(
-        (sum, a) =>
-          sum + (a.servicePrice ?? a.service?.price ?? 0),
-        0
+      appointments.filter((a) =>
+        isSameMonth(new Date(a.date), now)
+      ),
+    [appointments]
+  );
+
+  const prevMonthData = useMemo(
+    () =>
+      appointments.filter((a) =>
+        isSameMonth(new Date(a.date), prevMonth)
       ),
     [appointments]
   );
 
   /* =========================
-     RENDER
+     MÉTRICAS
+  ========================= */
+  const incomeCurrent = useMemo(
+    () =>
+      currentMonthData.reduce(
+        (sum, a) =>
+          sum + (a.servicePrice ?? a.service?.price ?? 0),
+        0
+      ),
+    [currentMonthData]
+  );
+
+  const incomePrev = useMemo(
+    () =>
+      prevMonthData.reduce(
+        (sum, a) =>
+          sum + (a.servicePrice ?? a.service?.price ?? 0),
+        0
+      ),
+    [prevMonthData]
+  );
+
+  const variation =
+    incomePrev === 0
+      ? null
+      : Math.round(((incomeCurrent - incomePrev) / incomePrev) * 100);
+
+  const avgPerTurn =
+    currentMonthData.length === 0
+      ? 0
+      : Math.round(incomeCurrent / currentMonthData.length);
+
+  /* =========================
+     UI
   ========================= */
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-3xl mx-auto px-4 pt-6 pb-24 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 pt-20 pb-24 space-y-6">
 
         {/* HEADER */}
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold">
-            Dashboard
-          </h1>
-          <p className="text-sm text-gray-500">
-            Resumen rápido de tu negocio
+        <div>
+          <h1 className="text-2xl font-semibold">Resumen del mes</h1>
+          <p className="text-sm text-gray-500 capitalize">
+            {now.toLocaleDateString("es-AR", {
+              month: "long",
+              year: "numeric",
+            })}
           </p>
-        </header>
-
-        {/* ALERTA HOY */}
-        <TodayAlertCard appointments={appointments} />
-
-        {/* MÉTRICAS PRINCIPALES */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl p-4 shadow">
-            <p className="text-xs text-gray-500">
-              Turnos totales
-            </p>
-            <p className="text-2xl font-semibold">
-              {totalTurns}
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 shadow">
-            <p className="text-xs text-gray-500">
-              Ingresos totales
-            </p>
-            <p className="text-2xl font-semibold">
-              $ {totalIncome}
-            </p>
-          </div>
         </div>
 
-        {/* RESUMEN SEMANAL */}
-        <WeeklyMiniChart appointments={appointments} />
+        {/* CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <StatCard
+            title="Ingresos del mes"
+            value={formatMoney(incomeCurrent)}
+            subtitle={
+              variation === null
+                ? "Sin datos del mes anterior"
+                : `${variation > 0 ? "↑" : "↓"} ${Math.abs(
+                    variation
+                  )}% vs mes anterior`
+            }
+          />
 
-        {/* CLIENTES FRECUENTES */}
-        <FrequentClientsCard appointments={appointments} />
+          <StatCard
+            title="Turnos del mes"
+            value={currentMonthData.length.toString()}
+            subtitle="Confirmados y pendientes"
+          />
 
-        {/* TABLA (solo como respaldo, no protagonista) */}
-        <div className="bg-white rounded-2xl shadow p-4">
-          <h3 className="text-sm font-semibold mb-3">
-            📋 Últimos turnos
-          </h3>
+          <StatCard
+            title="Ingreso promedio"
+            value={formatMoney(avgPerTurn)}
+            subtitle="Por turno"
+          />
 
-          <TurnsTable
-            data={appointments.slice(0, 10)}
-            loading={loading}
+          <StatCard
+            title="Mes anterior"
+            value={formatMoney(incomePrev)}
+            subtitle="Referencia"
           />
         </div>
+
+        {/* LOADING */}
+        {loading && (
+          <p className="text-sm text-gray-500 text-center pt-6">
+            Cargando métricas…
+          </p>
+        )}
       </main>
     </div>
   );
