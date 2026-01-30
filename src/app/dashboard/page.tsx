@@ -23,10 +23,16 @@ type Appointment = {
 const money = (n: number) =>
   `$ ${n.toLocaleString("es-AR")}`;
 
+const getYearMonth = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}`;
+};
+
 const startOfWeek = (d: Date) => {
   const date = new Date(d);
   const day = date.getDay() || 7;
-  if (day !== 1) date.setHours(-24 * (day - 1));
+  if (day !== 1) date.setDate(date.getDate() - (day - 1));
+  date.setHours(0, 0, 0, 0);
   return date;
 };
 
@@ -53,23 +59,25 @@ export default function DashboardPage() {
   }, []);
 
   const now = new Date();
-  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const currentKey = `${now.getFullYear()}-${now.getMonth()}`;
+  const prevKey = `${now.getFullYear()}-${now.getMonth() - 1}`;
 
   /* =========================
-     FILTROS
+     FILTROS POR MES (FIX)
   ========================= */
-  const isSameMonth = (d: Date, ref: Date) =>
-    d.getFullYear() === ref.getFullYear() &&
-    d.getMonth() === ref.getMonth();
-
-  const currentMonth = appointments.filter((a) =>
-    isSameMonth(new Date(a.date), now)
+  const currentMonth = useMemo(
+    () => appointments.filter((a) => getYearMonth(a.date) === currentKey),
+    [appointments, currentKey]
   );
 
-  const prevMonthData = appointments.filter((a) =>
-    isSameMonth(new Date(a.date), prevMonth)
+  const prevMonth = useMemo(
+    () => appointments.filter((a) => getYearMonth(a.date) === prevKey),
+    [appointments, prevKey]
   );
 
+  /* =========================
+     SEMANA ACTUAL
+  ========================= */
   const weekStart = startOfWeek(new Date());
   const weekData = appointments.filter(
     (a) => new Date(a.date) >= weekStart
@@ -83,7 +91,7 @@ export default function DashboardPage() {
     0
   );
 
-  const incomePrev = prevMonthData.reduce(
+  const incomePrev = prevMonth.reduce(
     (s, a) => s + (a.servicePrice ?? a.service?.price ?? 0),
     0
   );
@@ -99,27 +107,20 @@ export default function DashboardPage() {
       : Math.round(((incomeCurrent - incomePrev) / incomePrev) * 100);
 
   /* =========================
-     INSIGHT PRINCIPAL
+     INSIGHT SIMPLE
   ========================= */
   const insight = useMemo(() => {
     if (variation === null)
-      return { text: "Aún no hay datos para comparar 📊", emoji: "📊" };
+      return "Aún no hay datos suficientes para comparar 📊";
 
     if (variation > 10)
-      return { text: "Estás creciendo respecto al mes anterior", emoji: "📈" };
+      return "Los ingresos crecieron respecto al mes anterior 📈";
 
     if (variation < -10)
-      return { text: "Los ingresos bajaron este mes", emoji: "⚠️" };
+      return "Los ingresos bajaron respecto al mes anterior ⚠️";
 
-    return { text: "El negocio se mantiene estable", emoji: "😐" };
+    return "Los ingresos se mantienen estables 😐";
   }, [variation]);
-
-  /* =========================
-     INSIGHT PREDICTIVO
-  ========================= */
-  const extraPerTurn = 1000;
-  const potential =
-    currentMonth.length * extraPerTurn;
 
   /* =========================
      UI
@@ -141,93 +142,39 @@ export default function DashboardPage() {
 
         {/* INSIGHT */}
         <div className="bg-black text-white rounded-2xl p-4">
-          <p className="text-sm">
-            {insight.emoji} {insight.text}
-          </p>
+          <p className="text-sm">{insight}</p>
         </div>
 
-        {/* MINI GRÁFICO */}
+        {/* COMPARACIÓN MES */}
         <div className="bg-white rounded-2xl p-4 shadow">
           <p className="text-sm font-medium mb-3">
             Comparación mensual
           </p>
 
-          <div className="flex items-end gap-6 h-24">
-            <div className="flex-1">
-              <div
-                className="bg-gray-300 rounded-lg w-full"
-                style={{ height: `${incomePrev ? 100 : 10}%` }}
-              />
-              <p className="text-xs text-center mt-1">Mes anterior</p>
+          <div className="flex justify-between text-sm">
+            <div>
+              <p className="text-gray-500">Mes anterior</p>
+              <p className="font-semibold">{money(incomePrev)}</p>
             </div>
-
-            <div className="flex-1">
-              <div
-                className="bg-black rounded-lg w-full"
-                style={{
-                  height:
-                    incomePrev === 0
-                      ? "100%"
-                      : `${Math.min(
-                          100,
-                          (incomeCurrent / incomePrev) * 100
-                        )}%`,
-                }}
-              />
-              <p className="text-xs text-center mt-1">Este mes</p>
+            <div className="text-right">
+              <p className="text-gray-500">Este mes</p>
+              <p className="font-semibold">{money(incomeCurrent)}</p>
             </div>
           </div>
+
+          {variation !== null && (
+            <p className="text-xs text-gray-500 mt-2">
+              Variación: {variation > 0 ? "↑" : "↓"} {Math.abs(variation)}%
+            </p>
+          )}
         </div>
 
         {/* MÉTRICAS */}
         <div className="grid grid-cols-2 gap-4">
-          <StatCard
-            title="Ingresos del mes"
-            value={money(incomeCurrent)}
-          />
-          <StatCard
-            title="Turnos del mes"
-            value={currentMonth.length}
-          />
-          <StatCard
-            title="Ticket promedio"
-            value={money(avgTicket)}
-          />
-          <StatCard
-            title="Semana actual"
-            value={`${weekData.length} turnos`}
-          />
-        </div>
-
-        {/* INSIGHT PREDICTIVO */}
-        <div className="bg-white rounded-2xl p-4 shadow">
-          <p className="text-sm">
-            🧠 Si aumentás el ticket promedio en{" "}
-            <b>{money(extraPerTurn)}</b>, podrías ganar{" "}
-            <b>{money(potential)}</b> más este mes
-          </p>
-        </div>
-
-        {/* RESUMEN SEMANAL */}
-        <div className="bg-white rounded-2xl p-4 shadow">
-          <p className="text-sm font-medium mb-2">
-            Resumen semanal (lun–dom)
-          </p>
-          <p className="text-sm text-gray-600">
-            Turnos: <b>{weekData.length}</b>
-          </p>
-          <p className="text-sm text-gray-600">
-            Ingresos:{" "}
-            <b>
-              {money(
-                weekData.reduce(
-                  (s, a) =>
-                    s + (a.servicePrice ?? a.service?.price ?? 0),
-                  0
-                )
-              )}
-            </b>
-          </p>
+          <StatCard title="Ingresos del mes" value={money(incomeCurrent)} />
+          <StatCard title="Turnos del mes" value={currentMonth.length} />
+          <StatCard title="Ticket promedio" value={money(avgTicket)} />
+          <StatCard title="Semana actual" value={`${weekData.length} turnos`} />
         </div>
 
         {loading && (
