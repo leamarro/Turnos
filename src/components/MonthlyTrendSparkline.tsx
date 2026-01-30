@@ -7,16 +7,18 @@ import {
   Line,
 } from "recharts";
 
-type Appointment = {
+type SparklineAppointment = {
   date: string;
   servicePrice?: number | null;
-  service?: { price?: number };
+  service?: {
+    price?: number;
+  } | null;
 };
 
 export default function MonthlyTrendSparkline({
   data,
 }: {
-  data: Appointment[];
+  data: SparklineAppointment[];
 }) {
   const chartData = useMemo(() => {
     const map = new Map<string, number>();
