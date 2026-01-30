@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
-import MonthlyTrendSparkline from "@/components/MonthlyTrendSparkline";
 
 /* =========================
    TYPES
@@ -11,99 +10,137 @@ import MonthlyTrendSparkline from "@/components/MonthlyTrendSparkline";
 type Appointment = {
   id: string;
   date: string;
-  name?: string | null;
-  lastName?: string | null;
   service?: {
+    name?: string;
     price?: number;
   } | null;
   servicePrice?: number | null;
+  name?: string | null;
+  lastName?: string | null;
 };
 
 /* =========================
    HELPERS
 ========================= */
 const formatMoney = (v: number) =>
-  v.toLocaleString("es-AR", { minimumFractionDigits: 0 });
+  `$ ${v.toLocaleString("es-AR")}`;
 
-const startOfWeek = (d: Date) => {
+function getIncomeByMonth(
+  appointments: Appointment[],
+  year: number,
+  month: number
+) {
+  return appointments
+    .filter((a) => {
+      const d = new Date(a.date);
+      return d.getFullYear() === year && d.getMonth() === month;
+    })
+    .reduce(
+      (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
+      0
+    );
+}
+
+function startOfWeek(d: Date) {
   const date = new Date(d);
   const day = date.getDay() || 7;
   if (day !== 1) date.setDate(date.getDate() - (day - 1));
   date.setHours(0, 0, 0, 0);
   return date;
-};
+}
 
+/* =========================
+   SPARKLINE (MINI)
+========================= */
+function Sparkline({ values }: { values: number[] }) {
+  const max = Math.max(...values, 1);
+
+  return (
+    <div className="flex items-end gap-1 h-10 mt-2">
+      {values.map((v, i) => (
+        <div
+          key={i}
+          className="w-2 rounded bg-black/70 transition-all"
+          style={{ height: `${(v / max) * 100}%` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* =========================
+   PAGE
+========================= */
 export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /* =========================
-     FETCH
-  ========================= */
+  /* ================= FETCH ================= */
   useEffect(() => {
-    const load = async () => {
-      const res = await fetch("/api/appointments", { cache: "no-store" });
-      const data = await res.json();
-      setAppointments(Array.isArray(data) ? data : []);
-      setLoading(false);
-    };
-    load();
+    fetch("/api/appointments", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setAppointments(Array.isArray(d) ? d : []))
+      .finally(() => setLoading(false));
   }, []);
 
-  /* =========================
-     DERIVED DATA
-  ========================= */
   const now = new Date();
 
-  const incomeByMonth = useMemo(() => {
-    const map = new Map<string, number>();
+  /* ================= INGRESOS MES ================= */
+  const incomeCurrent = useMemo(
+    () =>
+      getIncomeByMonth(
+        appointments,
+        now.getFullYear(),
+        now.getMonth()
+      ),
+    [appointments]
+  );
 
-    appointments.forEach((a) => {
-      const d = new Date(a.date);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      const price = a.servicePrice ?? a.service?.price ?? 0;
-      map.set(key, (map.get(key) ?? 0) + price);
-    });
-
-    return map;
+  const incomePrev = useMemo(() => {
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return getIncomeByMonth(
+      appointments,
+      prev.getFullYear(),
+      prev.getMonth()
+    );
   }, [appointments]);
 
-  const currentKey = `${now.getFullYear()}-${now.getMonth()}`;
-  const prevKey = `${now.getFullYear()}-${now.getMonth() - 1}`;
-
-  const incomeCurrent = incomeByMonth.get(currentKey) ?? 0;
-  const incomePrev = incomeByMonth.get(prevKey) ?? 0;
-
-  const variation =
+  const monthlyVariation =
     incomePrev > 0
-      ? Math.round(((incomeCurrent - incomePrev) / incomePrev) * 100)
+      ? ((incomeCurrent - incomePrev) / incomePrev) * 100
       : null;
 
-  const trendEmoji =
-    variation === null ? "➖" : variation > 0 ? "📈" : variation < 0 ? "📉" : "➖";
+  /* ================= SEMANA ================= */
+  const thisWeekStart = startOfWeek(now);
+  const lastWeekStart = new Date(thisWeekStart);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
 
-  /* =========================
-     WEEK SUMMARY
-  ========================= */
-  const weekStart = startOfWeek(now);
-  const prevWeekStart = new Date(weekStart);
-  prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+  const thisWeekIncome = useMemo(
+    () =>
+      appointments
+        .filter((a) => new Date(a.date) >= thisWeekStart)
+        .reduce(
+          (s, a) => s + (a.servicePrice ?? a.service?.price ?? 0),
+          0
+        ),
+    [appointments]
+  );
 
-  const weekIncome = (start: Date) =>
-    appointments.reduce((sum, a) => {
-      const d = new Date(a.date);
-      if (d >= start && d < new Date(start.getTime() + 7 * 86400000)) {
-        return sum + (a.servicePrice ?? a.service?.price ?? 0);
-      }
-      return sum;
-    }, 0);
+  const lastWeekIncome = useMemo(
+    () =>
+      appointments
+        .filter((a) => {
+          const d = new Date(a.date);
+          return d >= lastWeekStart && d < thisWeekStart;
+        })
+        .reduce(
+          (s, a) => s + (a.servicePrice ?? a.service?.price ?? 0),
+          0
+        ),
+    [appointments]
+  );
 
-  const incomeThisWeek = weekIncome(weekStart);
-  const incomeLastWeek = weekIncome(prevWeekStart);
-
-  /* =========================
-     TOP CLIENT
-  ========================= */
+  /* ================= CLIENTE TOP ================= */
   const topClient = useMemo(() => {
     const map = new Map<string, number>();
 
@@ -113,9 +150,19 @@ export default function DashboardPage() {
       map.set(name, (map.get(name) ?? 0) + 1);
     });
 
-    return [...map.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3);
+    return [...map.entries()].sort((a, b) => b[1] - a[1])[0];
+  }, [appointments]);
+
+  /* ================= TENDENCIA 3 MESES ================= */
+  const trendValues = useMemo(() => {
+    return [2, 1, 0].map((i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      return getIncomeByMonth(
+        appointments,
+        d.getFullYear(),
+        d.getMonth()
+      );
+    });
   }, [appointments]);
 
   if (loading) {
@@ -123,79 +170,61 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-xl mx-auto px-4 pt-16 pb-24 space-y-6">
+    <main className="max-w-xl mx-auto px-4 pt-6 pb-24 space-y-6">
 
-        {/* HEADER */}
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
+      {/* INGRESOS MES */}
+      <div className="bg-white rounded-2xl p-4 shadow transition-all active:scale-[0.98]">
+        <p className="text-sm text-gray-500">Ingresos del mes</p>
+        <p className="text-2xl font-semibold mt-1">
+          {formatMoney(incomeCurrent)}
+        </p>
+        <p
+          className={`text-xs mt-2 ${
+            monthlyVariation === null
+              ? "text-gray-400"
+              : monthlyVariation >= 0
+              ? "text-green-600"
+              : "text-red-600"
+          }`}
+        >
+          {monthlyVariation === null
+            ? "Sin datos del mes anterior"
+            : `${monthlyVariation > 0 ? "↑" : "↓"} ${Math.abs(
+                monthlyVariation
+              ).toFixed(1)}% vs mes anterior`}
+        </p>
 
-        {/* INGRESOS MES */}
-        <div className="bg-white rounded-2xl p-4 shadow space-y-2">
-          <p className="text-sm text-gray-500">Ingresos del mes</p>
+        <Sparkline values={trendValues} />
+        <p className="text-xs text-gray-400 mt-1">
+          Tendencia últimos 3 meses
+        </p>
+      </div>
 
-          <div className="flex items-end justify-between">
-            <p className="text-2xl font-semibold">
-              $ {formatMoney(incomeCurrent)}
-            </p>
+      {/* SEMANA */}
+      <div className="bg-white rounded-2xl p-4 shadow transition-all active:scale-[0.98]">
+        <p className="text-sm text-gray-500">Ingresos esta semana</p>
+        <p className="text-xl font-semibold mt-1">
+          {formatMoney(thisWeekIncome)}
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          Semana anterior: {formatMoney(lastWeekIncome)}
+        </p>
+      </div>
 
-            <span className="text-xl">{trendEmoji}</span>
-          </div>
-
-          {variation !== null && (
-            <p className="text-xs text-gray-500">
-              {variation > 0 ? "↑" : "↓"} {Math.abs(variation)}% vs mes anterior
-            </p>
-          )}
-
-          <MonthlyTrendSparkline data={appointments} />
-
-          <p className="text-xs text-gray-400">
-            Tendencia últimos 3 meses
-          </p>
-        </div>
-
-        {/* SEMANA */}
-        <div className="bg-white rounded-2xl p-4 shadow space-y-1">
-          <p className="text-sm text-gray-500">Resumen semanal</p>
-
-          <p className="text-lg font-semibold">
-            $ {formatMoney(incomeThisWeek)}
-          </p>
-
-          <p className="text-xs text-gray-500">
-            Semana anterior: $ {formatMoney(incomeLastWeek)}
-          </p>
-        </div>
-
-        {/* TOP CLIENTES */}
+      {/* CLIENTE FRECUENTE */}
+      {topClient && (
         <div className="bg-white rounded-2xl p-4 shadow">
-          <p className="text-sm text-gray-500 mb-3">
-            Clientes más frecuentes
+          <p className="text-sm text-gray-500 mb-2">
+            Cliente más frecuente
           </p>
-
-          <div className="space-y-2">
-            {topClient.map(([name, count], i) => (
-              <div
-                key={name}
-                className="flex justify-between text-sm"
-              >
-                <span className="font-medium">
-                  {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"} {name}
-                </span>
-                <span className="text-gray-500">
-                  {count} turnos
-                </span>
-              </div>
-            ))}
-
-            {topClient.length === 0 && (
-              <p className="text-sm text-gray-400">
-                Aún sin datos suficientes
-              </p>
-            )}
+          <div className="flex justify-between text-sm">
+            <span className="font-medium">{topClient[0]}</span>
+            <span className="text-gray-500">
+              {topClient[1]} turnos
+            </span>
           </div>
         </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
