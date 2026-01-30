@@ -25,7 +25,7 @@ type Appointment = {
 ========================= */
 const money = (n: number) => `$ ${n.toLocaleString("es-AR")}`;
 
-const yearMonthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`;
+const monthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`;
 
 const startOfWeek = (d: Date) => {
   const date = new Date(d);
@@ -60,17 +60,17 @@ export default function DashboardPage() {
   const now = new Date();
 
   /* =========================
-     MES ACTUAL vs ANTERIOR
+     MESES
   ========================= */
-  const currentMonthKey = yearMonthKey(now);
-  const prevMonthKey = yearMonthKey(new Date(now.getFullYear(), now.getMonth() - 1));
+  const currentMonthKey = monthKey(now);
+  const prevMonthKey = monthKey(new Date(now.getFullYear(), now.getMonth() - 1));
 
   const currentMonth = appointments.filter(
-    (a) => yearMonthKey(new Date(a.date)) === currentMonthKey
+    (a) => monthKey(new Date(a.date)) === currentMonthKey
   );
 
   const prevMonth = appointments.filter(
-    (a) => yearMonthKey(new Date(a.date)) === prevMonthKey
+    (a) => monthKey(new Date(a.date)) === prevMonthKey
   );
 
   const incomeCurrent = currentMonth.reduce(
@@ -103,15 +103,18 @@ export default function DashboardPage() {
   }, [monthVariation]);
 
   /* =========================
-     SEMANA ACTUAL vs ANTERIOR
+     SEMANAS (FIXED)
   ========================= */
   const thisWeekStart = startOfWeek(now);
+  const nextWeekStart = new Date(thisWeekStart);
+  nextWeekStart.setDate(thisWeekStart.getDate() + 7);
+
   const lastWeekStart = new Date(thisWeekStart);
   lastWeekStart.setDate(thisWeekStart.getDate() - 7);
 
   const thisWeek = appointments.filter((a) => {
     const d = new Date(a.date);
-    return d >= thisWeekStart;
+    return d >= thisWeekStart && d < nextWeekStart;
   });
 
   const lastWeek = appointments.filter((a) => {
@@ -135,97 +138,112 @@ export default function DashboardPage() {
       : Math.round(((incomeThisWeek - incomeLastWeek) / incomeLastWeek) * 100);
 
   /* =========================
-     CLIENTE + SERVICIO TOP
+     TOP CLIENTES (TABLA)
   ========================= */
-  const topClient = useMemo(() => {
+  const topClients = useMemo(() => {
     const map: Record<string, number> = {};
     currentMonth.forEach((a) => {
       const name = `${a.name ?? ""} ${a.lastName ?? ""}`.trim();
       if (!name) return;
       map[name] = (map[name] ?? 0) + 1;
     });
-    return Object.entries(map).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+
+    return Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
   }, [currentMonth]);
 
-  const topService = useMemo(() => {
+  /* =========================
+     TENDENCIA 3 MESES
+  ========================= */
+  const last3Months = useMemo(() => {
     const map: Record<string, number> = {};
-    currentMonth.forEach((a) => {
-      const name = a.service?.name ?? "Sin servicio";
-      map[name] = (map[name] ?? 0) + 1;
+
+    appointments.forEach((a) => {
+      const d = new Date(a.date);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      map[key] =
+        (map[key] ?? 0) + (a.servicePrice ?? a.service?.price ?? 0);
     });
-    return Object.entries(map).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-  }, [currentMonth]);
+
+    return Object.entries(map)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-3)
+      .map(([key, total], i, arr) => {
+        const [y, m] = key.split("-");
+        const name = new Date(Number(y), Number(m)).toLocaleDateString("es-AR", {
+          month: "long",
+        });
+
+        const prev = arr[i - 1]?.[1] ?? null;
+        const trend =
+          prev === null ? null : total > prev ? "up" : total < prev ? "down" : "same";
+
+        return { name, total, trend };
+      });
+  }, [appointments]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-3xl mx-auto px-4 pt-20 pb-24 space-y-6">
 
-        {/* HEADER */}
-        <div>
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-sm text-gray-500 capitalize">
-            {now.toLocaleDateString("es-AR", {
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
-        </div>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
 
         {/* INSIGHT */}
-        <div className="bg-black text-white rounded-2xl p-4">
-          <p className="text-sm">{monthInsight}</p>
+        <div className="bg-black text-white rounded-2xl p-4 text-sm">
+          {monthInsight}
         </div>
 
         {/* MES */}
-        <div className="bg-white rounded-2xl p-4 shadow space-y-2">
-          <p className="text-sm font-medium">Mes actual vs anterior</p>
-
-          <div className="flex justify-between text-sm">
-            <div>
-              <p className="text-gray-500">Mes anterior</p>
-              <p className="font-semibold">{money(incomePrev)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-gray-500">Este mes</p>
-              <p className="font-semibold">{money(incomeCurrent)}</p>
-            </div>
-          </div>
-
-          {monthVariation !== null && (
-            <p className="text-xs text-gray-500">
-              Variación: {monthVariation > 0 ? "↑" : "↓"} {Math.abs(monthVariation)}%
-            </p>
-          )}
-        </div>
+        <StatCard title="Ingresos del mes" value={money(incomeCurrent)} />
+        <StatCard title="Turnos del mes" value={currentMonth.length} />
 
         {/* SEMANA */}
-        <div className="bg-white rounded-2xl p-4 shadow space-y-2">
-          <p className="text-sm font-medium">Esta semana vs anterior</p>
-
-          <div className="flex justify-between text-sm">
-            <div>
-              <p className="text-gray-500">Semana anterior</p>
-              <p className="font-semibold">{money(incomeLastWeek)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-gray-500">Esta semana</p>
-              <p className="font-semibold">{money(incomeThisWeek)}</p>
-            </div>
-          </div>
-
+        <div className="bg-white rounded-2xl p-4 shadow text-sm space-y-1">
+          <p className="font-medium">Esta semana vs anterior</p>
+          <p>Semana anterior: {money(incomeLastWeek)}</p>
+          <p>Esta semana: {money(incomeThisWeek)}</p>
           {weekVariation !== null && (
-            <p className="text-xs text-gray-500">
+            <p className="text-gray-500">
               Variación: {weekVariation > 0 ? "↑" : "↓"} {Math.abs(weekVariation)}%
             </p>
           )}
         </div>
 
-        {/* STATS */}
-        <div className="grid grid-cols-2 gap-4">
-          <StatCard title="Ingresos del mes" value={money(incomeCurrent)} />
-          <StatCard title="Turnos del mes" value={currentMonth.length} />
-          <StatCard title="Cliente más frecuente" value={topClient} />
-          <StatCard title="Servicio más vendido" value={topService} />
+        {/* TOP CLIENTES */}
+        <div className="bg-white rounded-2xl p-4 shadow text-sm">
+          <p className="font-medium mb-2">Clientes más frecuentes</p>
+          {topClients.length === 0 ? (
+            <p className="text-gray-500">Sin datos este mes</p>
+          ) : (
+            <table className="w-full">
+              <tbody>
+                {topClients.map(([name, count]) => (
+                  <tr key={name}>
+                    <td>{name}</td>
+                    <td className="text-right text-gray-500">
+                      {count} turnos
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* TENDENCIA */}
+        <div className="bg-white rounded-2xl p-4 shadow text-sm">
+          <p className="font-medium mb-2">Tendencia últimos 3 meses</p>
+          {last3Months.map((m) => (
+            <div key={m.name} className="flex justify-between">
+              <span className="capitalize">{m.name}</span>
+              <span>
+                {money(m.total)}{" "}
+                {m.trend === "up" && "↑"}
+                {m.trend === "down" && "↓"}
+              </span>
+            </div>
+          ))}
         </div>
 
         {loading && (
