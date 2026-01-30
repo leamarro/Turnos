@@ -2,14 +2,13 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-// CARDS
-import TodaySummaryCard from "@/components/TodaySummaryCard";
-import TodayNextAppointments from "@/components/TodayNextAppointments";
-import WeeklySummaryCard from "@/components/WeeklySummaryCard";
-import TopServiceWeekCard from "@/components/TopServiceWeekCard";
-import WeekComparisonCard from "@/components/WeekComparisonCard";
+// COMPONENTES
+import TodayAlertCard from "@/components/TodayAlertCard";
+import FrequentClientsCard from "@/components/FrequentClientsCard";
+import WeeklyMiniChart from "@/components/WeeklyMiniChart";
+import TurnsTable from "@/components/TurnsTable";
 
 /* =========================
    TYPES
@@ -17,11 +16,14 @@ import WeekComparisonCard from "@/components/WeekComparisonCard";
 type Appointment = {
   id: string;
   date: string;
+  status: string;
 
   name?: string | null;
   lastName?: string | null;
+  telefono?: string | null;
 
   service: {
+    id: string;
     name: string;
     price?: number;
   } | null;
@@ -29,6 +31,9 @@ type Appointment = {
   servicePrice?: number | null;
 };
 
+/* =========================
+   PAGE
+========================= */
 export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +50,7 @@ export default function DashboardPage() {
         const data = await res.json();
         setAppointments(Array.isArray(data) ? data : []);
       } catch (e) {
-        console.error("Dashboard error", e);
+        console.error(e);
         setAppointments([]);
       } finally {
         setLoading(false);
@@ -56,40 +61,78 @@ export default function DashboardPage() {
   }, []);
 
   /* =========================
-     LOADING
+     MÉTRICAS SIMPLES
   ========================= */
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">
-        Cargando dashboard…
-      </div>
-    );
-  }
+  const totalTurns = appointments.length;
+
+  const totalIncome = useMemo(
+    () =>
+      appointments.reduce(
+        (sum, a) =>
+          sum + (a.servicePrice ?? a.service?.price ?? 0),
+        0
+      ),
+    [appointments]
+  );
 
   /* =========================
-     UI
+     RENDER
   ========================= */
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-xl mx-auto px-4 pt-16 pb-28 space-y-5">
+      <main className="max-w-3xl mx-auto px-4 pt-6 pb-24 space-y-6">
 
         {/* HEADER */}
-        <h1 className="text-2xl font-semibold">
-          Dashboard
-        </h1>
+        <header className="space-y-1">
+          <h1 className="text-2xl font-semibold">
+            Dashboard
+          </h1>
+          <p className="text-sm text-gray-500">
+            Resumen rápido de tu negocio
+          </p>
+        </header>
 
-        {/* ================= HOY ================= */}
-        <TodaySummaryCard appointments={appointments} />
+        {/* ALERTA HOY */}
+        <TodayAlertCard appointments={appointments} />
 
-        <TodayNextAppointments appointments={appointments} />
+        {/* MÉTRICAS PRINCIPALES */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl p-4 shadow">
+            <p className="text-xs text-gray-500">
+              Turnos totales
+            </p>
+            <p className="text-2xl font-semibold">
+              {totalTurns}
+            </p>
+          </div>
 
-        {/* ================= SEMANA ================= */}
-        <WeeklySummaryCard appointments={appointments} />
+          <div className="bg-white rounded-2xl p-4 shadow">
+            <p className="text-xs text-gray-500">
+              Ingresos totales
+            </p>
+            <p className="text-2xl font-semibold">
+              $ {totalIncome}
+            </p>
+          </div>
+        </div>
 
-        <TopServiceWeekCard appointments={appointments} />
+        {/* RESUMEN SEMANAL */}
+        <WeeklyMiniChart appointments={appointments} />
 
-        <WeekComparisonCard appointments={appointments} />
+        {/* CLIENTES FRECUENTES */}
+        <FrequentClientsCard appointments={appointments} />
 
+        {/* TABLA (solo como respaldo, no protagonista) */}
+        <div className="bg-white rounded-2xl shadow p-4">
+          <h3 className="text-sm font-semibold mb-3">
+            📋 Últimos turnos
+          </h3>
+
+          <TurnsTable
+            data={appointments.slice(0, 10)}
+            loading={loading}
+          />
+        </div>
       </main>
     </div>
   );
