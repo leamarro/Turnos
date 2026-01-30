@@ -64,9 +64,15 @@ export default function MonthlyIncomeByServiceChart({
     <div className="w-full h-[280px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData}>
-          <XAxis dataKey="name" />
+          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
           <YAxis />
-          <Tooltip />
+          <Tooltip
+            formatter={(value) => {
+              if (typeof value !== "number") return value;
+              return `$ ${value}`;
+            }}
+            cursor={{ fill: "rgba(0,0,0,0.04)" }}
+          />
           <Bar dataKey="total" radius={[6, 6, 0, 0]}>
             {chartData.map((_, i) => (
               <Cell key={i} fill={COLORS[i % COLORS.length]} />
