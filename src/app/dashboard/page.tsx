@@ -2,40 +2,17 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useMemo, useState } from "react";
-import { exportToCsv } from "@/lib/exportCsv";
-import StatCard from "@/components/StatCard";
-import TurnsTable from "@/components/TurnsTable";
-import MonthlyIncomeByServiceChart from "@/components/MonthlyIncomeByServiceChart";
+import { useEffect, useState } from "react";
+import TodaySummaryCard from "@/components/TodaySummaryCard";
+import WeeklySummaryCard from "@/components/WeeklySummaryCard";
 
-/* =========================
-   TYPES (alineados con Prisma)
-========================= */
 type Appointment = {
   id: string;
   date: string;
-  status: string;
-
-  // datos guardados directamente en Appointment
-  name?: string | null;
-  lastName?: string | null;
-  telefono?: string | null;
-  instagram?: string | null;
-
   service: {
-    id: string;
     name: string;
     price?: number;
   } | null;
-
-  // relación opcional
-  user: {
-    id: string;
-    name?: string | null;
-    lastName?: string | null;
-    telefono?: string | null;
-  } | null;
-
   servicePrice?: number | null;
 };
 
@@ -43,32 +20,14 @@ export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /* =========================
-     FILTROS DASHBOARD
-  ========================= */
-  const [q, setQ] = useState("");
-  const [from, setFrom] = useState<string | null>(null);
-  const [to, setTo] = useState<string | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-
-  /* =========================
-     FILTROS EXPORT
-  ========================= */
-  const [exportMonth, setExportMonth] = useState("all");
-  const [exportService, setExportService] = useState("all");
-
-  /* =========================
-     FETCH
-  ========================= */
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch("/api/appointments", { cache: "no-store" });
         const data = await res.json();
         setAppointments(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error(err);
+      } catch (e) {
+        console.error(e);
         setAppointments([]);
       } finally {
         setLoading(false);
@@ -77,216 +36,29 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  /* =========================
-     HELPERS
-  ========================= */
-  const getClientName = (a: Appointment) =>
-    `${a.name ?? a.user?.name ?? ""} ${a.lastName ?? a.user?.lastName ?? ""}`.trim();
-
-  const getClientPhone = (a: Appointment) =>
-    a.telefono ?? a.user?.telefono ?? "";
-
-  /* =========================
-     FILTROS DASHBOARD
-  ========================= */
-  const filtered = useMemo(() => {
-    return appointments.filter((a) => {
-      const d = new Date(a.date);
-      const qq = q.toLowerCase();
-
-      if (q) {
-        const name = getClientName(a).toLowerCase();
-        const phone = getClientPhone(a);
-        const service = a.service?.name?.toLowerCase() ?? "";
-        if (!name.includes(qq) && !phone.includes(qq) && !service.includes(qq))
-          return false;
-      }
-
-      if (from && d < new Date(`${from}T00:00:00`)) return false;
-      if (to && d > new Date(`${to}T23:59:59`)) return false;
-
-      if (selectedMonth !== "all") {
-        const [y, m] = selectedMonth.split("-").map(Number);
-        if (d.getFullYear() !== y || d.getMonth() + 1 !== m) return false;
-      }
-
-      if (selectedStatus !== "all" && a.status !== selectedStatus)
-        return false;
-
-      return true;
-    });
-  }, [appointments, q, from, to, selectedMonth, selectedStatus]);
-
-  /* =========================
-     MÉTRICAS
-  ========================= */
-  const totalTurns = filtered.length;
-
-  const incomeMonth = useMemo(
-    () =>
-      filtered.reduce(
-        (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
-        0
-      ),
-    [filtered]
-  );
-
-  const topService = useMemo(() => {
-    const acc: Record<string, number> = {};
-    filtered.forEach((a) => {
-      const name = a.service?.name ?? "Sin servicio";
-      acc[name] = (acc[name] ?? 0) + 1;
-    });
-    return Object.entries(acc).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-  }, [filtered]);
-
-  /* =========================
-     OPCIONES
-  ========================= */
-  const availableMonths = useMemo(() => {
-    const set = new Set<string>();
-    appointments.forEach((a) => {
-      const d = new Date(a.date);
-      set.add(`${d.getFullYear()}-${d.getMonth() + 1}`);
-    });
-    return [...set];
-  }, [appointments]);
-
-  const services = useMemo(() => {
-    const map = new Map<string, string>();
-    appointments.forEach((a) => {
-      if (a.service) map.set(a.service.id, a.service.name);
-    });
-    return [...map.entries()];
-  }, [appointments]);
-
-  /* =========================
-     EXPORT CSV
-  ========================= */
-  const exportData = useMemo(() => {
-    return appointments.filter((a) => {
-      const d = new Date(a.date);
-
-      if (exportMonth !== "all") {
-        const [y, m] = exportMonth.split("-").map(Number);
-        if (d.getFullYear() !== y || d.getMonth() + 1 !== m) return false;
-      }
-
-      if (exportService !== "all" && a.service?.id !== exportService)
-        return false;
-
-      return true;
-    });
-  }, [appointments, exportMonth, exportService]);
-
-  const handleExport = () => {
-    exportToCsv(
-      "turnos.csv",
-      exportData.map((a) => {
-        const d = new Date(a.date);
-        return {
-          fecha: d.toLocaleDateString("es"),
-          hora: d.toLocaleTimeString("es", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          cliente: getClientName(a),
-          telefono: getClientPhone(a),
-          servicio: a.service?.name ?? "",
-          precio: a.servicePrice ?? a.service?.price ?? 0,
-        };
-      })
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">
+        Cargando dashboard…
+      </div>
     );
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto px-4 pt-20 pb-16 space-y-8">
+      <main className="max-w-xl mx-auto px-4 pt-16 pb-24 space-y-5">
 
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <h1 className="text-2xl font-semibold">
+          Dashboard
+        </h1>
 
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="minimal-input max-w-xs"
-          >
-            <option value="all">Todos los meses</option>
-            {availableMonths.map((m) => {
-              const [y, mo] = m.split("-");
-              return (
-                <option key={m} value={m}>
-                  {new Date(Number(y), Number(mo) - 1).toLocaleDateString("es", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </option>
-              );
-            })}
-          </select>
-        </div>
+        {/* HOY */}
+        <TodaySummaryCard appointments={appointments} />
 
-        {/* GRÁFICO */}
-        <div className="bg-white rounded-2xl p-4 shadow">
-          <h2 className="font-medium mb-3">Ingresos por servicio</h2>
-          <MonthlyIncomeByServiceChart
-            data={filtered}
-            selectedMonth={selectedMonth}
-          />
-        </div>
+        {/* SEMANA */}
+        <WeeklySummaryCard appointments={appointments} />
 
-        {/* STATS */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Turnos" value={totalTurns.toString()} />
-          <StatCard title="Ingresos" value={`$ ${incomeMonth}`} />
-          <StatCard title="Servicio top" value={topService} />
-        </div>
-
-        {/* EXPORT */}
-        <div className="bg-white rounded-2xl p-4 shadow space-y-3">
-          <h3 className="font-medium">Exportar CSV</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <select
-              value={exportMonth}
-              onChange={(e) => setExportMonth(e.target.value)}
-              className="minimal-input"
-            >
-              <option value="all">Todos los meses</option>
-              {availableMonths.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-
-            <select
-              value={exportService}
-              onChange={(e) => setExportService(e.target.value)}
-              className="minimal-input"
-            >
-              <option value="all">Todos los servicios</option>
-              {services.map(([id, name]) => (
-                <option key={id} value={id}>{name}</option>
-              ))}
-            </select>
-
-            <button
-              onClick={handleExport}
-              className="bg-black text-white rounded-xl px-4 py-2"
-            >
-              Exportar CSV
-            </button>
-          </div>
-
-          <p className="text-sm text-gray-500">
-            Se exportarán {exportData.length} turnos
-          </p>
-        </div>
-
-        {/* TABLA */}
-        <div className="bg-white rounded-2xl shadow p-4 overflow-x-auto">
-          <TurnsTable data={filtered} loading={loading} />
-        </div>
       </main>
     </div>
   );
