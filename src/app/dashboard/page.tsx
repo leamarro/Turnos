@@ -11,9 +11,7 @@ import StatCard from "@/components/StatCard";
 type Appointment = {
   id: string;
   date: string;
-  service: {
-    price?: number;
-  } | null;
+  service: { price?: number } | null;
   servicePrice?: number | null;
 };
 
@@ -26,14 +24,6 @@ const money = (n: number) =>
 const getYearMonth = (iso: string) => {
   const d = new Date(iso);
   return `${d.getFullYear()}-${d.getMonth()}`;
-};
-
-const startOfWeek = (d: Date) => {
-  const date = new Date(d);
-  const day = date.getDay() || 7;
-  if (day !== 1) date.setDate(date.getDate() - (day - 1));
-  date.setHours(0, 0, 0, 0);
-  return date;
 };
 
 export default function DashboardPage() {
@@ -63,7 +53,7 @@ export default function DashboardPage() {
   const prevKey = `${now.getFullYear()}-${now.getMonth() - 1}`;
 
   /* =========================
-     FILTROS POR MES (FIX)
+     DATOS POR MES
   ========================= */
   const currentMonth = useMemo(
     () => appointments.filter((a) => getYearMonth(a.date) === currentKey),
@@ -73,14 +63,6 @@ export default function DashboardPage() {
   const prevMonth = useMemo(
     () => appointments.filter((a) => getYearMonth(a.date) === prevKey),
     [appointments, prevKey]
-  );
-
-  /* =========================
-     SEMANA ACTUAL
-  ========================= */
-  const weekStart = startOfWeek(new Date());
-  const weekData = appointments.filter(
-    (a) => new Date(a.date) >= weekStart
   );
 
   /* =========================
@@ -96,22 +78,17 @@ export default function DashboardPage() {
     0
   );
 
-  const avgTicket =
-    currentMonth.length === 0
-      ? 0
-      : Math.round(incomeCurrent / currentMonth.length);
-
   const variation =
     incomePrev === 0
       ? null
       : Math.round(((incomeCurrent - incomePrev) / incomePrev) * 100);
 
   /* =========================
-     INSIGHT SIMPLE
+     INSIGHT
   ========================= */
   const insight = useMemo(() => {
     if (variation === null)
-      return "Aún no hay datos suficientes para comparar 📊";
+      return "Todavía no hay datos suficientes para comparar 📊";
 
     if (variation > 10)
       return "Los ingresos crecieron respecto al mes anterior 📈";
@@ -122,9 +99,6 @@ export default function DashboardPage() {
     return "Los ingresos se mantienen estables 😐";
   }, [variation]);
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-3xl mx-auto px-4 pt-20 pb-24 space-y-6">
@@ -145,7 +119,7 @@ export default function DashboardPage() {
           <p className="text-sm">{insight}</p>
         </div>
 
-        {/* COMPARACIÓN MES */}
+        {/* COMPARACIÓN */}
         <div className="bg-white rounded-2xl p-4 shadow">
           <p className="text-sm font-medium mb-3">
             Comparación mensual
@@ -169,12 +143,10 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* MÉTRICAS */}
+        {/* STATS */}
         <div className="grid grid-cols-2 gap-4">
           <StatCard title="Ingresos del mes" value={money(incomeCurrent)} />
           <StatCard title="Turnos del mes" value={currentMonth.length} />
-          <StatCard title="Ticket promedio" value={money(avgTicket)} />
-          <StatCard title="Semana actual" value={`${weekData.length} turnos`} />
         </div>
 
         {loading && (
