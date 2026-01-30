@@ -16,19 +16,6 @@ type Appointment = {
   servicePrice?: number | null;
 };
 
-function statusStyle(status: string) {
-  switch (status) {
-    case "confirmed":
-      return "bg-green-100 text-green-700";
-    case "cancelled":
-      return "bg-red-100 text-red-700";
-    case "pending":
-      return "bg-yellow-100 text-yellow-700";
-    default:
-      return "bg-gray-100 text-gray-600";
-  }
-}
-
 export default function TurnsTable({
   data,
   loading,
@@ -39,14 +26,19 @@ export default function TurnsTable({
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    setIsMobile(window.innerWidth < 640);
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  if (loading) return <p className="p-4 text-sm">Cargando turnos…</p>;
-  if (data.length === 0) return <p className="p-4 text-sm">No hay turnos</p>;
+  if (loading) {
+    return <p className="p-4 text-sm">Cargando turnos...</p>;
+  }
+
+  if (data.length === 0) {
+    return <p className="p-4 text-sm">No hay turnos</p>;
+  }
 
   /* ================= MOBILE ================= */
   if (isMobile) {
@@ -67,31 +59,27 @@ export default function TurnsTable({
                 </p>
               </div>
 
-              <span
-                className={`text-xs px-2 py-1 rounded-full ${statusStyle(
-                  a.status
-                )}`}
-              >
-                {a.status}
+              <span className="font-semibold text-sm">
+                $ {a.servicePrice ?? a.service?.price ?? 0}
               </span>
             </div>
 
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">
-                {new Date(a.date).toLocaleDateString("es")}{" "}
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>
+                {new Date(a.date).toLocaleDateString("es")}
+              </span>
+              <span>
                 {new Date(a.date).toLocaleTimeString("es", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
               </span>
-
-              <span className="font-semibold">
-                $ {a.servicePrice ?? a.service?.price ?? 0}
-              </span>
             </div>
 
             {a.telefono && (
-              <p className="text-xs text-gray-500">{a.telefono}</p>
+              <p className="text-xs text-gray-500">
+                📞 {a.telefono}
+              </p>
             )}
           </div>
         ))}
@@ -119,22 +107,21 @@ export default function TurnsTable({
             <td className="p-3 font-medium">
               {a.name} {a.lastName}
             </td>
+
             <td className="p-3">{a.telefono ?? "—"}</td>
+
             <td className="p-3">{a.service?.name ?? "—"}</td>
+
             <td className="p-3">
               {new Date(a.date).toLocaleString()}
             </td>
+
             <td className="p-3 text-right">
               $ {a.servicePrice ?? a.service?.price ?? 0}
             </td>
+
             <td className="p-3 text-center capitalize">
-              <span
-                className={`px-2 py-1 rounded-full text-xs ${statusStyle(
-                  a.status
-                )}`}
-              >
-                {a.status}
-              </span>
+              {a.status}
             </td>
           </tr>
         ))}
