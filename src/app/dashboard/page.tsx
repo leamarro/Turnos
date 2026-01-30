@@ -11,19 +11,28 @@ import StatCard from "@/components/StatCard";
 type Appointment = {
   id: string;
   date: string;
-  service: { price?: number } | null;
+  name?: string | null;
+  lastName?: string | null;
+  service: {
+    name: string;
+    price?: number;
+  } | null;
   servicePrice?: number | null;
 };
 
 /* =========================
    HELPERS
 ========================= */
-const money = (n: number) =>
-  `$ ${n.toLocaleString("es-AR")}`;
+const money = (n: number) => `$ ${n.toLocaleString("es-AR")}`;
 
-const getYearMonth = (iso: string) => {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${d.getMonth()}`;
+const yearMonthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`;
+
+const startOfWeek = (d: Date) => {
+  const date = new Date(d);
+  const day = date.getDay() || 7;
+  date.setDate(date.getDate() - day + 1);
+  date.setHours(0, 0, 0, 0);
+  return date;
 };
 
 export default function DashboardPage() {
@@ -49,25 +58,21 @@ export default function DashboardPage() {
   }, []);
 
   const now = new Date();
-  const currentKey = `${now.getFullYear()}-${now.getMonth()}`;
-  const prevKey = `${now.getFullYear()}-${now.getMonth() - 1}`;
 
   /* =========================
-     DATOS POR MES
+     MES ACTUAL vs ANTERIOR
   ========================= */
-  const currentMonth = useMemo(
-    () => appointments.filter((a) => getYearMonth(a.date) === currentKey),
-    [appointments, currentKey]
+  const currentMonthKey = yearMonthKey(now);
+  const prevMonthKey = yearMonthKey(new Date(now.getFullYear(), now.getMonth() - 1));
+
+  const currentMonth = appointments.filter(
+    (a) => yearMonthKey(new Date(a.date)) === currentMonthKey
   );
 
-  const prevMonth = useMemo(
-    () => appointments.filter((a) => getYearMonth(a.date) === prevKey),
-    [appointments, prevKey]
+  const prevMonth = appointments.filter(
+    (a) => yearMonthKey(new Date(a.date)) === prevMonthKey
   );
 
-  /* =========================
-     MÉTRICAS
-  ========================= */
   const incomeCurrent = currentMonth.reduce(
     (s, a) => s + (a.servicePrice ?? a.service?.price ?? 0),
     0
@@ -78,26 +83,78 @@ export default function DashboardPage() {
     0
   );
 
-  const variation =
-    incomePrev === 0
-      ? null
-      : Math.round(((incomeCurrent - incomePrev) / incomePrev) * 100);
+  const monthVariation =
+    incomePrev === 0 ? null : Math.round(((incomeCurrent - incomePrev) / incomePrev) * 100);
 
   /* =========================
-     INSIGHT
+     INSIGHT MES
   ========================= */
-  const insight = useMemo(() => {
-    if (variation === null)
-      return "Todavía no hay datos suficientes para comparar 📊";
+  const monthInsight = useMemo(() => {
+    if (monthVariation === null)
+      return "Todavía no hay datos para comparar este mes 📊";
 
-    if (variation > 10)
-      return "Los ingresos crecieron respecto al mes anterior 📈";
+    if (monthVariation > 10)
+      return "Buen mes: los ingresos crecieron 📈";
 
-    if (variation < -10)
+    if (monthVariation < -10)
       return "Los ingresos bajaron respecto al mes anterior ⚠️";
 
-    return "Los ingresos se mantienen estables 😐";
-  }, [variation]);
+    return "Ingresos estables respecto al mes anterior 😐";
+  }, [monthVariation]);
+
+  /* =========================
+     SEMANA ACTUAL vs ANTERIOR
+  ========================= */
+  const thisWeekStart = startOfWeek(now);
+  const lastWeekStart = new Date(thisWeekStart);
+  lastWeekStart.setDate(thisWeekStart.getDate() - 7);
+
+  const thisWeek = appointments.filter((a) => {
+    const d = new Date(a.date);
+    return d >= thisWeekStart;
+  });
+
+  const lastWeek = appointments.filter((a) => {
+    const d = new Date(a.date);
+    return d >= lastWeekStart && d < thisWeekStart;
+  });
+
+  const incomeThisWeek = thisWeek.reduce(
+    (s, a) => s + (a.servicePrice ?? a.service?.price ?? 0),
+    0
+  );
+
+  const incomeLastWeek = lastWeek.reduce(
+    (s, a) => s + (a.servicePrice ?? a.service?.price ?? 0),
+    0
+  );
+
+  const weekVariation =
+    incomeLastWeek === 0
+      ? null
+      : Math.round(((incomeThisWeek - incomeLastWeek) / incomeLastWeek) * 100);
+
+  /* =========================
+     CLIENTE + SERVICIO TOP
+  ========================= */
+  const topClient = useMemo(() => {
+    const map: Record<string, number> = {};
+    currentMonth.forEach((a) => {
+      const name = `${a.name ?? ""} ${a.lastName ?? ""}`.trim();
+      if (!name) return;
+      map[name] = (map[name] ?? 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+  }, [currentMonth]);
+
+  const topService = useMemo(() => {
+    const map: Record<string, number> = {};
+    currentMonth.forEach((a) => {
+      const name = a.service?.name ?? "Sin servicio";
+      map[name] = (map[name] ?? 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+  }, [currentMonth]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -116,14 +173,12 @@ export default function DashboardPage() {
 
         {/* INSIGHT */}
         <div className="bg-black text-white rounded-2xl p-4">
-          <p className="text-sm">{insight}</p>
+          <p className="text-sm">{monthInsight}</p>
         </div>
 
-        {/* COMPARACIÓN */}
-        <div className="bg-white rounded-2xl p-4 shadow">
-          <p className="text-sm font-medium mb-3">
-            Comparación mensual
-          </p>
+        {/* MES */}
+        <div className="bg-white rounded-2xl p-4 shadow space-y-2">
+          <p className="text-sm font-medium">Mes actual vs anterior</p>
 
           <div className="flex justify-between text-sm">
             <div>
@@ -136,9 +191,31 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {variation !== null && (
-            <p className="text-xs text-gray-500 mt-2">
-              Variación: {variation > 0 ? "↑" : "↓"} {Math.abs(variation)}%
+          {monthVariation !== null && (
+            <p className="text-xs text-gray-500">
+              Variación: {monthVariation > 0 ? "↑" : "↓"} {Math.abs(monthVariation)}%
+            </p>
+          )}
+        </div>
+
+        {/* SEMANA */}
+        <div className="bg-white rounded-2xl p-4 shadow space-y-2">
+          <p className="text-sm font-medium">Esta semana vs anterior</p>
+
+          <div className="flex justify-between text-sm">
+            <div>
+              <p className="text-gray-500">Semana anterior</p>
+              <p className="font-semibold">{money(incomeLastWeek)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-gray-500">Esta semana</p>
+              <p className="font-semibold">{money(incomeThisWeek)}</p>
+            </div>
+          </div>
+
+          {weekVariation !== null && (
+            <p className="text-xs text-gray-500">
+              Variación: {weekVariation > 0 ? "↑" : "↓"} {Math.abs(weekVariation)}%
             </p>
           )}
         </div>
@@ -147,6 +224,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-4">
           <StatCard title="Ingresos del mes" value={money(incomeCurrent)} />
           <StatCard title="Turnos del mes" value={currentMonth.length} />
+          <StatCard title="Cliente más frecuente" value={topClient} />
+          <StatCard title="Servicio más vendido" value={topService} />
         </div>
 
         {loading && (
