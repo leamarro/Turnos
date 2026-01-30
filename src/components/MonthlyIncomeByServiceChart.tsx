@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -17,7 +17,7 @@ type Appointment = {
   servicePrice?: number | null;
 };
 
-const COLORS = ["#EF4444", "#22C55E", "#3B82F6", "#A855F7"];
+const COLORS = ["#111827", "#4B5563", "#9CA3AF", "#6B7280"];
 
 export default function MonthlyIncomeByServiceChart({
   data,
@@ -26,6 +26,15 @@ export default function MonthlyIncomeByServiceChart({
   data: Appointment[];
   selectedMonth?: string;
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   const filteredByMonth = useMemo(() => {
     if (selectedMonth === "all") return data;
 
@@ -61,19 +70,28 @@ export default function MonthlyIncomeByServiceChart({
   }
 
   return (
-    <div className="w-full h-[280px]">
+    <div className="w-full h-[260px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData}>
-          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-          <YAxis />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 12 }}
+            interval={0}
+          />
+
+          {/* 🔥 ocultamos Y en mobile */}
+          {!isMobile && <YAxis />}
+
+          {/* tooltip solo aparece al tocar */}
           <Tooltip
             formatter={(value) => {
               if (typeof value !== "number") return value;
               return `$ ${value}`;
             }}
-            cursor={{ fill: "rgba(0,0,0,0.04)" }}
+            cursor={{ fill: "rgba(0,0,0,0.05)" }}
           />
-          <Bar dataKey="total" radius={[6, 6, 0, 0]}>
+
+          <Bar dataKey="total" radius={[8, 8, 0, 0]} animationDuration={300}>
             {chartData.map((_, i) => (
               <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
