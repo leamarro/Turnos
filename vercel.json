@@ -1,2 +1,12 @@
-{}
-
+{
+  "crons": [
+    {
+      "path": "/api/cron/agenda?type=hoy",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/agenda?type=manana",
+      "schedule": "0 20 * * *"
+    }
+  ]
+}
