@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import  prisma  from "@/lib/prisma"
+import prisma from "@/lib/prisma"
 import { sendWhatsApp } from "@/lib/whatsapp"
 
 function getDateRange(offsetDays: number) {
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
         },
       },
       include: {
-        client: true,
+        user: true, // 👈 ESTA es la relación correcta según tu schema
       },
       orderBy: {
         date: "asc",
@@ -55,7 +55,16 @@ export async function GET(req: Request) {
           minute: "2-digit",
         })
 
-        return `• ${hora} – ${t.client.name}`
+        // prioridad:
+        // 1) nombre cargado en el turno
+        // 2) usuario relacionado
+        // 3) fallback
+        const nombre =
+          [t.name, t.lastName].filter(Boolean).join(" ") ||
+          [t.user?.name, t.user?.lastName].filter(Boolean).join(" ") ||
+          "Sin nombre"
+
+        return `• ${hora} – ${nombre}`
       })
       .join("\n")
 
