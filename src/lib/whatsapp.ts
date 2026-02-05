@@ -6,9 +6,13 @@ const client = twilio(
 )
 
 export async function sendWhatsApp(message: string) {
-  await client.messages.create({
-    body: message,
-    from: process.env.TWILIO_WHATSAPP_FROM!,
-    to: process.env.ADMIN_WHATSAPP!,
-  })
+  const numbers = process.env.ADMIN_WHATSAPP!.split(",")
+
+  for (const to of numbers) {
+    await client.messages.create({
+      body: message,
+      from: process.env.TWILIO_WHATSAPP_FROM!,
+      to,
+    })
+  }
 }
