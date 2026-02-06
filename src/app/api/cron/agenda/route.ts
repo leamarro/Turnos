@@ -28,7 +28,7 @@ export async function GET(req: Request) {
 
     const offset = type === "manana" ? 1 : 0
     const label =
-      type === "manana" ? "📅 Euge estos son los turnos de mañana💖" : "📅 Euge estos son los turnos de hoy💖"
+      type === "manana" ? "📅 Turnos de mañana💖" : "📅 Turnos de hoy💖"
 
     const { start, end } = getDateRange(offset)
 
