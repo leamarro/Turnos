@@ -57,8 +57,8 @@ export async function GET(req: Request) {
 
   const title =
     type === "manana"
-      ? "📅 Turnos de mañana"
-      : "📅 Turnos de hoy"
+      ? "📅 Euge estos son los turnos de mañana"
+      : "📅 Euge estos son los turnos de hoy"
 
   const message = `${title}\n\n${list}`
 
