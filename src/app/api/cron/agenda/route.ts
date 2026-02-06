@@ -2,20 +2,26 @@ import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { sendWhatsApp } from "@/lib/whatsapp"
 
+/**
+ * Devuelve el rango del día en ARGENTINA,
+ * pero expresado correctamente en UTC (como guarda Prisma)
+ */
 function getArgentinaDate(offsetDays: number) {
   const now = new Date()
 
-  // Pasamos a horario Argentina (UTC-3)
-  const argentinaTime = new Date(
-    now.getTime() - 3 * 60 * 60 * 1000
+  // 00:00 Argentina = 03:00 UTC
+  const start = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + offsetDays,
+      3, 0, 0, 0
+    )
   )
 
-  const start = new Date(argentinaTime)
-  start.setDate(start.getDate() + offsetDays)
-  start.setHours(0, 0, 0, 0)
-
+  // 23:59 Argentina = 02:59 UTC del día siguiente
   const end = new Date(start)
-  end.setHours(23, 59, 59, 999)
+  end.setUTCHours(26, 59, 59, 999)
 
   return { start, end }
 }
@@ -41,7 +47,11 @@ export async function GET(req: Request) {
   })
 
   if (appointments.length === 0) {
-    return NextResponse.json({ ok: true, message: "Sin turnos" })
+    return NextResponse.json({
+      ok: true,
+      message: "Sin turnos",
+      range: { start, end },
+    })
   }
 
   const list = appointments
@@ -57,8 +67,8 @@ export async function GET(req: Request) {
 
   const title =
     type === "manana"
-      ? "📅 Euge estos son los turnos de mañana"
-      : "📅 Euge estos son los turnos de hoy"
+      ? "📅 Euge, estos son los turnos de mañana"
+      : "📅 Euge, estos son los turnos de hoy"
 
   const message = `${title}\n\n${list}`
 
