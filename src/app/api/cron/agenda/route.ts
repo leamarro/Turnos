@@ -3,16 +3,14 @@ import prisma from "@/lib/prisma"
 import { sendWhatsApp } from "@/lib/whatsapp"
 
 /**
- * Rango del día en horario ARGENTINA
- * (compatible con timestamp WITHOUT timezone)
+ * Igual que antes, pero "ahora" en Argentina
  */
 function getArgentinaDate(offsetDays: number) {
+  // ahora en Argentina (UTC-3)
   const now = new Date()
+  now.setHours(now.getHours() - 3)
 
-  // Hora actual en Argentina (UTC-3)
-  const argentinaNow = new Date(now.getTime() - 3 * 60 * 60 * 1000)
-
-  const start = new Date(argentinaNow)
+  const start = new Date(now)
   start.setDate(start.getDate() + offsetDays)
   start.setHours(0, 0, 0, 0)
 
