@@ -3,26 +3,21 @@ import prisma from "@/lib/prisma"
 import { sendWhatsApp } from "@/lib/whatsapp"
 
 /**
- * Calcula el día de Argentina correctamente
- * y lo traduce a UTC para Prisma
+ * Rango del día en horario ARGENTINA
+ * (compatible con timestamp WITHOUT timezone)
  */
 function getArgentinaDate(offsetDays: number) {
   const now = new Date()
 
-  // 1️⃣ Ahora en Argentina (UTC-3)
+  // Hora actual en Argentina (UTC-3)
   const argentinaNow = new Date(now.getTime() - 3 * 60 * 60 * 1000)
 
-  // 2️⃣ Día argentino real
-  const year = argentinaNow.getFullYear()
-  const month = argentinaNow.getMonth()
-  const day = argentinaNow.getDate() + offsetDays
+  const start = new Date(argentinaNow)
+  start.setDate(start.getDate() + offsetDays)
+  start.setHours(0, 0, 0, 0)
 
-  // 3️⃣ 00:00 Argentina expresado en UTC (03:00 UTC)
-  const start = new Date(Date.UTC(year, month, day, 3, 0, 0, 0))
-
-  // 4️⃣ 23:59 Argentina expresado en UTC (02:59 UTC del día siguiente)
   const end = new Date(start)
-  end.setUTCHours(26, 59, 59, 999)
+  end.setHours(23, 59, 59, 999)
 
   return { start, end }
 }
