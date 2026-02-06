@@ -54,10 +54,13 @@ export async function GET(req: Request) {
 
     const listado = turnos
       .map((t) => {
-        const hora = new Date(t.date).toLocaleTimeString("es-AR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
+      const d = new Date(t.date)
+      d.setHours(d.getHours() - 3) // 🇦🇷 corregimos visualización
+      
+      const hora = d.toLocaleTimeString("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
 
         const nombre =
           [t.name, t.lastName].filter(Boolean).join(" ") ||
