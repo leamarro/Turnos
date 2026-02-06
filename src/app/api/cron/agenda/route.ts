@@ -28,7 +28,7 @@ export async function GET(req: Request) {
 
     const offset = type === "manana" ? 1 : 0
     const label =
-      type === "manana" ? "📅 Euge estos son los turnos de mañana" : "📅 Euge estos son los turnos de hoy"
+      type === "manana" ? "📅 Euge estos son los turnos de mañana💖" : "📅 Euge estos son los turnos de hoy💖"
 
     const { start, end } = getDateRange(offset)
 
@@ -60,6 +60,7 @@ export async function GET(req: Request) {
       const hora = d.toLocaleTimeString("es-AR", {
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false,
       })
 
         const nombre =
