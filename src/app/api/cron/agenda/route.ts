@@ -2,13 +2,8 @@ import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { sendWhatsApp } from "@/lib/whatsapp"
 
-function getDateRangeArgentina(offsetDays: number) {
-  const now = new Date()
-
-  // fecha actual en Argentina (UTC-3)
-  const argentina = new Date(now.getTime() - 3 * 60 * 60 * 1000)
-
-  const start = new Date(argentina)
+function getDateRange(offsetDays: number) {
+  const start = new Date()
   start.setDate(start.getDate() + offsetDays)
   start.setHours(0, 0, 0, 0)
 
@@ -19,62 +14,77 @@ function getDateRangeArgentina(offsetDays: number) {
 }
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const type = searchParams.get("type") // hoy | manana
+  try {
+    const { searchParams } = new URL(req.url)
+    const type = searchParams.get("type") // hoy | manana
 
-  const offset = type === "manana" ? 1 : 0
-  const title =
-    type === "manana"
-      ? "📅 Turnos de mañana ❤️"
-      : "📅 Turnos de hoy ❤️"
+    if (!type) {
+      return NextResponse.json({ error: "Missing type" }, { status: 400 })
+    }
 
-  const { start, end } = getDateRangeArgentina(offset)
+    const offset = type === "manana" ? 1 : 0
 
-  const turnos = await prisma.appointment.findMany({
-    where: {
-      date: {
-        gte: start,
-        lte: end,
+    const title =
+      type === "manana"
+        ? "📅 Turnos de mañana 🤍"
+        : "📅 Turnos de hoy 🤍"
+
+    const { start, end } = getDateRange(offset)
+
+    const turnos = await prisma.appointment.findMany({
+      where: {
+        date: {
+          gte: start,
+          lte: end,
+        },
+        status: "pending",
       },
-      status: "pending",
-    },
-    orderBy: {
-      date: "asc",
-    },
-  })
-
-  if (turnos.length === 0) {
-    await sendWhatsApp({
-      message: `${title}\n\n❌ No tenés turnos`,
+      include: {
+        user: true,
+      },
+      orderBy: {
+        date: "asc",
+      },
     })
 
-    return NextResponse.json({ ok: true, empty: true })
-  }
+    if (turnos.length === 0) {
+      await sendWhatsApp(`${title}\n\n❌ No tenés turnos`)
+      return NextResponse.json({ ok: true, empty: true })
+    }
 
-  const list = turnos
-    .map((t) => {
-      const hora = new Date(t.date).toLocaleTimeString("es-AR", {
-        hour: "2-digit",
-        minute: "2-digit",
+    const listado = turnos
+      .map((t) => {
+        const hora = new Date(t.date).toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false, // 👈 17:00 en vez de 5 PM
+        })
+
+        const nombre =
+          [t.name, t.lastName].filter(Boolean).join(" ") ||
+          [t.user?.name, t.user?.lastName].filter(Boolean).join(" ") ||
+          "Sin nombre"
+
+        return `• ${hora} – ${nombre}`
       })
+      .join("\n")
 
-      const nombre = [t.name, t.lastName]
-        .filter(Boolean)
-        .join(" ") || "Sin nombre"
-
-      return `🕒 ${hora} – ${nombre}`
-    })
-    .join("\n")
-
-  const message = `
+    const message = `
 ${title}
 
-${list}
+${listado}
 
 📌 Total: ${turnos.length} turnos
 `.trim()
 
-  await sendWhatsApp({ message })
+    await sendWhatsApp(message)
 
-  return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json(
+      { error: "Error sending agenda" },
+      { status: 500 }
+    )
+  }
 }
