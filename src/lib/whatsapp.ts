@@ -1,39 +1,30 @@
-type SendWhatsAppParams = {
-  message: string
-}
+const GRAPH_URL = "https://graph.facebook.com/v18.0"
 
-export async function sendWhatsApp({ message }: SendWhatsAppParams) {
-  const phonesRaw = process.env.ADMIN_PHONES
+const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID!
+const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN!
 
-  if (!phonesRaw) {
-    throw new Error("ADMIN_PHONES no definido")
-  }
+// podés poner uno o varios números
+const ADMIN_NUMBERS = [
+  "5492932415221",
+  // "5492932478730", // descomentá cuando quieras
+]
 
-  const phones = phonesRaw.split(",").map((p) => p.trim())
-
-  for (const phone of phones) {
-    const res = await fetch(
-      `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json",
+export async function sendWhatsApp(message: string) {
+  for (const to of ADMIN_NUMBERS) {
+    await fetch(`${GRAPH_URL}/${PHONE_NUMBER_ID}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: {
+          body: message,
         },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: phone,
-          type: "text",
-          text: {
-            body: message,
-          },
-        }),
-      }
-    )
-
-    if (!res.ok) {
-      const error = await res.text()
-      console.error("Error WhatsApp a", phone, error)
-    }
+      }),
+    })
   }
 }
