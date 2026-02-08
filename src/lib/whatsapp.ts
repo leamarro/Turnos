@@ -1,18 +1,39 @@
-import twilio from "twilio"
+type SendWhatsAppParams = {
+  message: string
+}
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID!,
-  process.env.TWILIO_AUTH_TOKEN!
-)
+export async function sendWhatsApp({ message }: SendWhatsAppParams) {
+  const phonesRaw = process.env.ADMIN_PHONES
 
-export async function sendWhatsApp(message: string) {
-  const numbers = process.env.ADMIN_WHATSAPP!.split(",")
+  if (!phonesRaw) {
+    throw new Error("ADMIN_PHONES no definido")
+  }
 
-  for (const to of numbers) {
-    await client.messages.create({
-      body: message,
-      from: process.env.TWILIO_WHATSAPP_FROM!,
-      to,
-    })
+  const phones = phonesRaw.split(",").map((p) => p.trim())
+
+  for (const phone of phones) {
+    const res = await fetch(
+      `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: phone,
+          type: "text",
+          text: {
+            body: message,
+          },
+        }),
+      }
+    )
+
+    if (!res.ok) {
+      const error = await res.text()
+      console.error("Error WhatsApp a", phone, error)
+    }
   }
 }

@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/agenda?type=manana",
-      "schedule": "0 23 * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
