@@ -1,10 +1,11 @@
 const GRAPH_URL = "https://graph.facebook.com/v18.0"
 
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID!
-const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN! // 👈 ESTE CAMBIO
+const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN!
 
 const ADMIN_NUMBERS = [
   "5492932415221",
+  // "5492932478730", // podés agregar más
 ]
 
 export async function sendWhatsApp(message: string) {
@@ -19,7 +20,9 @@ export async function sendWhatsApp(message: string) {
         messaging_product: "whatsapp",
         to,
         type: "text",
-        text: { body: message },
+        text: {
+          body: message,
+        },
       }),
     })
 
