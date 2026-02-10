@@ -14,8 +14,7 @@ type AppointmentFormProps = {
 }
 
 export default function AppointmentForm({
-  initialData,
-  onSubmit,
+  initialData
 }: AppointmentFormProps) {
   const [form, setForm] = useState({
     date: initialData?.date ?? "",
