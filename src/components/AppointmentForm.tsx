@@ -36,7 +36,7 @@ export default function AppointmentForm() {
   }, []);
 
   /* ===================== */
-  /* VALIDAR HORA */
+  /* HORA */
   /* ===================== */
   function isValidTime(value: string) {
     return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
@@ -104,7 +104,9 @@ export default function AppointmentForm() {
           <Input
             placeholder="Teléfono (ej: 1123456789)"
             value={telefono}
-            onChange={(v) => setTelefono(v.replace(/[^\d]/g, ""))}
+            onChange={(v) =>
+              setTelefono(v.replace(/[^\d]/g, ""))
+            }
           />
 
           <Input
@@ -129,30 +131,51 @@ export default function AppointmentForm() {
           </select>
 
           {/* FECHA */}
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="minimal-input"
-          />
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">Fecha</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="minimal-input"
+            />
+          </div>
 
           {/* HORA */}
-          <input
-            type="text"
-            placeholder="HH:mm"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="minimal-input"
-          />
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">Hora</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="HH:mm"
+              value={time}
+              onChange={(e) => {
+                let v = e.target.value.replace(/[^\d]/g, "");
+                if (v.length >= 3) {
+                  v = v.slice(0, 2) + ":" + v.slice(2, 4);
+                }
+                setTime(v.slice(0, 5));
+              }}
+              onBlur={() => {
+                if (!isValidTime(time)) setTime("");
+              }}
+              className="minimal-input"
+            />
+          </div>
 
-          {/* 📝 NOTAS */}
-          <textarea
-            placeholder="Observaciones (seña, domicilio, quinceañera, etc)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            className="minimal-input resize-none"
-          />
+          {/* 📝 OBSERVACIONES */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">
+              Observaciones (interno)
+            </label>
+            <textarea
+              placeholder="Ej: seña $10.000 · domicilio · maquillaje 15"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="minimal-input resize-none"
+            />
+          </div>
 
           <button
             type="submit"
