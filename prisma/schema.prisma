@@ -9,20 +9,22 @@ datasource db {
 
 model Appointment {
   id         String   @id @default(cuid())
-  date DateTime @db.Timestamp
+  date       DateTime @db.Timestamp
   status     String   @default("pending")
   createdAt  DateTime @default(now())
 
-  name      String?
-  lastName  String?
-  telefono  String?
-  instagram String?
+  name       String?
+  lastName   String?
+  telefono   String?
+  instagram  String?
 
-  serviceId String?
-  service   Service?  @relation(fields: [serviceId], references: [id])
+  serviceId  String?
+  service    Service? @relation(fields: [serviceId], references: [id])
 
-  userId String?
-  user   User? @relation(fields: [userId], references: [id])
+  userId     String?
+  user       User? @relation(fields: [userId], references: [id])
+
+  notes      String?
 }
 
 model Service {
