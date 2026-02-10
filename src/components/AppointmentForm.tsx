@@ -91,7 +91,7 @@ export default function AppointmentForm() {
   };
 
   return (
-<div className="min-h-screen flex justify-center bg-gray-50 px-4 pt-4 md:pt-12">
+    <div className="min-h-screen flex justify-center bg-gray-50 px-4 pt-12">
       <div className="w-full max-w-md bg-white rounded-2xl p-6 space-y-6">
         <h2 className="text-2xl font-semibold text-center">
           Reservar turno
