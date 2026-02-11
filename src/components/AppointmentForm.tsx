@@ -166,10 +166,10 @@ export default function AppointmentForm() {
           {/* 📝 OBSERVACIONES */}
           <div className="space-y-1">
             <label className="text-xs text-gray-500">
-              Observaciones (interno)
+              Nota (opcional)
             </label>
             <textarea
-              placeholder="Ej: seña $10.000 · domicilio · maquillaje 15"
+              placeholder="Notas.."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
