@@ -23,6 +23,7 @@ export default function AppointmentForm() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
+  const [notes, setNotes] = useState(""); // 👈 NUEVO
   const [message, setMessage] = useState("");
 
   /* ===================== */
@@ -79,6 +80,7 @@ export default function AppointmentForm() {
         serviceId,
         date: dateTime,
         status: "confirmado",
+        notes: notes || null, // 👈 NUEVO
       });
 
       router.push(`/appointments/${res.data.id}`);
@@ -89,7 +91,7 @@ export default function AppointmentForm() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center bg-gray-50 px-4 pt-4 md:pt-12">
+    <div className="min-h-screen flex justify-center bg-gray-50 px-4 pt-12">
       <div className="w-full max-w-md bg-white rounded-2xl p-6 space-y-6">
         <h2 className="text-2xl font-semibold text-center">
           Reservar turno
@@ -102,7 +104,9 @@ export default function AppointmentForm() {
           <Input
             placeholder="Teléfono (ej: 1123456789)"
             value={telefono}
-            onChange={(v) => setTelefono(v.replace(/[^\d]/g, ""))}
+            onChange={(v) =>
+              setTelefono(v.replace(/[^\d]/g, ""))
+            }
           />
 
           <Input
@@ -156,6 +160,20 @@ export default function AppointmentForm() {
                 if (!isValidTime(time)) setTime("");
               }}
               className="minimal-input"
+            />
+          </div>
+
+          {/* 📝 OBSERVACIONES */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">
+              Observaciones (interno)
+            </label>
+            <textarea
+              placeholder="Ej: seña $10.000 · domicilio · maquillaje 15"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="minimal-input resize-none"
             />
           </div>
 
