@@ -9,7 +9,7 @@ type Appointment = {
   name?: string | null;
   lastName?: string | null;
   telefono?: string | null;
-  notes?: string | null; // ✅ AGREGADO
+  notes?: string | null;
   service: {
     name: string;
     price?: number;
