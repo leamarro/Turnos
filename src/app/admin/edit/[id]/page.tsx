@@ -14,6 +14,7 @@ import {
   Trash2,
   Save,
   Instagram,
+  FileText,
 } from "lucide-react";
 
 type Service = { id: string; name: string };
@@ -26,6 +27,7 @@ type Appointment = {
   lastName?: string;
   telefono?: string;
   instagram?: string;
+  notes?: string;
   service?: { id: string; name?: string };
 };
 
@@ -44,6 +46,7 @@ export default function EditAppointmentPage({
   const [lastName, setLastName] = useState("");
   const [telefono, setTelefono] = useState("");
   const [instagram, setInstagram] = useState("");
+  const [notes, setNotes] = useState("");
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -62,6 +65,7 @@ export default function EditAppointmentPage({
         setLastName(a.lastName ?? "");
         setTelefono(a.telefono ?? "");
         setInstagram(a.instagram ?? "");
+        setNotes(a.notes ?? "");
         setServiceId(a.service?.id ?? "");
         setStatus(a.status ?? "pendiente");
 
@@ -101,6 +105,7 @@ export default function EditAppointmentPage({
         lastName: lastName.trim(),
         telefono: telefono.trim() || null,
         instagram: instagram.trim() || null,
+        notes: notes.trim() || null,
         serviceId,
         status,
       };
@@ -111,7 +116,6 @@ export default function EditAppointmentPage({
       }
 
       await axios.put(`/api/appointments?id=${id}`, payload);
-
       router.push("/admin");
     } catch (err) {
       console.error(err);
@@ -143,27 +147,15 @@ export default function EditAppointmentPage({
         </h1>
 
         <Field icon={<User size={16} />} label="Nombre">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input"
-          />
+          <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
         </Field>
 
         <Field icon={<User size={16} />} label="Apellido">
-          <input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="input"
-          />
+          <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="input" />
         </Field>
 
         <Field icon={<Phone size={16} />} label="Teléfono">
-          <input
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            className="input"
-          />
+          <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" />
         </Field>
 
         <Field icon={<Instagram size={16} />} label="Instagram">
@@ -172,6 +164,15 @@ export default function EditAppointmentPage({
             onChange={(e) => setInstagram(e.target.value)}
             className="input"
             placeholder="@usuario"
+          />
+        </Field>
+
+        <Field icon={<FileText size={16} />} label="Notas">
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="input"
+            rows={3}
           />
         </Field>
 
@@ -192,30 +193,16 @@ export default function EditAppointmentPage({
 
         <div className="flex gap-3">
           <Field icon={<CalendarClock size={16} />} label="Fecha">
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="input"
-            />
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
           </Field>
 
           <Field icon={<CalendarClock size={16} />} label="Hora">
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="input"
-            />
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input" />
           </Field>
         </div>
 
         <Field icon={<BadgeCheck size={16} />} label="Estado">
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="input"
-          >
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="input">
             <option value="pendiente">Pendiente</option>
             <option value="confirmado">Confirmado</option>
             <option value="finalizado">Finalizado</option>
