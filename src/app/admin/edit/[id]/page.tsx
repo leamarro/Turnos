@@ -111,6 +111,7 @@ export default function EditAppointmentPage({
       }
 
       await axios.put(`/api/appointments?id=${id}`, payload);
+
       router.push("/admin");
     } catch (err) {
       console.error(err);
@@ -137,16 +138,129 @@ export default function EditAppointmentPage({
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16">
       <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 space-y-5">
-
         <h1 className="text-lg font-semibold text-center">
           Editar turno
         </h1>
 
-        {/* Todos los fields incluyendo Instagram */}
+        <Field icon={<User size={16} />} label="Nombre">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input"
+          />
+        </Field>
 
-        {/* ... (se mantiene exactamente igual que el código que me pasaste) */}
+        <Field icon={<User size={16} />} label="Apellido">
+          <input
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className="input"
+          />
+        </Field>
 
+        <Field icon={<Phone size={16} />} label="Teléfono">
+          <input
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+            className="input"
+          />
+        </Field>
+
+        <Field icon={<Instagram size={16} />} label="Instagram">
+          <input
+            value={instagram}
+            onChange={(e) => setInstagram(e.target.value)}
+            className="input"
+            placeholder="@usuario"
+          />
+        </Field>
+
+        <Field icon={<Sparkles size={16} />} label="Servicio">
+          <select
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value)}
+            className="input"
+          >
+            <option value="">Seleccionar servicio</option>
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <div className="flex gap-3">
+          <Field icon={<CalendarClock size={16} />} label="Fecha">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="input"
+            />
+          </Field>
+
+          <Field icon={<CalendarClock size={16} />} label="Hora">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="input"
+            />
+          </Field>
+        </div>
+
+        <Field icon={<BadgeCheck size={16} />} label="Estado">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="input"
+          >
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="finalizado">Finalizado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </Field>
+
+        <div className="flex justify-between gap-3 pt-2">
+          <button
+            onClick={handleDelete}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-red-600 hover:bg-red-50 transition w-full"
+          >
+            <Trash2 size={16} />
+            Eliminar
+          </button>
+
+          <button
+            onClick={handleSave}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 transition w-full"
+          >
+            <Save size={16} />
+            Guardar
+          </button>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1 w-full">
+      <label className="flex items-center gap-2 text-xs text-gray-500">
+        {icon}
+        {label}
+      </label>
+      {children}
     </div>
   );
 }
