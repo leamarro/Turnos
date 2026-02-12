@@ -1,131 +1,116 @@
-"use client";
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
 
-type Appointment = {
-  id: string;
-  date: string;
-  status: string;
-  name?: string | null;
-  lastName?: string | null;
-  telefono?: string | null;
-  service: {
-    name: string;
-    price?: number;
-  } | null;
-  servicePrice?: number | null;
-};
+/* ========================= */
+/* GET */
+/* ========================= */
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
 
-export default function TurnsTable({
-  data,
-  loading,
-}: {
-  data: Appointment[];
-  loading: boolean;
-}) {
-  const [isMobile, setIsMobile] = useState(false);
+  if (id) {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+      include: { service: true },
+    });
 
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 640);
-    const onResize = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+    if (!appointment) {
+      return NextResponse.json(
+        { error: "Turno no encontrado" },
+        { status: 404 }
+      );
+    }
 
-  if (loading) {
-    return <p className="p-4 text-sm">Cargando turnos...</p>;
+    return NextResponse.json(appointment);
   }
 
-  if (data.length === 0) {
-    return <p className="p-4 text-sm">No hay turnos</p>;
+  const appointments = await prisma.appointment.findMany({
+    include: { service: true },
+    orderBy: { date: "asc" },
+  });
+
+  return NextResponse.json(appointments);
+}
+
+/* ========================= */
+/* PUT */
+/* ========================= */
+export async function PUT(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Falta ID" },
+        { status: 400 }
+      );
+    }
+
+    const body = await req.json();
+
+    const {
+      name,
+      lastName,
+      telefono,
+      instagram,
+      notes, // ✅ IMPORTANTE
+      serviceId,
+      status,
+      date,
+      time,
+    } = body;
+
+    let finalDate: Date | undefined = undefined;
+
+    if (date && time) {
+      finalDate = new Date(`${date}T${time}`);
+    }
+
+    const updated = await prisma.appointment.update({
+      where: { id },
+      data: {
+        name,
+        lastName,
+        telefono,
+        instagram,
+        notes, // ✅ ACA SE GUARDA
+        serviceId: serviceId || null,
+        status,
+        ...(finalDate && { date: finalDate }),
+      },
+      include: { service: true },
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Error al actualizar turno" },
+      { status: 500 }
+    );
   }
+}
 
-  /* ================= MOBILE ================= */
-  if (isMobile) {
-    return (
-      <div className="space-y-3">
-        {data.map((a) => (
-          <div
-            key={a.id}
-            className="bg-white rounded-2xl p-4 shadow-sm space-y-2"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-medium">
-                  {a.name} {a.lastName}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {a.service?.name ?? "—"}
-                </p>
-              </div>
+/* ========================= */
+/* DELETE */
+/* ========================= */
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
 
-              <span className="font-semibold text-sm">
-                $ {a.servicePrice ?? a.service?.price ?? 0}
-              </span>
-            </div>
-
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>
-                {new Date(a.date).toLocaleDateString("es")}
-              </span>
-              <span>
-                {new Date(a.date).toLocaleTimeString("es", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
-
-            {a.telefono && (
-              <p className="text-xs text-gray-500">
-                📞 {a.telefono}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
+  if (!id) {
+    return NextResponse.json(
+      { error: "Falta ID" },
+      { status: 400 }
     );
   }
 
-  /* ================= DESKTOP ================= */
-  return (
-    <table className="w-full text-sm">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="p-3 text-left">Cliente</th>
-          <th className="p-3 text-left">Teléfono</th>
-          <th className="p-3 text-left">Servicio</th>
-          <th className="p-3 text-left">Fecha</th>
-          <th className="p-3 text-right">Precio</th>
-          <th className="p-3 text-center">Estado</th>
-        </tr>
-      </thead>
+  await prisma.appointment.delete({
+    where: { id },
+  });
 
-      <tbody>
-        {data.map((a) => (
-          <tr key={a.id} className="border-t hover:bg-gray-50">
-            <td className="p-3 font-medium">
-              {a.name} {a.lastName}
-            </td>
-
-            <td className="p-3">{a.telefono ?? "—"}</td>
-
-            <td className="p-3">{a.service?.name ?? "—"}</td>
-
-            <td className="p-3">
-              {new Date(a.date).toLocaleString()}
-            </td>
-
-            <td className="p-3 text-right">
-              $ {a.servicePrice ?? a.service?.price ?? 0}
-            </td>
-
-            <td className="p-3 text-center capitalize">
-              {a.status}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
+  return NextResponse.json({ success: true });
 }
