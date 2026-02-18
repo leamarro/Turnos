@@ -84,10 +84,11 @@ export default function AppointmentForm() {
       });
 
       router.push(`/appointments/${res.data.id}`);
-    } catch (err) {
-      console.error(err);
-      setMessage("❌ Error al reservar el turno");
-    }
+} catch (err: any) {
+  console.error(err.response?.data || err);
+  setMessage("❌ Error al reservar el turno");
+}
+
   };
 
   return (

@@ -1,124 +1,116 @@
-import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-
-export const dynamic = "force-dynamic";
+import { NextResponse } from "next/server";
 
 /* ========================= */
-/* GET */
+/* GET — lista o detalle */
 /* ========================= */
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
-  if (id) {
-    const appointment = await prisma.appointment.findUnique({
-      where: { id },
+  if (!id) {
+    const appointments = await prisma.appointment.findMany({
+      orderBy: { date: "desc" },
       include: { service: true },
     });
 
-    if (!appointment) {
-      return NextResponse.json(
-        { error: "Turno no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(appointment);
+    return NextResponse.json(appointments);
   }
 
-  const appointments = await prisma.appointment.findMany({
+  const appointment = await prisma.appointment.findUnique({
+    where: { id },
     include: { service: true },
-    orderBy: { date: "asc" },
   });
 
-  return NextResponse.json(appointments);
+  if (!appointment) {
+    return NextResponse.json(
+      { error: "Turno no encontrado" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json(appointment);
+}
+
+/* ========================= */
+/* POST */
+/* ========================= */
+export async function POST(request: Request) {
+  const body = await request.json();
+
+  const appointment = await prisma.appointment.create({
+    data: {
+      name: body.name,
+      lastName: body.lastName,
+      telefono: body.telefono || null,
+      instagram: body.instagram || null,
+      date: new Date(body.date),
+      status: body.status ?? "pending",
+      serviceId: body.serviceId,
+    },
+  });
+
+  return NextResponse.json(appointment);
 }
 
 /* ========================= */
 /* PUT */
 /* ========================= */
-export async function PUT(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+export async function PUT(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "Falta ID" },
-        { status: 400 }
-      );
-    }
-
-    const body = await req.json();
-
-    const {
-      name,
-      lastName,
-      telefono,
-      instagram,
-      notes, // ✅ IMPORTANTE
-      serviceId,
-      status,
-      date,
-      time,
-    } = body;
-
-    let finalDate: Date | undefined = undefined;
-
-    if (date && time) {
-      finalDate = new Date(`${date}T${time}`);
-    }
-
-    const updated = await prisma.appointment.update({
-      where: { id },
-      data: {
-        name,
-        lastName,
-        telefono,
-        instagram,
-        notes, // ✅ ACA SE GUARDA
-        serviceId: serviceId || null,
-        status,
-        ...(finalDate && { date: finalDate }),
-      },
-      include: { service: true },
-    });
-
-    return NextResponse.json(updated);
-  } catch (error) {
-    console.error(error);
+  if (!id) {
     return NextResponse.json(
-      { error: "Error al actualizar turno" },
-      { status: 500 }
+      { error: "ID requerido" },
+      { status: 400 }
     );
   }
+
+  const body = await request.json();
+
+  const updated = await prisma.appointment.update({
+    where: { id },
+    data: {
+      name: body.name,
+      lastName: body.lastName,
+      telefono: body.telefono || null,
+      instagram: body.instagram || null,
+      status: body.status,
+      serviceId: body.serviceId,
+      ...(body.date && body.time
+        ? {
+            date: new Date(
+              `${body.date}T${body.time}:00-03:00`
+            ),
+          }
+        : {}),
+    },
+  });
+
+  return NextResponse.json(updated);
 }
 
 /* ========================= */
 /* DELETE */
 /* ========================= */
-export async function DELETE(req: Request) {
-  const { searchParams } = new URL(req.url);
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
   if (!id) {
     return NextResponse.json(
-      { error: "Falta ID" },
+      { error: "ID requerido" },
       { status: 400 }
     );
   }
 
-  await prisma.appointment.delete({
-    where: { id },
-  });
+  await prisma.appointment.delete({ where: { id } });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ ok: true });
 }
 4
 
-/* ========================= */
-/* POST */
-/* ========================= */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -128,20 +120,18 @@ export async function POST(req: Request) {
       lastName,
       telefono,
       instagram,
-      notes,
       serviceId,
       date,
-      time,
+      status,
+      notes,
     } = body;
 
-    if (!name || !date || !time) {
+    if (!name || !lastName || !telefono || !serviceId || !date) {
       return NextResponse.json(
         { error: "Faltan datos obligatorios" },
         { status: 400 }
       );
     }
-
-    const finalDate = new Date(`${date}T${time}`);
 
     const appointment = await prisma.appointment.create({
       data: {
@@ -149,12 +139,14 @@ export async function POST(req: Request) {
         lastName,
         telefono,
         instagram,
+        serviceId,
         notes,
-        serviceId: serviceId || null,
-        status: "pending",
-        date: finalDate,
+        status: status || "pending",
+        date: new Date(date), // 👈 CLAVE
       },
-      include: { service: true },
+      include: {
+        service: true,
+      },
     });
 
     return NextResponse.json(appointment);
