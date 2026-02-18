@@ -14,6 +14,7 @@ import {
   Trash2,
   Save,
   Instagram,
+  FileText,
 } from "lucide-react";
 
 type Service = { id: string; name: string };
@@ -25,7 +26,8 @@ type Appointment = {
   name?: string;
   lastName?: string;
   telefono?: string;
-  instagram?: string; // ✅
+  instagram?: string;
+  notes?: string;
   service?: { id: string; name?: string };
 };
 
@@ -43,7 +45,8 @@ export default function EditAppointmentPage({
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [instagram, setInstagram] = useState(""); // ✅
+  const [instagram, setInstagram] = useState("");
+  const [notes, setNotes] = useState("");
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -61,24 +64,24 @@ export default function EditAppointmentPage({
         setName(a.name ?? "");
         setLastName(a.lastName ?? "");
         setTelefono(a.telefono ?? "");
-        setInstagram(a.instagram ?? ""); // ✅
+        setInstagram(a.instagram ?? "");
+        setNotes(a.notes ?? "");
         setServiceId(a.service?.id ?? "");
         setStatus(a.status ?? "pendiente");
 
-if (a.date) {
-  const d = new Date(a.date);
-  if (!isNaN(d.getTime())) {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mi = String(d.getMinutes()).padStart(2, "0");
+        if (a.date) {
+          const d = new Date(a.date);
+          if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            const hh = String(d.getHours()).padStart(2, "0");
+            const mi = String(d.getMinutes()).padStart(2, "0");
 
-    setDate(`${yyyy}-${mm}-${dd}`);
-    setTime(`${hh}:${mi}`);
-  }
-}
-
+            setDate(`${yyyy}-${mm}-${dd}`);
+            setTime(`${hh}:${mi}`);
+          }
+        }
 
         setServices(Array.isArray(sv.data) ? sv.data : []);
       } catch (err) {
@@ -101,7 +104,8 @@ if (a.date) {
         name: name.trim(),
         lastName: lastName.trim(),
         telefono: telefono.trim() || null,
-        instagram: instagram.trim() || null, // ✅
+        instagram: instagram.trim() || null,
+        notes: notes.trim() || null,
         serviceId,
         status,
       };
@@ -112,7 +116,6 @@ if (a.date) {
       }
 
       await axios.put(`/api/appointments?id=${id}`, payload);
-
       router.push("/admin");
     } catch (err) {
       console.error(err);
@@ -139,42 +142,37 @@ if (a.date) {
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16">
       <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 space-y-5">
-
         <h1 className="text-lg font-semibold text-center">
           Editar turno
         </h1>
 
         <Field icon={<User size={16} />} label="Nombre">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input"
-          />
+          <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
         </Field>
 
         <Field icon={<User size={16} />} label="Apellido">
-          <input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="input"
-          />
+          <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="input" />
         </Field>
 
         <Field icon={<Phone size={16} />} label="Teléfono">
-          <input
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            className="input"
-          />
+          <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" />
         </Field>
 
-        {/* ✅ INSTAGRAM */}
         <Field icon={<Instagram size={16} />} label="Instagram">
           <input
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
             className="input"
             placeholder="@usuario"
+          />
+        </Field>
+
+        <Field icon={<FileText size={16} />} label="Notas">
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="input"
+            rows={3}
           />
         </Field>
 
@@ -195,30 +193,16 @@ if (a.date) {
 
         <div className="flex gap-3">
           <Field icon={<CalendarClock size={16} />} label="Fecha">
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="input"
-            />
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
           </Field>
 
           <Field icon={<CalendarClock size={16} />} label="Hora">
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="input"
-            />
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input" />
           </Field>
         </div>
 
         <Field icon={<BadgeCheck size={16} />} label="Estado">
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="input"
-          >
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="input">
             <option value="pendiente">Pendiente</option>
             <option value="confirmado">Confirmado</option>
             <option value="finalizado">Finalizado</option>
@@ -247,10 +231,6 @@ if (a.date) {
     </div>
   );
 }
-
-/* ------------------ */
-/* COMPONENTES UI */
-/* ------------------ */
 
 function Field({
   label,

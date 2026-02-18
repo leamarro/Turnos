@@ -63,22 +63,22 @@ export default function AppointmentDetail({
     );
   }
 
+  const statusLower = appointment.status.toLowerCase();
+
   const statusColor =
-    appointment.status === "confirmed" || appointment.status === "confirmado"
+    statusLower === "confirmed" || statusLower === "confirmado"
       ? "text-green-600"
-      : appointment.status === "cancelled" || appointment.status === "cancelado"
+      : statusLower === "cancelled" || statusLower === "cancelado"
       ? "text-red-600"
-      : appointment.status === "finished" || appointment.status === "finalizado"
+      : statusLower === "finished" || statusLower === "finalizado"
       ? "text-gray-600"
       : "text-yellow-600";
 
   const isConfirmed =
-    appointment.status.toLowerCase() === "confirmed" ||
-    appointment.status.toLowerCase() === "confirmado";
+    statusLower === "confirmed" || statusLower === "confirmado";
 
   const isPending =
-    appointment.status.toLowerCase() === "pending" ||
-    appointment.status.toLowerCase() === "pendiente";
+    statusLower === "pending" || statusLower === "pendiente";
 
   /* ========================= */
   /* 📲 WHATSAPP */
@@ -103,41 +103,44 @@ Tu turno está confirmado 💄
 
     const phone = appointment.telefono.replace(/\D/g, "");
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   /* ========================= */
-  /* 📸 INSTAGRAM — DM DIRECTO */
+  /* 📸 INSTAGRAM */
   /* ========================= */
-const handleSendInstagram = async () => {
-  if (!appointment.instagram) return;
-  const username = appointment.instagram.replace("@", "");
+  const handleSendInstagram = async () => {
+    if (!appointment.instagram) return;
 
-  const message = `Hola ${appointment.name}! 💕✨
+    const username = appointment.instagram.replace("@", "");
+
+    const message = `Hola ${appointment.name}! 💕✨
 
 Tu turno está confirmado 💄
 
 🧾 Servicio: ${appointment.service?.name ?? "—"}
 📅 Fecha y hora: ${format(
-    new Date(appointment.date),
-    "dd/MM/yyyy HH:mm",
-    { locale: es }
-  )}
+      new Date(appointment.date),
+      "dd/MM/yyyy HH:mm",
+      { locale: es }
+    )}
 
 ¡Te esperamos! 💖`;
-  
-try { await navigator.clipboard.writeText(message); } catch (err) { console.warn("No se pudo copiar el mensaje"); }
 
-  
+    try {
+      await navigator.clipboard.writeText(message);
+      alert("Mensaje copiado 📋 Pegalo en el DM de Instagram");
+    } catch (err) {
+      console.warn("No se pudo copiar el mensaje");
+    }
 
-  // DM directo
-window.open(
-  `https://www.instagram.com/${username}/`,
-  "_blank",
-  "noopener,noreferrer"
-);
-};
-
+    window.open(
+      `https://www.instagram.com/${username}/`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16 pb-16">
@@ -188,7 +191,6 @@ window.open(
 
         </div>
 
-        {/* 📲 BOTONES */}
         {(isConfirmed || isPending) && (
           <div className="mt-6 flex flex-col gap-3">
 
@@ -211,6 +213,7 @@ window.open(
                 Enviar DM Instagram
               </button>
             )}
+
           </div>
         )}
 
@@ -229,6 +232,7 @@ window.open(
 
 /* ========================= */
 /* ℹ️ INFO ROW */
+/* ========================= */
 function Info({
   label,
   icon,

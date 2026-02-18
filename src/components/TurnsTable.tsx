@@ -9,6 +9,7 @@ type Appointment = {
   name?: string | null;
   lastName?: string | null;
   telefono?: string | null;
+  notes?: string | null;
   service: {
     name: string;
     price?: number;
@@ -47,7 +48,7 @@ export default function TurnsTable({
         {data.map((a) => (
           <div
             key={a.id}
-            className="bg-white rounded-2xl p-4 shadow-sm space-y-2"
+            className="bg-white rounded-2xl p-4 shadow-sm space-y-3 border border-gray-100"
           >
             <div className="flex justify-between items-start">
               <div>
@@ -81,6 +82,16 @@ export default function TurnsTable({
                 📞 {a.telefono}
               </p>
             )}
+
+            {/* ✅ NOTA BONITA */}
+            {a.notes && (
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+                <p className="text-xs text-gray-400 mb-1">Nota</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                  {a.notes}
+                </p>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -96,6 +107,7 @@ export default function TurnsTable({
           <th className="p-3 text-left">Teléfono</th>
           <th className="p-3 text-left">Servicio</th>
           <th className="p-3 text-left">Fecha</th>
+          <th className="p-3 text-left">Nota</th> {/* ✅ NUEVA COLUMNA */}
           <th className="p-3 text-right">Precio</th>
           <th className="p-3 text-center">Estado</th>
         </tr>
@@ -103,7 +115,7 @@ export default function TurnsTable({
 
       <tbody>
         {data.map((a) => (
-          <tr key={a.id} className="border-t hover:bg-gray-50">
+          <tr key={a.id} className="border-t hover:bg-gray-50 align-top">
             <td className="p-3 font-medium">
               {a.name} {a.lastName}
             </td>
@@ -114,6 +126,17 @@ export default function TurnsTable({
 
             <td className="p-3">
               {new Date(a.date).toLocaleString()}
+            </td>
+
+            {/* ✅ NOTA EN DESKTOP */}
+            <td className="p-3 max-w-xs">
+              {a.notes ? (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-700 whitespace-pre-wrap">
+                  {a.notes}
+                </div>
+              ) : (
+                "—"
+              )}
             </td>
 
             <td className="p-3 text-right">
