@@ -109,7 +109,7 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
-4
+
 
 export async function POST(req: Request) {
   try {
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
         serviceId,
         notes,
         status: status || "pending",
-        date: new Date(date), // 👈 CLAVE
+        date: new Date(date),
       },
       include: {
         service: true,
