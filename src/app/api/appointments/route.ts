@@ -109,3 +109,55 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+4
+
+/* ========================= */
+/* POST */
+/* ========================= */
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    const {
+      name,
+      lastName,
+      telefono,
+      instagram,
+      notes,
+      serviceId,
+      date,
+      time,
+    } = body;
+
+    if (!name || !date || !time) {
+      return NextResponse.json(
+        { error: "Faltan datos obligatorios" },
+        { status: 400 }
+      );
+    }
+
+    const finalDate = new Date(`${date}T${time}`);
+
+    const appointment = await prisma.appointment.create({
+      data: {
+        name,
+        lastName,
+        telefono,
+        instagram,
+        notes,
+        serviceId: serviceId || null,
+        status: "pending",
+        date: finalDate,
+      },
+      include: { service: true },
+    });
+
+    return NextResponse.json(appointment);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Error al crear turno" },
+      { status: 500 }
+    );
+  }
+}
