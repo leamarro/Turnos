@@ -230,20 +230,32 @@ export default function AdminPanel() {
                   </p>
                 </div>
 
-                <div className="text-right text-sm">
-                  <p>Total: ${total}</p>
-                  <p>Pagado: ${paid}</p>
-                  {hasDebt ? (
-                    <p className="text-red-600 font-semibold">
-                      Debe: ${remaining}
-                    </p>
-                  ) : (
-                    <p className="text-green-600 font-semibold">
-                      Pago completo
-                    </p>
-                  )}
-                </div>
-              </div>
+                {total > 0 && (
+                  <div className="text-right text-sm">
+                    <p>Total: ${total}</p>
+                
+                    {paid === 0 && (
+                      <p className="text-gray-500">
+                        Sin pagos registrados
+                      </p>
+                    )}
+                
+                    {paid > 0 && paid < total && (
+                      <>
+                        <p>Pagado: ${paid}</p>
+                        <p className="text-red-600 font-semibold">
+                          Debe: ${remaining}
+                        </p>
+                      </>
+                    )}
+                
+                    {paid >= total && (
+                      <p className="text-green-600 font-semibold">
+                        Pago completo
+                      </p>
+                    )}
+                  </div>
+                )}
 
               <div className="flex justify-end gap-3 mt-4">
                 <button
