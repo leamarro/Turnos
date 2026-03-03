@@ -27,10 +27,10 @@ export async function POST(
     const totalServicio = appointment.servicePrice ?? 0;
 
     if (totalPagado < totalServicio) {
-      // Agregar pago restante automáticamente
       await prisma.payment.create({
         data: {
           amount: totalServicio - totalPagado,
+          method: "full", // 🔥 obligatorio
           appointmentId: params.id,
         },
       });
