@@ -224,29 +224,44 @@ export default function EditAppointmentPage({
             Restante: ${restante}
           </p>
         </div>
+        
+{/* HISTORIAL DE PAGOS */}
+{payments.length > 0 && (
+  <div className="border p-4 rounded-xl space-y-3 text-sm">
+    <p className="font-semibold">Historial de pagos</p>
 
-        {/* HISTORIAL DE PAGOS */}
-        {payments.length > 0 && (
-          <div className="border p-4 rounded-xl space-y-2 text-sm">
-            <p className="font-semibold">Historial de pagos</p>
+    {payments.map((p) => {
+      const fecha = new Date(p.createdAt).toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
 
-            {payments.map((p) => (
-              <div
-                key={p.id}
-                className="flex justify-between border-b pb-1"
-              >
-                <span>
-                  {p.method === "deposit"
-                    ? "Seña"
-                    : p.method === "full"
-                    ? "Pago final"
-                    : p.method}
-                </span>
-                <span>${p.amount}</span>
-              </div>
-            ))}
+      const metodo =
+        p.method === "deposit"
+          ? "Seña"
+          : p.method === "full"
+          ? "Pago final"
+          : p.method === "cash"
+          ? "Efectivo"
+          : p.method;
+
+      return (
+        <div
+          key={p.id}
+          className="flex justify-between border-b pb-2"
+        >
+          <div>
+            <p>{metodo}</p>
+            <p className="text-xs text-gray-500">{fecha}</p>
           </div>
-        )}
+
+          <span className="font-medium">${p.amount}</span>
+        </div>
+      );
+    })}
+  </div>
+)}
 
         <input
           type="number"
