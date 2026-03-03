@@ -5,25 +5,64 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const body = await req.json();
-  const { amount } = body;
+  try {
+    const { amount } = await req.json();
 
-  if (!amount || amount <= 0) {
-    return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
+    if (!amount || amount <= 0) {
+      return NextResponse.json(
+        { error: "Monto inválido" },
+        { status: 400 }
+      );
+    }
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: params.id },
+      include: { payments: true },
+    });
+
+    if (!appointment) {
+      return NextResponse.json(
+        { error: "Turno no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Crear pago
+    await prisma.payment.create({
+      data: {
+        amount,
+        appointmentId: params.id,
+      },
+    });
+
+    // Recalcular total pagado
+    const updatedAppointment = await prisma.appointment.findUnique({
+      where: { id: params.id },
+      include: { payments: true },
+    });
+
+    const totalPagado =
+      updatedAppointment?.payments.reduce(
+        (acc, p) => acc + p.amount,
+        0
+      ) ?? 0;
+
+    const totalServicio = updatedAppointment?.servicePrice ?? 0;
+
+    // Si ya está pago → cambiar status automáticamente
+    if (totalPagado >= totalServicio) {
+      await prisma.appointment.update({
+        where: { id: params.id },
+        data: { status: "completed" },
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Error al agregar seña" },
+      { status: 500 }
+    );
   }
-
-  await prisma.payment.create({
-    data: {
-      amount,
-      method: "cash",
-      appointmentId: params.id,
-    },
-  });
-
-  await prisma.appointment.update({
-    where: { id: params.id },
-    data: { status: "pending" },
-  });
-
-  return NextResponse.json({ success: true });
 }
