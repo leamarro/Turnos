@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2, CalendarDays, Phone, User } from "lucide-react";
+import { Pencil, Trash2, Phone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 /* ========================= */
@@ -27,17 +27,17 @@ type Appointment = {
 };
 
 /* ========================= */
-/* ⏱️ ESTADO TEMPORAL REAL */
+/* ⏱️ ESTADO TEMPORAL */
 function getTimeInfo(date: string) {
   const now = new Date();
   const d = new Date(date);
   const diffMs = d.getTime() - now.getTime();
   const diffMin = diffMs / 1000 / 60;
 
-  if (diffMs < 0) return { state: "past", diffMin };
-  if (diffMin <= 60) return { state: "very-soon", diffMin };
-  if (diffMin <= 240) return { state: "soon", diffMin };
-  return { state: "future", diffMin };
+  if (diffMs < 0) return { state: "past" };
+  if (diffMin <= 60) return { state: "very-soon" };
+  if (diffMin <= 240) return { state: "soon" };
+  return { state: "future" };
 }
 
 function getCardStyle(state: string) {
@@ -46,8 +46,6 @@ function getCardStyle(state: string) {
       return "bg-green-200 border-l-4 border-green-600";
     case "soon":
       return "bg-green-100 border-l-4 border-green-400";
-    case "future":
-      return "bg-white";
     case "past":
       return "bg-gray-50 opacity-50";
     default:
@@ -55,8 +53,6 @@ function getCardStyle(state: string) {
   }
 }
 
-/* ========================= */
-/* 📅 FILTRO POR DÍA (SAFE) */
 function sameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -74,7 +70,6 @@ export default function AdminPanel() {
   const router = useRouter();
   const today = new Date();
 
-  /* ========================= */
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
     const ordered = Array.isArray(res.data)
@@ -89,31 +84,28 @@ export default function AdminPanel() {
     fetchAppointments();
   }, []);
 
-  /* ========================= */
   const appointments = useMemo(() => {
     let list = [...allAppointments];
 
-    const todayStart = new Date(today); todayStart.setHours(0,0,0,0);
-    const todayEnd = new Date(today); todayEnd.setHours(23,59,59,999);
+    const todayStart = new Date(today);
+    todayStart.setHours(0, 0, 0, 0);
 
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
-    const tomorrowStart = new Date(tomorrow); tomorrowStart.setHours(0,0,0,0);
-    const tomorrowEnd = new Date(tomorrow); tomorrowEnd.setHours(23,59,59,999);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
 
-    const weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
+    const weekEnd = new Date(today);
+    weekEnd.setDate(today.getDate() + 7);
 
     if (filterOption === "today") {
-      list = list.filter(a => {
-        const d = new Date(a.date);
-        return d >= todayStart && d <= todayEnd;
-      });
-    } else if (filterOption === "tomorrow") {
-      list = list.filter(a => {
-        const d = new Date(a.date);
-        return d >= tomorrowStart && d <= tomorrowEnd;
-      });
-    } else if (filterOption === "week") {
-      list = list.filter(a => {
+      list = list.filter((a) => sameDay(new Date(a.date), today));
+    }
+
+    if (filterOption === "tomorrow") {
+      list = list.filter((a) => sameDay(new Date(a.date), tomorrow));
+    }
+
+    if (filterOption === "week") {
+      list = list.filter((a) => {
         const d = new Date(a.date);
         return d >= todayStart && d <= weekEnd;
       });
@@ -125,18 +117,22 @@ export default function AdminPanel() {
     }
 
     if (!showPast) {
-      list = list.filter(a => new Date(a.date) >= todayStart);
+      list = list.filter((a) => new Date(a.date) >= todayStart);
     }
 
     if (showPendingOnly) {
       list = list.filter((a) => {
         const total = a.servicePrice ?? 0;
-        const paid = a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+        const paid =
+          a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
         return paid < total;
       });
     }
 
-    return list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return list.sort(
+      (a, b) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
   }, [allAppointments, filterDate, filterOption, showPast, showPendingOnly]);
 
   async function deleteAppointment(id: string) {
@@ -145,71 +141,54 @@ export default function AdminPanel() {
     fetchAppointments();
   }
 
-  /* ========================= */
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
 
       {/* FILTROS */}
-      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col gap-3">
+      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-wrap gap-3">
+        <button onClick={() => setFilterOption("all")} className="px-3 py-1 border rounded-full text-sm">
+          Todos
+        </button>
 
-        <div className="flex gap-2 flex-wrap">
-          {["all","today","tomorrow","week"].map(opt => (
-            <button
-              key={opt}
-              onClick={() => { setFilterOption(opt as any); setFilterDate(""); }}
-              className={`px-3 py-1 rounded-full text-sm transition ${
-                filterOption===opt
-                  ? "bg-black text-white"
-                  : "border text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {opt==="all"?"Todos":opt==="today"?"Hoy":opt==="tomorrow"?"Mañana":"Semana"}
-            </button>
-          ))}
-        </div>
+        <button onClick={() => setFilterOption("today")} className="px-3 py-1 border rounded-full text-sm">
+          Hoy
+        </button>
 
-        <div className="flex gap-4 flex-wrap items-center">
+        <button onClick={() => setFilterOption("tomorrow")} className="px-3 py-1 border rounded-full text-sm">
+          Mañana
+        </button>
 
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            className="minimal-input"
-          />
+        <button onClick={() => setFilterOption("week")} className="px-3 py-1 border rounded-full text-sm">
+          Semana
+        </button>
 
-          <button
-            onClick={() => setShowPast(v => !v)}
-            className="px-3 py-1 rounded-full text-sm border"
-          >
-            {showPast ? "Ocultar pasados" : "Mostrar pasados"}
-          </button>
-
-          <button
-            onClick={() => setShowPendingOnly(v => !v)}
-            className={`px-3 py-1 rounded-full text-sm border ${
-              showPendingOnly ? "bg-red-600 text-white" : ""
-            }`}
-          >
-            Solo pagos pendientes
-          </button>
-        </div>
+        <button
+          onClick={() => setShowPendingOnly((v) => !v)}
+          className={`px-3 py-1 border rounded-full text-sm ${
+            showPendingOnly ? "bg-red-600 text-white" : ""
+          }`}
+        >
+          Solo pendientes
+        </button>
       </div>
 
       {/* LISTADO */}
       <div className="space-y-4">
         {appointments.map((a) => {
           const total = a.servicePrice ?? 0;
-          const paid = a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+          const paid =
+            a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
           const remaining = total - paid;
           const hasDebt = remaining > 0;
-
           const info = getTimeInfo(a.date);
 
           return (
             <div
               key={a.id}
-              className={`rounded-2xl p-4 shadow ${getCardStyle(info.state)} ${
+              className={`rounded-2xl p-4 shadow ${getCardStyle(
+                info.state
+              )} ${
                 hasDebt ? "border border-red-400" : "border border-green-400"
               }`}
             >
@@ -226,20 +205,22 @@ export default function AdminPanel() {
                   <p className="text-sm mt-2">{a.service?.name}</p>
 
                   <p className="text-xs text-gray-500 mt-2">
-                    {format(new Date(a.date), "dd/MM/yyyy HH:mm", { locale: es })} hs
+                    {format(new Date(a.date), "dd/MM/yyyy HH:mm", {
+                      locale: es,
+                    })} hs
                   </p>
                 </div>
 
                 {total > 0 && (
                   <div className="text-right text-sm">
                     <p>Total: ${total}</p>
-                
+
                     {paid === 0 && (
                       <p className="text-gray-500">
                         Sin pagos registrados
                       </p>
                     )}
-                
+
                     {paid > 0 && paid < total && (
                       <>
                         <p>Pagado: ${paid}</p>
@@ -248,7 +229,7 @@ export default function AdminPanel() {
                         </p>
                       </>
                     )}
-                
+
                     {paid >= total && (
                       <p className="text-green-600 font-semibold">
                         Pago completo
@@ -256,10 +237,13 @@ export default function AdminPanel() {
                     )}
                   </div>
                 )}
+              </div>
 
               <div className="flex justify-end gap-3 mt-4">
                 <button
-                  onClick={() => router.push(`/admin/edit/${a.id}`)}
+                  onClick={() =>
+                    router.push(`/admin/edit/${a.id}`)
+                  }
                   className="text-green-600"
                 >
                   <Pencil size={18} />
