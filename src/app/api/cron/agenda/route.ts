@@ -40,7 +40,7 @@ export async function GET(req: Request) {
         status: "pending",
       },
       include: {
-        user: true,
+        User: true,
       },
       orderBy: {
         date: "asc",
