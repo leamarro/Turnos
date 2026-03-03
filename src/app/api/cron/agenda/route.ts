@@ -62,7 +62,7 @@ export async function GET(req: Request) {
 
         const nombre =
           [t.name, t.lastName].filter(Boolean).join(" ") ||
-          [t.user?.name, t.user?.lastName].filter(Boolean).join(" ") ||
+          [t.User?.name, t.User?.lastName].filter(Boolean).join(" ") ||
           "Sin nombre"
 
         return `• ${hora} – ${nombre}`
