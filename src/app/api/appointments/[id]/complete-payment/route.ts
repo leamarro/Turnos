@@ -19,10 +19,7 @@ export async function POST(
     }
 
     const totalPagado =
-      appointment.payments.reduce(
-        (acc, p) => acc + p.amount,
-        0
-      ) ?? 0;
+      appointment.payments.reduce((acc, p) => acc + p.amount, 0) ?? 0;
 
     const totalServicio = appointment.servicePrice ?? 0;
 
@@ -30,7 +27,7 @@ export async function POST(
       await prisma.payment.create({
         data: {
           amount: totalServicio - totalPagado,
-          method: "full", // 🔥 obligatorio
+          method: "full",
           appointmentId: params.id,
         },
       });
