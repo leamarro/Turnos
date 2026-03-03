@@ -8,7 +8,9 @@ export async function POST(
   try {
     const { amount } = await req.json();
 
-    if (!amount || amount <= 0) {
+    const parsedAmount = Number(amount);
+
+    if (!parsedAmount || parsedAmount <= 0) {
       return NextResponse.json(
         { error: "Monto inválido" },
         { status: 400 }
@@ -27,15 +29,16 @@ export async function POST(
       );
     }
 
-    // Crear pago
+    // ✅ Crear pago con method obligatorio
     await prisma.payment.create({
       data: {
-        amount,
+        amount: parsedAmount,
+        method: "deposit", // 🔥 obligatorio
         appointmentId: params.id,
       },
     });
 
-    // Recalcular total pagado
+    // Recalcular totales
     const updatedAppointment = await prisma.appointment.findUnique({
       where: { id: params.id },
       include: { payments: true },
@@ -49,7 +52,7 @@ export async function POST(
 
     const totalServicio = updatedAppointment?.servicePrice ?? 0;
 
-    // Si ya está pago → cambiar status automáticamente
+    // Si ya está pago → cambiar status
     if (totalPagado >= totalServicio) {
       await prisma.appointment.update({
         where: { id: params.id },
