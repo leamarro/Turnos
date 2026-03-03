@@ -96,15 +96,10 @@ export default function EditAppointmentPage({
     return <p className="p-6">Cargando...</p>;
   }
 
-  // 🔥 SAFE payments
   const payments = appointment.payments ?? [];
 
   const totalServicio = appointment.servicePrice ?? 0;
-  const totalPagado = payments.reduce(
-    (acc, p) => acc + p.amount,
-    0
-  );
-
+  const totalPagado = payments.reduce((acc, p) => acc + p.amount, 0);
   const restante = totalServicio - totalPagado;
   const pagoCompleto = restante <= 0;
 
@@ -141,7 +136,6 @@ export default function EditAppointmentPage({
 
   async function handleDelete() {
     if (!confirm("¿Eliminar turno?")) return;
-
     await axios.delete(`/api/appointments/${id}`);
     router.push("/admin");
   }
@@ -154,46 +148,13 @@ export default function EditAppointmentPage({
           Editar Turno
         </h1>
 
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre"
-          className="input"
-        />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="input" />
+        <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Apellido" className="input" />
+        <input value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="Teléfono" className="input" />
+        <input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="Instagram" className="input" />
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas" className="input" />
 
-        <input
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          placeholder="Apellido"
-          className="input"
-        />
-
-        <input
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-          placeholder="Teléfono"
-          className="input"
-        />
-
-        <input
-          value={instagram}
-          onChange={(e) => setInstagram(e.target.value)}
-          placeholder="Instagram"
-          className="input"
-        />
-
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notas"
-          className="input"
-        />
-
-        <select
-          value={serviceId}
-          onChange={(e) => setServiceId(e.target.value)}
-          className="input"
-        >
+        <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input">
           <option value="">Seleccionar servicio</option>
           {services.map((s) => (
             <option key={s.id} value={s.id}>
@@ -203,112 +164,98 @@ export default function EditAppointmentPage({
         </select>
 
         <div className="flex gap-2">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="input w-1/2"
-          />
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="input w-1/2"
-          />
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input w-1/2" />
+          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input w-1/2" />
         </div>
 
-        {/* RESUMEN FINANCIERO */}
+        {/* RESUMEN */}
         <div className="bg-gray-100 p-4 rounded-xl space-y-1 text-sm">
           <p>Total servicio: ${totalServicio}</p>
           <p>Total pagado: ${totalPagado}</p>
-          <p className="font-semibold text-red-600">
-            Restante: ${restante}
-          </p>
+          {!pagoCompleto ? (
+            <p className="font-semibold text-red-600">Restante: ${restante}</p>
+          ) : (
+            <p className="font-semibold text-green-600">Pago completo</p>
+          )}
         </div>
-        
-{/* HISTORIAL DE PAGOS */}
-{payments.length > 0 && (
-  <div className="border p-4 rounded-xl space-y-3 text-sm">
-    <p className="font-semibold">Historial de pagos</p>
 
-    {payments.map((p) => {
-      const fecha = new Date(p.createdAt).toLocaleDateString("es-AR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+        {/* HISTORIAL */}
+        {payments.length > 0 && (
+          <div className="border p-4 rounded-xl space-y-3 text-sm">
+            <p className="font-semibold">Historial de pagos</p>
 
-      const metodo =
-        p.method === "deposit"
-          ? "Seña"
-          : p.method === "full"
-          ? "Pago final"
-          : p.method === "cash"
-          ? "Efectivo"
-          : p.method;
+            {payments.map((p) => {
+              const fecha = new Date(p.createdAt).toLocaleDateString("es-AR");
+              const metodo =
+                p.method === "deposit"
+                  ? "Seña"
+                  : p.method === "full"
+                  ? "Pago final"
+                  : p.method === "cash"
+                  ? "Efectivo"
+                  : p.method;
 
-      return (
-        <div
-          key={p.id}
-          className="flex justify-between border-b pb-2"
-        >
-          <div>
-            <p>{metodo}</p>
-            <p className="text-xs text-gray-500">{fecha}</p>
-          </div>
-
-          <span className="font-medium">${p.amount}</span>
-        </div>
-      );
-    })}
-  </div>
-)}
-
-        <input
-          type="number"
-          value={depositAmount}
-          onChange={(e) => setDepositAmount(e.target.value)}
-          disabled={pagoCompleto}
-          placeholder="Agregar seña"
-          className="input disabled:bg-gray-200"
-        />
-
-        <button
-          onClick={handleAddDeposit}
-          disabled={pagoCompleto}
-          className="bg-blue-600 text-white py-2 rounded-xl disabled:bg-gray-400"
-        >
-          Agregar seña
-        </button>
-
-        {!pagoCompleto ? (
-          <button
-            onClick={handleCompletePayment}
-            className="bg-green-600 text-white py-2 rounded-xl"
-          >
-            Completar pago
-          </button>
-        ) : (
-          <div className="bg-green-100 text-green-700 text-center py-2 rounded-xl">
-            ✅ Pago completado
+              return (
+                <div key={p.id} className="flex justify-between border-b pb-2">
+                  <div>
+                    <p>{metodo}</p>
+                    <p className="text-xs text-gray-500">{fecha}</p>
+                  </div>
+                  <span className="font-medium">${p.amount}</span>
+                </div>
+              );
+            })}
           </div>
         )}
 
+        {/* BLOQUE PAGOS */}
+        <div className="space-y-4">
+          {!pagoCompleto && (
+            <>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="Monto de seña"
+                  className="input flex-1"
+                />
+
+                <button
+                  onClick={handleAddDeposit}
+                  disabled={!depositAmount || Number(depositAmount) <= 0}
+                  className="bg-blue-600 text-white px-4 rounded-xl disabled:bg-gray-400"
+                >
+                  Agregar
+                </button>
+              </div>
+
+              <button
+                onClick={handleCompletePayment}
+                className="w-full bg-green-600 text-white py-2 rounded-xl"
+              >
+                Completar pago (${restante})
+              </button>
+            </>
+          )}
+
+          {pagoCompleto && (
+            <div className="bg-green-100 text-green-700 text-center py-3 rounded-xl font-semibold">
+              ✅ Pago completado
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-2">
-          <button
-            onClick={handleDelete}
-            className="bg-red-600 text-white py-2 rounded-xl w-full"
-          >
+          <button onClick={handleDelete} className="bg-red-600 text-white py-2 rounded-xl w-full">
             Eliminar
           </button>
 
-          <button
-            onClick={handleSave}
-            className="bg-black text-white py-2 rounded-xl w-full"
-          >
+          <button onClick={handleSave} className="bg-black text-white py-2 rounded-xl w-full">
             Guardar
           </button>
         </div>
+
       </div>
     </div>
   );
