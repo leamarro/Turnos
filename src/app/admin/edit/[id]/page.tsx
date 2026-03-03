@@ -41,7 +41,7 @@ export default function EditAppointmentPage({
 
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [services, setServices] = useState<Service[]>([]);
-
+  const [depositAmount, setDepositAmount] = useState("");
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -93,35 +93,43 @@ export default function EditAppointmentPage({
     loadData();
   }, [id]);
 
-  async function handleSave() {
-    if (!name.trim()) {
-      alert("El nombre es obligatorio");
-      return;
-    }
-
-    try {
-      const payload: any = {
-        name: name.trim(),
-        lastName: lastName.trim(),
-        telefono: telefono.trim() || null,
-        instagram: instagram.trim() || null,
-        notes: notes.trim() || null,
-        serviceId,
-        status,
-      };
-
-      if (date && time) {
-        payload.date = date;
-        payload.time = time;
-      }
-
-      await axios.put(`/api/appointments?id=${id}`, payload);
-      router.push("/admin");
-    } catch (err) {
-      console.error(err);
-      alert("Error al guardar");
-    }
+async function handleSave() {
+  if (!name.trim()) {
+    alert("El nombre es obligatorio");
+    return;
   }
+
+  try {
+    const payload: any = {
+      name: name.trim(),
+      lastName: lastName.trim(),
+      telefono: telefono.trim() || null,
+      instagram: instagram.trim() || null,
+      notes: notes.trim() || null,
+      serviceId,
+      status,
+    };
+
+    if (date && time) {
+      payload.date = date;
+      payload.time = time;
+    }
+
+    // 🔥 si agregó seña
+    if (depositAmount && Number(depositAmount) > 0) {
+      await axios.post(`/api/appointments/${id}/add-deposit`, {
+        amount: Number(depositAmount),
+      });
+    }
+
+    await axios.put(`/api/appointments?id=${id}`, payload);
+
+    router.push("/admin");
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar");
+  }
+}
 
   async function handleDelete() {
     if (!confirm("¿Eliminar el turno definitivamente?")) return;
@@ -209,6 +217,16 @@ export default function EditAppointmentPage({
             <option value="cancelado">Cancelado</option>
           </select>
         </Field>
+
+        <Field icon={<BadgeCheck size={16} />} label="Agregar seña (opcional)">
+        <input
+          type="number"
+          value={depositAmount}
+          onChange={(e) => setDepositAmount(e.target.value)}
+          className="input"
+          placeholder="Monto de seña"
+        />
+      </Field>
 
         <div className="flex justify-between gap-3 pt-2">
           <button

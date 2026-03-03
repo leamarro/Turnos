@@ -4,55 +4,133 @@ import { NextResponse } from "next/server";
 /* ========================= */
 /* GET — lista o detalle */
 /* ========================= */
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-
-  if (!id) {
+export async function GET() {
+  try {
     const appointments = await prisma.appointment.findMany({
-      orderBy: { date: "desc" },
-      include: { service: true },
-    });
+      include: {
+        service: true,
+        payments: true,
+      },
+      orderBy: {
+        date: "asc",
+      },
+    })
 
-    return NextResponse.json(appointments);
+    const enrichedAppointments = appointments.map((appointment) => {
+      const totalPaid = appointment.payments.reduce(
+        (sum, payment) => sum + payment.amount,
+        0
+      )
+
+      const remaining =
+        (appointment.servicePrice || 0) - totalPaid
+
+      return {
+        ...appointment,
+        totalPaid,
+        remaining,
+      }
+    })
+
+    return NextResponse.json(enrichedAppointments)
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: "Error fetching appointments" }, { status: 500 })
   }
+}
 
-  const appointment = await prisma.appointment.findUnique({
-    where: { id },
-    include: { service: true },
-  });
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
 
-  if (!appointment) {
+    const {
+      name,
+      lastName,
+      telefono,
+      instagram,
+      notes,
+      date,
+      serviceId,
+      depositAmount,
+    } = body
+
+    if (!date || !serviceId || !name) {
+      return NextResponse.json(
+        { error: "Faltan datos obligatorios" },
+        { status: 400 }
+      )
+    }
+
+    const appointmentDate = new Date(date)
+
+    // 🔥 Validar horario ocupado
+    const existing = await prisma.appointment.findFirst({
+      where: {
+        date: appointmentDate,
+        status: { not: "cancelled" },
+      },
+    })
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "Horario no disponible" },
+        { status: 400 }
+      )
+    }
+
+    // 🔥 Buscar precio real del servicio
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+    })
+
+    if (!service) {
+      return NextResponse.json(
+        { error: "Servicio no encontrado" },
+        { status: 404 }
+      )
+    }
+
+    // 🔥 Estado inicial automático
+    let initialStatus: "confirmed" | "pending" = "confirmed"
+
+    if (depositAmount && Number(depositAmount) > 0) {
+      initialStatus = "pending"
+    }
+
+    const appointment = await prisma.appointment.create({
+      data: {
+        name,
+        lastName,
+        telefono,
+        instagram,
+        notes,
+        date: appointmentDate,
+        serviceId,
+        servicePrice: service.price, // 🔥 ahora sale del servicio
+        status: initialStatus,
+      },
+    })
+
+    // 🔥 Crear seña si existe
+    if (depositAmount && Number(depositAmount) > 0) {
+      await prisma.payment.create({
+        data: {
+          amount: Number(depositAmount),
+          method: "deposit",
+          appointmentId: appointment.id,
+        },
+      })
+    }
+
+    return NextResponse.json(appointment)
+  } catch (error) {
+    console.error(error)
     return NextResponse.json(
-      { error: "Turno no encontrado" },
-      { status: 404 }
-    );
+      { error: "Error creating appointment" },
+      { status: 500 }
+    )
   }
-
-  return NextResponse.json(appointment);
 }
-
-/* ========================= */
-/* POST */
-/* ========================= */
-export async function POST(request: Request) {
-  const body = await request.json();
-
-  const appointment = await prisma.appointment.create({
-    data: {
-      name: body.name,
-      lastName: body.lastName,
-      telefono: body.telefono || null,
-      instagram: body.instagram || null,
-      date: new Date(body.date),
-      status: body.status ?? "pending",
-      serviceId: body.serviceId,
-    },
-  });
-
-  return NextResponse.json(appointment);
-}
-
 /* ========================= */
 /* PUT */
 /* ========================= */

@@ -15,7 +15,14 @@ import {
   Pencil,
   MessageCircle,
   Instagram,
+  DollarSign,
 } from "lucide-react";
+
+type Payment = {
+  id: string;
+  amount: number;
+  createdAt: string;
+};
 
 type Appointment = {
   id: string;
@@ -25,9 +32,11 @@ type Appointment = {
   instagram?: string;
   date: string;
   status: string;
+  servicePrice: number;
   service?: {
     name: string;
   };
+  payments?: Payment[];
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -49,7 +58,7 @@ export default function AppointmentDetail({
   const [appointment, setAppointment] = useState<Appointment | null>(null);
 
   useEffect(() => {
-    fetch(`/api/appointments?id=${params.id}`, { cache: "no-store" })
+    fetch(`/api/appointments/${params.id}`, { cache: "no-store" })
       .then((res) => res.json())
       .then(setAppointment)
       .catch(() => setAppointment(null));
@@ -62,6 +71,11 @@ export default function AppointmentDetail({
       </p>
     );
   }
+
+  const totalPagado =
+    appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+
+  const restante = appointment.servicePrice - totalPagado;
 
   const statusLower = appointment.status.toLowerCase();
 
@@ -131,7 +145,7 @@ Tu turno está confirmado 💄
     try {
       await navigator.clipboard.writeText(message);
       alert("Mensaje copiado 📋 Pegalo en el DM de Instagram");
-    } catch (err) {
+    } catch {
       console.warn("No se pudo copiar el mensaje");
     }
 
@@ -146,11 +160,9 @@ Tu turno está confirmado 💄
     <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16 pb-16">
       <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 relative">
 
-        {/* ✏️ EDITAR */}
         <button
           onClick={() => router.push(`/admin/edit/${params.id}`)}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition"
-          aria-label="Editar turno"
         >
           <Pencil size={18} />
         </button>
@@ -163,14 +175,6 @@ Tu turno está confirmado 💄
 
           <Info label="Cliente" icon={<User size={16} />}>
             {appointment.name} {appointment.lastName ?? ""}
-          </Info>
-
-          <Info label="Teléfono" icon={<Phone size={16} />}>
-            {appointment.telefono ?? "—"}
-          </Info>
-
-          <Info label="Instagram" icon={<Instagram size={16} />}>
-            {appointment.instagram ?? "—"}
           </Info>
 
           <Info label="Servicio" icon={<Sparkles size={16} />}>
@@ -186,6 +190,21 @@ Tu turno está confirmado 💄
           <Info label="Estado" icon={<BadgeCheck size={16} />}>
             <span className={`font-medium ${statusColor}`}>
               {STATUS_LABELS[appointment.status] ?? appointment.status}
+            </span>
+          </Info>
+
+          {/* 💰 SECCIÓN DE PAGOS */}
+          <Info label="Total" icon={<DollarSign size={16} />}>
+            ${appointment.servicePrice}
+          </Info>
+
+          <Info label="Pagado" icon={<DollarSign size={16} />}>
+            ${totalPagado}
+          </Info>
+
+          <Info label="Restante" icon={<DollarSign size={16} />}>
+            <span className={restante <= 0 ? "text-green-600 font-medium" : ""}>
+              ${restante}
             </span>
           </Info>
 
@@ -213,7 +232,6 @@ Tu turno está confirmado 💄
                 Enviar DM Instagram
               </button>
             )}
-
           </div>
         )}
 
@@ -248,10 +266,7 @@ function Info({
         {icon}
         <span>{label}</span>
       </div>
-
-      <span className="text-right">
-        {children}
-      </span>
+      <span className="text-right">{children}</span>
     </div>
   );
 }
