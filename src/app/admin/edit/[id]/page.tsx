@@ -91,11 +91,19 @@ export default function EditAppointmentPage({
     if (id) loadData();
   }, [id]);
 
-  if (!appointment) return <p className="p-6">Cargando...</p>;
+  if (!appointment) {
+    return <p className="p-6">Cargando...</p>;
+  }
+
+  // 🔥 SAFE payments
+  const payments = appointment.payments ?? [];
 
   const totalServicio = appointment.servicePrice ?? 0;
-  const totalPagado =
-    appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+  const totalPagado = payments.reduce(
+    (acc, p) => acc + p.amount,
+    0
+  );
+
   const restante = totalServicio - totalPagado;
   const pagoCompleto = restante <= 0;
 
@@ -217,11 +225,12 @@ export default function EditAppointmentPage({
           </p>
         </div>
 
-        {/* HISTORIAL */}
-        {appointment.payments?.length > 0 && (
+        {/* HISTORIAL DE PAGOS */}
+        {payments.length > 0 && (
           <div className="border p-4 rounded-xl space-y-2 text-sm">
             <p className="font-semibold">Historial de pagos</p>
-            {appointment.payments.map((p) => (
+
+            {payments.map((p) => (
               <div
                 key={p.id}
                 className="flex justify-between border-b pb-1"
