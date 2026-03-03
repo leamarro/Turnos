@@ -42,6 +42,7 @@ export default function EditAppointmentPage({
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [depositAmount, setDepositAmount] = useState("");
+
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -50,15 +51,16 @@ export default function EditAppointmentPage({
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [status, setStatus] = useState("pendiente");
+  const [status, setStatus] = useState("confirmado");
 
   useEffect(() => {
     async function loadData() {
       try {
-        const ap = await axios.get(`/api/appointments?id=${id}`);
+        const ap = await axios.get(`/api/appointments/${id}`);
         const sv = await axios.get("/api/services");
 
         const a: Appointment = ap.data;
+
         setAppointment(a);
 
         setName(a.name ?? "");
@@ -67,20 +69,19 @@ export default function EditAppointmentPage({
         setInstagram(a.instagram ?? "");
         setNotes(a.notes ?? "");
         setServiceId(a.service?.id ?? "");
-        setStatus(a.status ?? "pendiente");
+        setStatus(a.status ?? "confirmado");
 
         if (a.date) {
           const d = new Date(a.date);
-          if (!isNaN(d.getTime())) {
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, "0");
-            const dd = String(d.getDate()).padStart(2, "0");
-            const hh = String(d.getHours()).padStart(2, "0");
-            const mi = String(d.getMinutes()).padStart(2, "0");
 
-            setDate(`${yyyy}-${mm}-${dd}`);
-            setTime(`${hh}:${mi}`);
-          }
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          const hh = String(d.getHours()).padStart(2, "0");
+          const mi = String(d.getMinutes()).padStart(2, "0");
+
+          setDate(`${yyyy}-${mm}-${dd}`);
+          setTime(`${hh}:${mi}`);
         }
 
         setServices(Array.isArray(sv.data) ? sv.data : []);
@@ -90,52 +91,51 @@ export default function EditAppointmentPage({
       }
     }
 
-    loadData();
+    if (id) loadData();
   }, [id]);
 
-async function handleSave() {
-  if (!name.trim()) {
-    alert("El nombre es obligatorio");
-    return;
-  }
-
-  try {
-    const payload: any = {
-      name: name.trim(),
-      lastName: lastName.trim(),
-      telefono: telefono.trim() || null,
-      instagram: instagram.trim() || null,
-      notes: notes.trim() || null,
-      serviceId,
-      status,
-    };
-
-    if (date && time) {
-      payload.date = date;
-      payload.time = time;
+  async function handleSave() {
+    if (!name.trim()) {
+      alert("El nombre es obligatorio");
+      return;
     }
 
-    // 🔥 si agregó seña
-    if (depositAmount && Number(depositAmount) > 0) {
-      await axios.post(`/api/appointments/${id}/add-deposit`, {
-        amount: Number(depositAmount),
-      });
+    try {
+      const payload: any = {
+        name: name.trim(),
+        lastName: lastName.trim(),
+        telefono: telefono.trim() || null,
+        instagram: instagram.trim() || null,
+        notes: notes.trim() || null,
+        serviceId,
+        status,
+      };
+
+      if (date && time) {
+        payload.date = new Date(`${date}T${time}`);
+      }
+
+      // 🔥 agregar seña si existe
+      if (depositAmount && Number(depositAmount) > 0) {
+        await axios.post(`/api/appointments/${id}/add-deposit`, {
+          amount: Number(depositAmount),
+        });
+      }
+
+      await axios.put(`/api/appointments/${id}`, payload);
+
+      router.push("/admin");
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar");
     }
-
-    await axios.put(`/api/appointments?id=${id}`, payload);
-
-    router.push("/admin");
-  } catch (err) {
-    console.error(err);
-    alert("Error al guardar");
   }
-}
 
   async function handleDelete() {
     if (!confirm("¿Eliminar el turno definitivamente?")) return;
 
     try {
-      await axios.delete(`/api/appointments?id=${id}`);
+      await axios.delete(`/api/appointments/${id}`);
       router.push("/admin");
     } catch (err) {
       console.error(err);
@@ -219,14 +219,14 @@ async function handleSave() {
         </Field>
 
         <Field icon={<BadgeCheck size={16} />} label="Agregar seña (opcional)">
-        <input
-          type="number"
-          value={depositAmount}
-          onChange={(e) => setDepositAmount(e.target.value)}
-          className="input"
-          placeholder="Monto de seña"
-        />
-      </Field>
+          <input
+            type="number"
+            value={depositAmount}
+            onChange={(e) => setDepositAmount(e.target.value)}
+            className="input"
+            placeholder="Monto de seña"
+          />
+        </Field>
 
         <div className="flex justify-between gap-3 pt-2">
           <button
