@@ -44,6 +44,8 @@ export default function EditAppointmentPage({
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [depositAmount, setDepositAmount] = useState("");
+  const [showToast, setShowToast] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -92,16 +94,42 @@ export default function EditAppointmentPage({
     if (id) loadData();
   }, [id]);
 
-  if (!appointment) {
-    return <p className="p-6">Cargando...</p>;
-  }
+  if (!appointment) return <p className="p-6">Cargando...</p>;
 
   const payments = appointment.payments ?? [];
-
   const totalServicio = appointment.servicePrice ?? 0;
   const totalPagado = payments.reduce((acc, p) => acc + p.amount, 0);
   const restante = totalServicio - totalPagado;
   const pagoCompleto = restante <= 0;
+
+  function triggerToast(message: string) {
+    setShowToast(message);
+    setTimeout(() => setShowToast(""), 2500);
+  }
+
+  async function handleAddDeposit() {
+    if (!depositAmount || Number(depositAmount) <= 0) return;
+
+    await axios.post(`/api/appointments/${id}/add-deposit`, {
+      amount: Number(depositAmount),
+    });
+
+    setDepositAmount("");
+    await fetchAppointment();
+    triggerToast("Seña registrada correctamente");
+  }
+
+  async function handleCompletePayment() {
+    await axios.post(`/api/appointments/${id}/complete-payment`);
+
+    await axios.put(`/api/appointments/${id}`, {
+      status: "completed",
+    });
+
+    await fetchAppointment();
+    setShowConfirm(false);
+    triggerToast("Pago completado");
+  }
 
   async function handleSave() {
     await axios.put(`/api/appointments/${id}`, {
@@ -118,22 +146,6 @@ export default function EditAppointmentPage({
     router.push("/admin");
   }
 
-  async function handleAddDeposit() {
-    if (!depositAmount || Number(depositAmount) <= 0) return;
-
-    await axios.post(`/api/appointments/${id}/add-deposit`, {
-      amount: Number(depositAmount),
-    });
-
-    setDepositAmount("");
-    await fetchAppointment();
-  }
-
-  async function handleCompletePayment() {
-    await axios.post(`/api/appointments/${id}/complete-payment`);
-    await fetchAppointment();
-  }
-
   async function handleDelete() {
     if (!confirm("¿Eliminar turno?")) return;
     await axios.delete(`/api/appointments/${id}`);
@@ -141,12 +153,10 @@ export default function EditAppointmentPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6 relative">
       <div className="max-w-md mx-auto bg-white shadow-xl rounded-2xl p-6 space-y-4">
 
-        <h1 className="text-lg font-bold text-center">
-          Editar Turno
-        </h1>
+        <h1 className="text-lg font-bold text-center">Editar Turno</h1>
 
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="input" />
         <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Apellido" className="input" />
@@ -154,22 +164,8 @@ export default function EditAppointmentPage({
         <input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="Instagram" className="input" />
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas" className="input" />
 
-        <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input">
-          <option value="">Seleccionar servicio</option>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-
-        <div className="flex gap-2">
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input w-1/2" />
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input w-1/2" />
-        </div>
-
         {/* RESUMEN */}
-        <div className="bg-gray-100 p-4 rounded-xl space-y-1 text-sm">
+        <div className="bg-gray-100 p-4 rounded-xl text-sm">
           <p>Total servicio: ${totalServicio}</p>
           <p>Total pagado: ${totalPagado}</p>
           {!pagoCompleto ? (
@@ -179,84 +175,82 @@ export default function EditAppointmentPage({
           )}
         </div>
 
-        {/* HISTORIAL */}
-        {payments.length > 0 && (
-          <div className="border p-4 rounded-xl space-y-3 text-sm">
-            <p className="font-semibold">Historial de pagos</p>
+        {/* PAGOS */}
+        {!pagoCompleto && (
+          <>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                placeholder="Monto de seña"
+                className="input flex-1"
+              />
+              <button
+                onClick={handleAddDeposit}
+                disabled={!depositAmount || Number(depositAmount) <= 0}
+                className="bg-blue-600 text-white px-4 rounded-xl disabled:bg-gray-400"
+              >
+                Agregar
+              </button>
+            </div>
 
-            {payments.map((p) => {
-              const fecha = new Date(p.createdAt).toLocaleDateString("es-AR");
-              const metodo =
-                p.method === "deposit"
-                  ? "Seña"
-                  : p.method === "full"
-                  ? "Pago final"
-                  : p.method === "cash"
-                  ? "Efectivo"
-                  : p.method;
-
-              return (
-                <div key={p.id} className="flex justify-between border-b pb-2">
-                  <div>
-                    <p>{metodo}</p>
-                    <p className="text-xs text-gray-500">{fecha}</p>
-                  </div>
-                  <span className="font-medium">${p.amount}</span>
-                </div>
-              );
-            })}
-          </div>
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="w-full bg-green-600 text-white py-2 rounded-xl"
+            >
+              Completar pago (${restante})
+            </button>
+          </>
         )}
 
-        {/* BLOQUE PAGOS */}
-        <div className="space-y-4">
-          {!pagoCompleto && (
-            <>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="Monto de seña"
-                  className="input flex-1"
-                />
-
-                <button
-                  onClick={handleAddDeposit}
-                  disabled={!depositAmount || Number(depositAmount) <= 0}
-                  className="bg-blue-600 text-white px-4 rounded-xl disabled:bg-gray-400"
-                >
-                  Agregar
-                </button>
-              </div>
-
-              <button
-                onClick={handleCompletePayment}
-                className="w-full bg-green-600 text-white py-2 rounded-xl"
-              >
-                Completar pago (${restante})
-              </button>
-            </>
-          )}
-
-          {pagoCompleto && (
-            <div className="bg-green-100 text-green-700 text-center py-3 rounded-xl font-semibold">
-              ✅ Pago completado
-            </div>
-          )}
-        </div>
+        {pagoCompleto && (
+          <div className="bg-green-100 text-green-700 text-center py-3 rounded-xl font-semibold">
+            ✅ Pago completado
+          </div>
+        )}
 
         <div className="flex gap-2">
           <button onClick={handleDelete} className="bg-red-600 text-white py-2 rounded-xl w-full">
             Eliminar
           </button>
-
           <button onClick={handleSave} className="bg-black text-white py-2 rounded-xl w-full">
             Guardar
           </button>
         </div>
-
       </div>
+
+      {/* MODAL CONFIRM */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-2xl space-y-4 shadow-xl">
+            <p className="text-center font-semibold">
+              ¿Confirmar pago completo?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="w-full bg-gray-300 py-2 rounded-xl"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCompletePayment}
+                className="w-full bg-green-600 text-white py-2 rounded-xl"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST */}
+      {showToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-xl shadow-lg animate-fadeIn">
+          {showToast}
+        </div>
+      )}
     </div>
   );
 }
