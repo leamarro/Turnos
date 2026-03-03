@@ -17,7 +17,16 @@ import {
   FileText,
 } from "lucide-react";
 
-type Service = { id: string; name: string };
+type Service = {
+  id: string;
+  name: string;
+  price?: number;
+};
+
+type Payment = {
+  id: string;
+  amount: number;
+};
 
 type Appointment = {
   id: string;
@@ -28,7 +37,9 @@ type Appointment = {
   telefono?: string;
   instagram?: string;
   notes?: string;
-  service?: { id: string; name?: string };
+  servicePrice?: number | null;
+  service?: Service | null;
+  payments?: Payment[];
 };
 
 export default function EditAppointmentPage({
@@ -62,6 +73,7 @@ export default function EditAppointmentPage({
         const a: Appointment = ap.data;
 
         setAppointment(a);
+        setServices(Array.isArray(sv.data) ? sv.data : []);
 
         setName(a.name ?? "");
         setLastName(a.lastName ?? "");
@@ -73,7 +85,6 @@ export default function EditAppointmentPage({
 
         if (a.date) {
           const d = new Date(a.date);
-
           const yyyy = d.getFullYear();
           const mm = String(d.getMonth() + 1).padStart(2, "0");
           const dd = String(d.getDate()).padStart(2, "0");
@@ -83,8 +94,6 @@ export default function EditAppointmentPage({
           setDate(`${yyyy}-${mm}-${dd}`);
           setTime(`${hh}:${mi}`);
         }
-
-        setServices(Array.isArray(sv.data) ? sv.data : []);
       } catch (err) {
         console.error(err);
         alert("Error al cargar el turno");
@@ -93,6 +102,16 @@ export default function EditAppointmentPage({
 
     if (id) loadData();
   }, [id]);
+
+  if (!appointment) {
+    return <p className="p-6 text-center text-gray-500">Cargando…</p>;
+  }
+
+  // 🔥 CÁLCULO FINANCIERO
+  const totalServicio = appointment.servicePrice ?? 0;
+  const totalPagado =
+    appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+  const restante = totalServicio - totalPagado;
 
   async function handleSave() {
     if (!name.trim()) {
@@ -115,19 +134,37 @@ export default function EditAppointmentPage({
         payload.date = new Date(`${date}T${time}`);
       }
 
-      // 🔥 agregar seña si existe
-      if (depositAmount && Number(depositAmount) > 0) {
-        await axios.post(`/api/appointments/${id}/add-deposit`, {
-          amount: Number(depositAmount),
-        });
-      }
-
       await axios.put(`/api/appointments/${id}`, payload);
 
       router.push("/admin");
     } catch (err) {
       console.error(err);
       alert("Error al guardar");
+    }
+  }
+
+  async function handleAddDeposit() {
+    if (!depositAmount || Number(depositAmount) <= 0) return;
+
+    try {
+      await axios.post(`/api/appointments/${id}/add-deposit`, {
+        amount: Number(depositAmount),
+      });
+
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Error al agregar seña");
+    }
+  }
+
+  async function handleCompletePayment() {
+    try {
+      await axios.post(`/api/appointments/${id}/complete-payment`);
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Error al completar pago");
     }
   }
 
@@ -143,17 +180,14 @@ export default function EditAppointmentPage({
     }
   }
 
-  if (!appointment) {
-    return <p className="p-6 text-center text-gray-500">Cargando…</p>;
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16">
-      <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 space-y-5">
+      <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 space-y-5 max-h-[85vh] overflow-y-auto">
         <h1 className="text-lg font-semibold text-center">
           Editar turno
         </h1>
 
+        {/* DATOS */}
         <Field icon={<User size={16} />} label="Nombre">
           <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
         </Field>
@@ -167,29 +201,15 @@ export default function EditAppointmentPage({
         </Field>
 
         <Field icon={<Instagram size={16} />} label="Instagram">
-          <input
-            value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-            className="input"
-            placeholder="@usuario"
-          />
+          <input value={instagram} onChange={(e) => setInstagram(e.target.value)} className="input" />
         </Field>
 
         <Field icon={<FileText size={16} />} label="Notas">
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="input"
-            rows={3}
-          />
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="input" />
         </Field>
 
         <Field icon={<Sparkles size={16} />} label="Servicio">
-          <select
-            value={serviceId}
-            onChange={(e) => setServiceId(e.target.value)}
-            className="input"
-          >
+          <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input">
             <option value="">Seleccionar servicio</option>
             {services.map((s) => (
               <option key={s.id} value={s.id}>
@@ -199,39 +219,47 @@ export default function EditAppointmentPage({
           </select>
         </Field>
 
-        <div className="flex gap-3">
-          <Field icon={<CalendarClock size={16} />} label="Fecha">
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
-          </Field>
-
-          <Field icon={<CalendarClock size={16} />} label="Hora">
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input" />
-          </Field>
+        {/* RESUMEN FINANCIERO */}
+        <div className="bg-gray-100 p-4 rounded-xl text-sm space-y-1">
+          <p>Total servicio: ${totalServicio}</p>
+          <p>Total pagado: ${totalPagado}</p>
+          <p className="font-semibold text-red-600">
+            Restante: ${restante}
+          </p>
         </div>
 
-        <Field icon={<BadgeCheck size={16} />} label="Estado">
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="input">
-            <option value="pendiente">Pendiente</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="finalizado">Finalizado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </Field>
-
-        <Field icon={<BadgeCheck size={16} />} label="Agregar seña (opcional)">
+        {/* AGREGAR SEÑA */}
+        <Field icon={<BadgeCheck size={16} />} label="Agregar seña">
           <input
             type="number"
             value={depositAmount}
             onChange={(e) => setDepositAmount(e.target.value)}
             className="input"
-            placeholder="Monto de seña"
+            placeholder="Monto"
           />
         </Field>
 
-        <div className="flex justify-between gap-3 pt-2">
+        <button
+          onClick={handleAddDeposit}
+          className="w-full bg-blue-600 text-white py-2 rounded-xl"
+        >
+          Agregar seña
+        </button>
+
+        {/* COMPLETAR PAGO */}
+        {restante > 0 && (
+          <button
+            onClick={handleCompletePayment}
+            className="w-full bg-green-600 text-white py-2 rounded-xl"
+          >
+            Completar pago
+          </button>
+        )}
+
+        <div className="flex gap-3 pt-2">
           <button
             onClick={handleDelete}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-red-600 hover:bg-red-50 transition w-full"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-red-600 w-full"
           >
             <Trash2 size={16} />
             Eliminar
@@ -239,7 +267,7 @@ export default function EditAppointmentPage({
 
           <button
             onClick={handleSave}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 transition w-full"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-black text-white w-full"
           >
             <Save size={16} />
             Guardar
