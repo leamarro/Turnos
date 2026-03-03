@@ -24,7 +24,10 @@ export async function GET(
     return NextResponse.json(appointment);
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error interno" },
+      { status: 500 }
+    );
   }
 }
 
@@ -52,7 +55,10 @@ export async function PUT(
     return NextResponse.json(updated);
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Error al actualizar" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al actualizar" },
+      { status: 500 }
+    );
   }
 }
 
@@ -61,6 +67,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // 🔥 borrar pagos primero
+    await prisma.payment.deleteMany({
+      where: { appointmentId: params.id },
+    });
+
     await prisma.appointment.delete({
       where: { id: params.id },
     });
@@ -68,6 +79,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Error al eliminar" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al eliminar turno" },
+      { status: 500 }
+    );
   }
 }
