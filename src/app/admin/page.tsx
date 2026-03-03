@@ -7,13 +7,23 @@ import { es } from "date-fns/locale";
 import { Pencil, Trash2, CalendarDays, Phone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+/* ========================= */
+/* TYPES */
+type Payment = {
+  id: string;
+  amount: number;
+  method: string;
+};
+
 type Appointment = {
   id: string;
   name?: string;
   lastName?: string;
   telefono?: string;
   date: string;
+  servicePrice?: number | null;
   service?: { name?: string };
+  payments?: Payment[];
 };
 
 /* ========================= */
@@ -60,11 +70,11 @@ export default function AdminPanel() {
   const [filterDate, setFilterDate] = useState("");
   const [filterOption, setFilterOption] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [showPast, setShowPast] = useState(false);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
   const router = useRouter();
   const today = new Date();
 
   /* ========================= */
-  /* FETCH */
   async function fetchAppointments() {
     const res = await axios.get("/api/appointments");
     const ordered = Array.isArray(res.data)
@@ -80,7 +90,6 @@ export default function AdminPanel() {
   }, []);
 
   /* ========================= */
-  /* FILTRADO + ORDEN */
   const appointments = useMemo(() => {
     let list = [...allAppointments];
 
@@ -119,16 +128,16 @@ export default function AdminPanel() {
       list = list.filter(a => new Date(a.date) >= todayStart);
     }
 
-    return list.sort((a, b) => {
-      const ta = getTimeInfo(a.date).state;
-      const tb = getTimeInfo(b.date).state;
+    if (showPendingOnly) {
+      list = list.filter((a) => {
+        const total = a.servicePrice ?? 0;
+        const paid = a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+        return paid < total;
+      });
+    }
 
-      if (ta === "past" && tb !== "past") return 1;
-      if (ta !== "past" && tb === "past") return -1;
-
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    });
-  }, [allAppointments, filterDate, filterOption, showPast]);
+    return list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [allAppointments, filterDate, filterOption, showPast, showPendingOnly]);
 
   async function deleteAppointment(id: string) {
     if (!confirm("¿Eliminar este turno?")) return;
@@ -142,8 +151,9 @@ export default function AdminPanel() {
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
 
       {/* FILTROS */}
-      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="flex gap-2">
+      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col gap-3">
+
+        <div className="flex gap-2 flex-wrap">
           {["all","today","tomorrow","week"].map(opt => (
             <button
               key={opt}
@@ -159,139 +169,105 @@ export default function AdminPanel() {
           ))}
         </div>
 
-        <div className="flex gap-3 items-center mt-2 sm:mt-0">
-          <div className="flex flex-col">
-            <label className="text-sm text-gray-500">Filtrar por fecha</label>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                className="minimal-input max-w-xs"
-              />
-              {filterDate && (
-                <button
-                  onClick={() => setFilterDate("")}
-                  className="px-2 py-1 border rounded text-sm text-gray-600 hover:bg-gray-100"
-                >
-                  Limpiar
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="flex gap-4 flex-wrap items-center">
+
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="minimal-input"
+          />
 
           <button
             onClick={() => setShowPast(v => !v)}
-            className={`px-3 py-1 rounded-full text-sm border transition ${
-              showPast ? "bg-black text-white" : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className="px-3 py-1 rounded-full text-sm border"
           >
             {showPast ? "Ocultar pasados" : "Mostrar pasados"}
+          </button>
+
+          <button
+            onClick={() => setShowPendingOnly(v => !v)}
+            className={`px-3 py-1 rounded-full text-sm border ${
+              showPendingOnly ? "bg-red-600 text-white" : ""
+            }`}
+          >
+            Solo pagos pendientes
           </button>
         </div>
       </div>
 
-      {/* ================= MOBILE ================= */}
-      <div className="sm:hidden space-y-4">
+      {/* LISTADO */}
+      <div className="space-y-4">
         {appointments.map((a) => {
+          const total = a.servicePrice ?? 0;
+          const paid = a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+          const remaining = total - paid;
+          const hasDebt = remaining > 0;
+
           const info = getTimeInfo(a.date);
-          const isNow = info.state === "very-soon" || info.state === "soon";
 
           return (
             <div
               key={a.id}
-              className={`relative rounded-2xl overflow-hidden shadow transition ${getCardStyle(info.state)} ${isNow ? "ring-2 ring-green-400" : ""}`}
+              className={`rounded-2xl p-4 shadow ${getCardStyle(info.state)} ${
+                hasDebt ? "border border-red-400" : "border border-green-400"
+              }`}
             >
-              <div className="p-4 flex justify-between items-start">
+              <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold flex items-center gap-2">
                     <User size={16} /> {a.name} {a.lastName}
                   </p>
+
                   <p className="text-sm text-gray-600 flex items-center gap-2">
                     <Phone size={14} /> {a.telefono}
                   </p>
+
                   <p className="text-sm mt-2">{a.service?.name}</p>
-                  <div className="text-sm text-gray-600 mt-2 flex flex-col">
-                    <span className="flex items-center gap-2">
-                      <CalendarDays size={14} /> {format(new Date(a.date), "dd/MM/yyyy", { locale: es })}
-                    </span>
-                    <span className="text-xs text-gray-500 ml-6">{format(new Date(a.date), "HH:mm")} hs</span>
-                  </div>
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    {format(new Date(a.date), "dd/MM/yyyy HH:mm", { locale: es })} hs
+                  </p>
                 </div>
 
-                {/* BOTONES MINIMALISTAS */}
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => router.push(`/admin/edit/${a.id}`)}
-                    className="text-green-600 hover:bg-green-50 p-2 rounded"
-                  >
-                    <Pencil size={18} />
-                  </button>
-                  <button
-                    onClick={() => deleteAppointment(a.id)}
-                    className="text-red-600 hover:bg-red-50 p-2 rounded"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                <div className="text-right text-sm">
+                  <p>Total: ${total}</p>
+                  <p>Pagado: ${paid}</p>
+                  {hasDebt ? (
+                    <p className="text-red-600 font-semibold">
+                      Debe: ${remaining}
+                    </p>
+                  ) : (
+                    <p className="text-green-600 font-semibold">
+                      Pago completo
+                    </p>
+                  )}
                 </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={() => router.push(`/admin/edit/${a.id}`)}
+                  className="text-green-600"
+                >
+                  <Pencil size={18} />
+                </button>
+
+                <button
+                  onClick={() => deleteAppointment(a.id)}
+                  className="text-red-600"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             </div>
           );
         })}
 
         {appointments.length === 0 && (
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-gray-500">
             No hay turnos para este filtro
           </p>
-        )}
-      </div>
-
-      {/* ================= DESKTOP ================= */}
-      <div className="hidden sm:block bg-white rounded-2xl shadow overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 text-left">Cliente</th>
-              <th className="p-3 text-left">Teléfono</th>
-              <th className="p-3 text-left">Servicio</th>
-              <th className="p-3 text-left">Fecha / Hora</th>
-              <th className="p-3 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointments.map((a) => {
-              const info = getTimeInfo(a.date);
-              const isNow = info.state === "very-soon" || info.state === "soon";
-
-              return (
-                <tr key={a.id} className={`border-t transition ${isNow ? "bg-green-100" : ""}`}>
-                  <td className="p-3">{a.name} {a.lastName}</td>
-                  <td className="p-3">{a.telefono}</td>
-                  <td className="p-3">{a.service?.name}</td>
-                  <td className="p-3">
-                    <div className="flex flex-col">
-                      <span>{format(new Date(a.date), "dd/MM/yyyy", { locale: es })}</span>
-                      <span className="text-xs text-gray-500">{format(new Date(a.date), "HH:mm")} hs</span>
-                    </div>
-                  </td>
-                  <td className="p-3 text-center">
-                    <div className="flex justify-center gap-4">
-                      <button onClick={() => router.push(`/admin/edit/${a.id}`)} className="text-green-600">
-                        <Pencil size={18} />
-                      </button>
-                      <button onClick={() => deleteAppointment(a.id)} className="text-red-600">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        {appointments.length === 0 && (
-          <p className="text-center p-6 text-gray-500">No hay turnos para este filtro</p>
         )}
       </div>
     </div>
