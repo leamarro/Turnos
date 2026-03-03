@@ -64,36 +64,40 @@ export default function EditAppointmentPage({
   const [time, setTime] = useState("");
   const [status, setStatus] = useState("confirmado");
 
+  // 🔥 FUNCIÓN REUTILIZABLE
+  async function fetchAppointment() {
+    const ap = await axios.get(`/api/appointments/${id}`);
+    const a: Appointment = ap.data;
+
+    setAppointment(a);
+
+    setName(a.name ?? "");
+    setLastName(a.lastName ?? "");
+    setTelefono(a.telefono ?? "");
+    setInstagram(a.instagram ?? "");
+    setNotes(a.notes ?? "");
+    setServiceId(a.service?.id ?? "");
+    setStatus(a.status ?? "confirmado");
+
+    if (a.date) {
+      const d = new Date(a.date);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+
+      setDate(`${yyyy}-${mm}-${dd}`);
+      setTime(`${hh}:${mi}`);
+    }
+  }
+
   useEffect(() => {
     async function loadData() {
       try {
-        const ap = await axios.get(`/api/appointments/${id}`);
         const sv = await axios.get("/api/services");
-
-        const a: Appointment = ap.data;
-
-        setAppointment(a);
         setServices(Array.isArray(sv.data) ? sv.data : []);
-
-        setName(a.name ?? "");
-        setLastName(a.lastName ?? "");
-        setTelefono(a.telefono ?? "");
-        setInstagram(a.instagram ?? "");
-        setNotes(a.notes ?? "");
-        setServiceId(a.service?.id ?? "");
-        setStatus(a.status ?? "confirmado");
-
-        if (a.date) {
-          const d = new Date(a.date);
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, "0");
-          const dd = String(d.getDate()).padStart(2, "0");
-          const hh = String(d.getHours()).padStart(2, "0");
-          const mi = String(d.getMinutes()).padStart(2, "0");
-
-          setDate(`${yyyy}-${mm}-${dd}`);
-          setTime(`${hh}:${mi}`);
-        }
+        await fetchAppointment();
       } catch (err) {
         console.error(err);
         alert("Error al cargar el turno");
@@ -107,7 +111,7 @@ export default function EditAppointmentPage({
     return <p className="p-6 text-center text-gray-500">Cargando…</p>;
   }
 
-  // 🔥 CÁLCULO FINANCIERO
+  // 🔥 CÁLCULOS FINANCIEROS REACTIVOS
   const totalServicio = appointment.servicePrice ?? 0;
   const totalPagado =
     appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
@@ -135,7 +139,6 @@ export default function EditAppointmentPage({
       }
 
       await axios.put(`/api/appointments/${id}`, payload);
-
       router.push("/admin");
     } catch (err) {
       console.error(err);
@@ -151,7 +154,8 @@ export default function EditAppointmentPage({
         amount: Number(depositAmount),
       });
 
-      router.refresh();
+      setDepositAmount("");
+      await fetchAppointment(); // 🔥 actualiza datos sin recargar
     } catch (err) {
       console.error(err);
       alert("Error al agregar seña");
@@ -161,7 +165,7 @@ export default function EditAppointmentPage({
   async function handleCompletePayment() {
     try {
       await axios.post(`/api/appointments/${id}/complete-payment`);
-      router.refresh();
+      await fetchAppointment(); // 🔥 actualiza datos
     } catch (err) {
       console.error(err);
       alert("Error al completar pago");
@@ -187,7 +191,6 @@ export default function EditAppointmentPage({
           Editar turno
         </h1>
 
-        {/* DATOS */}
         <Field icon={<User size={16} />} label="Nombre">
           <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
         </Field>
@@ -246,7 +249,6 @@ export default function EditAppointmentPage({
           Agregar seña
         </button>
 
-        {/* COMPLETAR PAGO */}
         {restante > 0 && (
           <button
             onClick={handleCompletePayment}
