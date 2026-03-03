@@ -16,6 +16,7 @@ type Payment = {
   id: string;
   amount: number;
   method: string;
+  createdAt: string;
 };
 
 type Appointment = {
