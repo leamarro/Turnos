@@ -3,23 +3,20 @@ import prisma from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const appointments = await prisma.appointment.findMany({
+    const payments = await prisma.payment.findMany({
       select: {
-        date: true,
-        service: {
-          select: { price: true },
-        },
+        amount: true,
+        createdAt: true,
       },
     });
 
     const monthly: Record<string, number> = {};
 
-    appointments.forEach((a) => {
-      const month = new Date(a.date).toISOString().slice(0, 7);
-      const price = a.service?.price ?? 0;
+    payments.forEach((p) => {
+      const month = new Date(p.createdAt).toISOString().slice(0, 7);
 
       if (!monthly[month]) monthly[month] = 0;
-      monthly[month] += price;
+      monthly[month] += p.amount;
     });
 
     const result = Object.entries(monthly).map(([month, total]) => ({

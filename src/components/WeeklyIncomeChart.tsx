@@ -11,9 +11,9 @@ export default function WeeklyIncomeChart({ appointments }: Props) {
 
   const data = week.map((day, i) => {
     const total = appointments.reduce((sum, a) => {
-      const d = new Date(a.date);
+      const d = new Date(a.createdAt); // OJO: createdAt del payment
       if (d.getDay() === i) {
-        return sum + (a.servicePrice ?? a.service?.price ?? 0);
+        return sum + a.amount;
       }
       return sum;
     }, 0);

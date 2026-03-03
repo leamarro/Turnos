@@ -22,7 +22,7 @@ export default function AppointmentForm() {
 
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-
+  const [depositAmount, setDepositAmount] = useState("");
   const [notes, setNotes] = useState(""); // 👈 NUEVO
   const [message, setMessage] = useState("");
 
@@ -79,8 +79,10 @@ export default function AppointmentForm() {
         instagram: instagram || null,
         serviceId,
         date: dateTime,
-        status: "confirmado",
-        notes: notes || null, // 👈 NUEVO
+        notes: notes || null,
+        depositAmount: depositAmount
+          ? Number(depositAmount)
+          : null,
       });
 
       router.push(`/appointments/${res.data.id}`);
@@ -177,6 +179,19 @@ export default function AppointmentForm() {
               className="minimal-input resize-none"
             />
           </div>
+
+          <div className="space-y-1">
+          <label className="text-xs text-gray-500">
+            Seña (opcional)
+          </label>
+          <input
+            type="number"
+            placeholder="Monto de seña"
+            value={depositAmount}
+            onChange={(e) => setDepositAmount(e.target.value)}
+            className="minimal-input"
+          />
+        </div>
 
           <button
             type="submit"

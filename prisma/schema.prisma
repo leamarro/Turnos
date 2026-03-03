@@ -8,23 +8,23 @@ datasource db {
 }
 
 model Appointment {
-  id         String   @id @default(cuid())
-  date       DateTime @db.Timestamp
-  status     String   @default("pending")
-  createdAt  DateTime @default(now())
+  id           String   @id @default(cuid())
+  date         DateTime
+  serviceId    String?
+  createdAt    DateTime @default(now())
+  userId       String?
+  status AppointmentStatus @default(confirmed)
+  name         String?
+  lastName     String?
+  telefono     String?
+  instagram    String?
+  notes        String?
+  servicePrice Int?
 
-  name       String?
-  lastName   String?
-  telefono   String?
-  instagram  String?
+  service      Service? @relation(fields: [serviceId], references: [id])
+  User         User?    @relation(fields: [userId], references: [id])
 
-  serviceId  String?
-  service    Service? @relation(fields: [serviceId], references: [id])
-
-  userId     String?
-  user       User? @relation(fields: [userId], references: [id])
-
-  notes      String?
+  payments     Payment[]   // 👈 IMPORTANTE
 }
 
 model Service {
@@ -37,11 +37,27 @@ model Service {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  telefono  String?  @unique
-  lastName  String?
-  createdAt DateTime @default(now())
+  id          String        @id @default(cuid())
+  name        String
+  telefono    String?       @unique
+  createdAt   DateTime      @default(now())
+  lastName    String?
+  Appointment Appointment[]
+}
 
-  appointments Appointment[]
+model Payment {
+  id            String      @id @default(cuid())
+  amount        Int
+  method        String
+  createdAt     DateTime    @default(now())
+
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  cancelled
+  completed
 }
