@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const body = await req.json()
 
@@ -24,7 +27,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       },
     })
 
-    // Calcular total pagado
+    // Sumar pagos
     const payments = await prisma.payment.aggregate({
       where: {
         appointmentId: params.id,
@@ -39,9 +42,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     })
 
     const totalPaid = payments._sum.amount || 0
-    const price = appointment?.price || 0
+    const price = appointment?.servicePrice || 0
 
-    // Si se pagó todo → cambiar status
+    // Cambiar status si está pago
     if (totalPaid >= price && price > 0) {
       await prisma.appointment.update({
         where: { id: params.id },
