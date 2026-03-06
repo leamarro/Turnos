@@ -1,171 +1,336 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
+export const dynamic = "force-dynamic";
 
-export default function EditAppointmentPage() {
-  const router = useRouter()
-  const params = useParams()
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
-  const [appointment, setAppointment] = useState<any>(null)
-  const [deposit, setDeposit] = useState("")
-  const [method, setMethod] = useState("Efectivo")
+type Service = {
+  id: string;
+  name: string;
+  price?: number;
+};
 
-  const fetchAppointment = async () => {
-    const res = await fetch(`/api/appointments/${params.id}`)
-    const data = await res.json()
-    setAppointment(data)
+type Payment = {
+  id: string;
+  amount: number;
+  method: string;
+  createdAt: string;
+};
+
+type Appointment = {
+  id: string;
+  date?: string;
+  status?: string;
+  name?: string;
+  lastName?: string;
+  telefono?: string;
+  instagram?: string;
+  notes?: string;
+  servicePrice?: number | null;
+  service?: Service | null;
+  payments?: Payment[];
+};
+
+export default function EditAppointmentPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const router = useRouter();
+  const id = params.id;
+
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [depositAmount, setDepositAmount] = useState("");
+
+  const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [notes, setNotes] = useState("");
+  const [serviceId, setServiceId] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [status, setStatus] = useState("confirmed");
+
+  async function fetchAppointment() {
+    const ap = await axios.get(`/api/appointments/${id}`);
+    const data: Appointment = ap.data;
+
+    setAppointment(data);
+
+    setName(data.name ?? "");
+    setLastName(data.lastName ?? "");
+    setTelefono(data.telefono ?? "");
+    setInstagram(data.instagram ?? "");
+    setNotes(data.notes ?? "");
+    setServiceId(data.service?.id ?? "");
+    setStatus(data.status ?? "confirmed");
+
+    if (data.date) {
+      const d = new Date(data.date);
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+
+      setDate(`${yyyy}-${mm}-${dd}`);
+      setTime(`${hh}:${mi}`);
+    }
   }
 
   useEffect(() => {
-    fetchAppointment()
-  }, [])
+    async function loadData() {
+      const sv = await axios.get("/api/services");
+      setServices(sv.data);
+      await fetchAppointment();
+    }
 
-  if (!appointment) return <p className="p-10">Cargando...</p>
+    if (id) loadData();
+  }, [id]);
 
-  const payments = appointment.payments || []
-
-  const totalPaid = payments.reduce((acc: number, p: any) => acc + p.amount, 0)
-
-  const totalPrice = appointment.price || 0
-
-  const remaining = Math.max(totalPrice - totalPaid, 0)
-
-  const isPaid = remaining === 0 && totalPrice > 0
-
-  const addDeposit = async () => {
-    if (!deposit) return
-
-    await fetch(`/api/appointments/${appointment.id}/add-deposit`, {
-      method: "POST",
-      body: JSON.stringify({
-        amount: Number(deposit),
-        method,
-      }),
-    })
-
-    setDeposit("")
-    fetchAppointment()
+  if (!appointment) {
+    return <p className="p-6">Cargando...</p>;
   }
 
-  const completePayment = async () => {
-    if (remaining <= 0) return
+  const payments = appointment.payments ?? [];
 
-    await fetch(`/api/appointments/${appointment.id}/add-deposit`, {
-      method: "POST",
-      body: JSON.stringify({
-        amount: remaining,
-        method,
-      }),
-    })
+  const totalServicio = appointment.servicePrice ?? 0;
 
-    fetchAppointment()
+  const totalPagado = payments.reduce((acc, p) => acc + p.amount, 0);
+
+  const restante = totalServicio - totalPagado;
+
+  const pagoCompleto = restante <= 0;
+
+  async function handleSave() {
+    await axios.put(`/api/appointments/${id}`, {
+      name,
+      lastName,
+      telefono,
+      instagram,
+      notes,
+      serviceId,
+      date: date && time ? new Date(`${date}T${time}`) : undefined,
+      status,
+    });
+
+    router.push("/admin");
   }
 
-  const deleteAppointment = async () => {
-    if (!confirm("Eliminar turno?")) return
+  async function handleAddDeposit() {
+    if (!depositAmount || Number(depositAmount) <= 0) return;
 
-    await fetch(`/api/appointments/${appointment.id}`, {
-      method: "DELETE",
-    })
+    await axios.post(`/api/appointments/${id}/add-deposit`, {
+      amount: Number(depositAmount),
+    });
 
-    router.push("/admin")
+    setDepositAmount("");
+    await fetchAppointment();
+  }
+
+  async function handleCompletePayment() {
+    await axios.post(`/api/appointments/${id}/complete-payment`);
+    await fetchAppointment();
+  }
+
+  async function handleDelete() {
+    if (!confirm("¿Eliminar turno?")) return;
+
+    await axios.delete(`/api/appointments/${id}`);
+    router.push("/admin");
   }
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-md mx-auto bg-white shadow-xl rounded-2xl p-6 space-y-5">
 
-      <h1 className="text-2xl font-bold">Editar turno</h1>
+        <h1 className="text-lg font-bold text-center">
+          Editar Turno
+        </h1>
 
-      <div className="border rounded-xl p-4 space-y-1 text-sm bg-gray-50">
-        {totalPrice > 0 && (
-          <>
-            <p>Total: ${totalPrice}</p>
-            <p>Pagado: ${totalPaid}</p>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Nombre"
+          className="input"
+        />
 
-            {remaining > 0 ? (
-              <p className="text-red-600 font-semibold">
-                Debe: ${remaining}
-              </p>
-            ) : (
-              <p className="text-green-600 font-semibold">
-                Pago completo
-              </p>
-            )}
-          </>
-        )}
-      </div>
+        <input
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          placeholder="Apellido"
+          className="input"
+        />
 
-      {!isPaid && (
-        <div className="border p-4 rounded-xl space-y-3">
+        <input
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          placeholder="Teléfono"
+          className="input"
+        />
 
-          <p className="font-semibold">Agregar seña</p>
+        <input
+          value={instagram}
+          onChange={(e) => setInstagram(e.target.value)}
+          placeholder="Instagram"
+          className="input"
+        />
 
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Notas"
+          className="input"
+        />
+
+        <select
+          value={serviceId}
+          onChange={(e) => setServiceId(e.target.value)}
+          className="input"
+        >
+          <option value="">Seleccionar servicio</option>
+
+          {services.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex gap-2">
           <input
-            type="number"
-            placeholder="Monto"
-            value={deposit}
-            onChange={(e) => setDeposit(e.target.value)}
-            className="border p-2 rounded w-full"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="input w-1/2"
           />
 
-          <select
-            value={method}
-            onChange={(e) => setMethod(e.target.value)}
-            className="border p-2 rounded w-full"
-          >
-            <option>Efectivo</option>
-            <option>Transferencia</option>
-            <option>Mercado Pago</option>
-          </select>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="input w-1/2"
+          />
+        </div>
+
+        {/* RESUMEN */}
+        <div className="bg-gray-100 p-4 rounded-xl text-sm space-y-1">
+          <p>Total servicio: ${totalServicio}</p>
+          <p>Total pagado: ${totalPagado}</p>
+
+          {restante > 0 && (
+            <p className="text-red-600 font-semibold">
+              Restante: ${restante}
+            </p>
+          )}
+
+          {pagoCompleto && (
+            <p className="text-green-600 font-semibold">
+              Pago completo
+            </p>
+          )}
+        </div>
+
+        {/* HISTORIAL */}
+        {payments.length > 0 && (
+          <div className="border rounded-xl p-4 space-y-3 text-sm">
+            <p className="font-semibold">Historial de pagos</p>
+
+            {payments.map((p) => {
+              const fecha = new Date(p.createdAt).toLocaleDateString(
+                "es-AR",
+                {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                }
+              );
+
+              const metodo =
+                p.method === "deposit"
+                  ? "Seña"
+                  : p.method === "full"
+                  ? "Pago final"
+                  : p.method === "cash"
+                  ? "Efectivo"
+                  : p.method;
+
+              return (
+                <div
+                  key={p.id}
+                  className="flex justify-between border-b pb-2"
+                >
+                  <div>
+                    <p>{metodo}</p>
+                    <p className="text-xs text-gray-500">{fecha}</p>
+                  </div>
+
+                  <span className="font-medium">
+                    ${p.amount}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* AGREGAR SEÑA */}
+        <div className="space-y-2">
+          <input
+            type="number"
+            value={depositAmount}
+            onChange={(e) => setDepositAmount(e.target.value)}
+            disabled={pagoCompleto}
+            placeholder="Agregar seña"
+            className="input disabled:bg-gray-200"
+          />
 
           <button
-            onClick={addDeposit}
-            className="bg-black text-white px-4 py-2 rounded w-full"
+            onClick={handleAddDeposit}
+            disabled={pagoCompleto}
+            className="w-full bg-blue-600 text-white py-2 rounded-xl disabled:bg-gray-400"
           >
             Agregar seña
           </button>
-
-          {remaining > 0 && (
-            <button
-              onClick={completePayment}
-              className="bg-green-600 text-white px-4 py-2 rounded w-full"
-            >
-              Completar pago (${remaining})
-            </button>
-          )}
         </div>
-      )}
 
-      {payments.length > 0 && (
-        <div className="border p-4 rounded-xl space-y-2 text-sm">
+        {/* COMPLETAR PAGO */}
+        {!pagoCompleto ? (
+          <button
+            onClick={handleCompletePayment}
+            className="w-full bg-green-600 text-white py-2 rounded-xl"
+          >
+            Completar pago
+          </button>
+        ) : (
+          <div className="bg-green-100 text-green-700 text-center py-2 rounded-xl">
+            Pago completado
+          </div>
+        )}
 
-          <p className="font-semibold">Historial de pagos</p>
+        {/* BOTONES */}
+        <div className="flex gap-2 pt-2">
+          <button
+            onClick={handleDelete}
+            className="bg-red-600 text-white py-2 rounded-xl w-full"
+          >
+            Eliminar
+          </button>
 
-          {payments.map((p: any) => (
-            <div
-              key={p.id}
-              className="flex justify-between border-b pb-1"
-            >
-              <span>
-                ${p.amount} • {p.method}
-              </span>
-
-              <span className="text-gray-500">
-                {new Date(p.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-          ))}
+          <button
+            onClick={handleSave}
+            className="bg-black text-white py-2 rounded-xl w-full"
+          >
+            Guardar
+          </button>
         </div>
-      )}
 
-      <button
-        onClick={deleteAppointment}
-        className="bg-red-600 text-white px-4 py-2 rounded w-full"
-      >
-        Eliminar turno
-      </button>
-
+      </div>
     </div>
-  )
+  );
 }
