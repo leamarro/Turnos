@@ -44,12 +44,12 @@ export async function POST(
     const totalPaid = payments._sum.amount || 0
     const price = appointment?.servicePrice || 0
 
-    // Cambiar status si está pago
+    // Si se pagó todo → cambiar status
     if (totalPaid >= price && price > 0) {
       await prisma.appointment.update({
         where: { id: params.id },
         data: {
-          status: "PAID",
+          status: "completed",
         },
       })
     }
