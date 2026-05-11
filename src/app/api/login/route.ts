@@ -1,29 +1,45 @@
 import { NextResponse } from "next/server";
+import {
+  createSessionToken,
+  getSessionCookieName,
+  getSessionMaxAge,
+} from "@/lib/auth";
 
 export async function POST(request: Request) {
   const { password } = await request.json();
+  const adminPassword = process.env.ADMIN_PASSWORD;
 
-  if (password !== process.env.ADMIN_PASSWORD) {
+  if (!adminPassword) {
     return NextResponse.json(
-      { error: "Contraseña incorrecta" },
+      { error: "ADMIN_PASSWORD no configurada" },
+      { status: 500 }
+    );
+  }
+
+  if (password !== adminPassword) {
+    return NextResponse.json(
+      { error: "Contrasena incorrecta" },
       { status: 401 }
     );
   }
 
   const response = NextResponse.json({ ok: true });
+  const token = await createSessionToken();
 
-  // Cookie de sesión
-  response.cookies.set("token", "admin", {
+  response.cookies.set(getSessionCookieName(), token, {
     httpOnly: true,
     path: "/",
     sameSite: "lax",
+    maxAge: getSessionMaxAge(),
+    secure: process.env.NODE_ENV === "production",
   });
 
-  // Cookie con nombre de usuario (solo UI)
   response.cookies.set("username", "Admin", {
     httpOnly: false,
     path: "/",
     sameSite: "lax",
+    maxAge: getSessionMaxAge(),
+    secure: process.env.NODE_ENV === "production",
   });
 
   return response;

@@ -18,8 +18,10 @@ export async function POST(
       );
     }
 
-    const totalPagado =
-      appointment.payments.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+    const totalPagado = appointment.payments.reduce(
+      (acc, payment) => acc + payment.amount,
+      0
+    );
 
     const totalServicio = appointment.servicePrice ?? 0;
 

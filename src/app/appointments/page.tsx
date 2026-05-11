@@ -6,7 +6,7 @@ import AppointmentForm from "@/components/AppointmentForm";
 
 export default function AppointmentPage() {
   return (
-    <div className="pt-24 px-4">
+    <div className="min-h-screen bg-[#f6f1ea] px-4 py-10 sm:px-6 lg:px-8">
       <AppointmentForm />
     </div>
   );

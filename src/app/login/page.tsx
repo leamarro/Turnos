@@ -4,8 +4,10 @@ export const dynamic = "force-dynamic";
 
 import { useState } from "react";
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,7 +19,11 @@ export default function LoginPage() {
 
     try {
       await axios.post("/api/login", { password });
-      window.location.href = "/home";
+      const nextPath = searchParams.get("next");
+      window.location.href =
+        nextPath?.startsWith("/") && !nextPath.startsWith("//")
+          ? nextPath
+          : "/home";
     } catch {
       setError("Contraseña incorrecta");
     } finally {

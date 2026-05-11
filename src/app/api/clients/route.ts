@@ -3,6 +3,16 @@ import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+type ClientSummary = {
+  id: string;
+  name: string;
+  lastName: string;
+  telefono: string | null;
+  instagram: string | null;
+  totalAppointments: number;
+  lastAppointment: Date | null;
+};
+
 export async function GET() {
   const appointments = await prisma.appointment.findMany({
     orderBy: { date: "desc" },
@@ -15,7 +25,7 @@ export async function GET() {
     },
   });
 
-  const map = new Map<string, any>();
+  const map = new Map<string, ClientSummary>();
 
   for (const a of appointments) {
     const key = a.telefono || a.instagram;
@@ -34,6 +44,8 @@ export async function GET() {
     }
 
     const client = map.get(key);
+    if (!client) continue;
+
     client.totalAppointments += 1;
 
     if (!client.lastAppointment || new Date(a.date) > new Date(client.lastAppointment)) {

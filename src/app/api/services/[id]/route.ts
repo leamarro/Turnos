@@ -5,11 +5,26 @@ import prisma from "@/lib/prisma";
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
-    const { name, price } = await req.json();
+    const { name, price, duration } = await req.json();
+    const parsedPrice = Number(price);
+    const parsedDuration = Number(duration);
+
+    if (!name || !Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      return NextResponse.json(
+        { error: "Datos de servicio invalidos" },
+        { status: 400 }
+      );
+    }
 
     const service = await prisma.service.update({
       where: { id },
-      data: { name, price: Number(price) },
+      data: {
+        name,
+        price: parsedPrice,
+        ...(Number.isFinite(parsedDuration) && parsedDuration > 0
+          ? { duration: parsedDuration }
+          : {}),
+      },
     });
 
     return NextResponse.json(service);

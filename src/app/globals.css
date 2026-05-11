@@ -188,6 +188,30 @@ input:focus, select:focus, textarea:focus {
   opacity: 0.5;
 }
 
+.booking-input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #d4d4d8;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 0.75rem 0.9rem;
+  color: #09090b;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  box-shadow: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.booking-input::placeholder {
+  color: #a1a1aa;
+}
+
+.booking-input:focus {
+  border-color: #18181b;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.12);
+}
+
 /* 🔥 MATA PICKER DE HORA EN CHROME MOBILE */
 .no-time-picker::-webkit-calendar-picker-indicator {
   display: none;

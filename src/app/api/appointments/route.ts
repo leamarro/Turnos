@@ -1,9 +1,6 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-/* ========================= */
-/* GET — lista o detalle */
-/* ========================= */
 export async function GET() {
   try {
     const appointments = await prisma.appointment.findMany({
@@ -14,34 +11,36 @@ export async function GET() {
       orderBy: {
         date: "asc",
       },
-    })
+    });
 
     const enrichedAppointments = appointments.map((appointment) => {
       const totalPaid = appointment.payments.reduce(
         (sum, payment) => sum + payment.amount,
         0
-      )
+      );
 
-      const remaining =
-        (appointment.servicePrice || 0) - totalPaid
+      const remaining = (appointment.servicePrice || 0) - totalPaid;
 
       return {
         ...appointment,
         totalPaid,
         remaining,
-      }
-    })
+      };
+    });
 
-    return NextResponse.json(enrichedAppointments)
+    return NextResponse.json(enrichedAppointments);
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Error fetching appointments" }, { status: 500 })
+    console.error(error);
+    return NextResponse.json(
+      { error: "Error fetching appointments" },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
+    const body = await req.json();
 
     const {
       name,
@@ -52,100 +51,140 @@ export async function POST(req: Request) {
       date,
       serviceId,
       depositAmount,
-    } = body
+    } = body;
 
-    if (!date || !serviceId || !name) {
+    if (!date || !serviceId || !name || !lastName || !telefono) {
       return NextResponse.json(
         { error: "Faltan datos obligatorios" },
         { status: 400 }
-      )
+      );
     }
 
-    const appointmentDate = new Date(date)
+    const appointmentDate = new Date(date);
 
-    // 🔥 Validar horario ocupado
+    if (Number.isNaN(appointmentDate.getTime())) {
+      return NextResponse.json(
+        { error: "Fecha invalida" },
+        { status: 400 }
+      );
+    }
+
+    if (appointmentDate.getTime() < Date.now()) {
+      return NextResponse.json(
+        { error: "No se puede reservar un turno en el pasado" },
+        { status: 400 }
+      );
+    }
+
     const existing = await prisma.appointment.findFirst({
       where: {
         date: appointmentDate,
         status: { not: "cancelled" },
       },
-    })
+    });
 
     if (existing) {
       return NextResponse.json(
         { error: "Horario no disponible" },
         { status: 400 }
-      )
+      );
     }
 
-    // 🔥 Buscar precio real del servicio
     const service = await prisma.service.findUnique({
       where: { id: serviceId },
-    })
+    });
 
     if (!service) {
       return NextResponse.json(
         { error: "Servicio no encontrado" },
         { status: 404 }
-      )
+      );
     }
 
-    // 🔥 Estado inicial automático
-    let initialStatus: "confirmed" | "pending" = "confirmed"
+    const parsedDeposit = Number(depositAmount || 0);
 
-    if (depositAmount && Number(depositAmount) > 0) {
-      initialStatus = "pending"
+    if (
+      depositAmount &&
+      (!Number.isFinite(parsedDeposit) || parsedDeposit < 0)
+    ) {
+      return NextResponse.json(
+        { error: "Sena invalida" },
+        { status: 400 }
+      );
     }
+
+    const initialStatus = parsedDeposit > 0 ? "pending" : "confirmed";
 
     const appointment = await prisma.appointment.create({
       data: {
-        name,
-        lastName,
-        telefono,
-        instagram,
-        notes,
+        name: String(name).trim(),
+        lastName: String(lastName).trim(),
+        telefono: String(telefono).trim(),
+        instagram: instagram ? String(instagram).trim() : null,
+        notes: notes ? String(notes).trim() : null,
         date: appointmentDate,
         serviceId,
-        servicePrice: service.price, // 🔥 ahora sale del servicio
+        servicePrice: Math.round(service.price),
         status: initialStatus,
       },
-    })
+    });
 
-    // 🔥 Crear seña si existe
-    if (depositAmount && Number(depositAmount) > 0) {
+    if (parsedDeposit > 0) {
       await prisma.payment.create({
         data: {
-          amount: Number(depositAmount),
+          amount: Math.round(parsedDeposit),
           method: "deposit",
           appointmentId: appointment.id,
         },
-      })
+      });
     }
 
-    return NextResponse.json(appointment)
+    return NextResponse.json(appointment);
   } catch (error) {
-    console.error(error)
+    console.error(error);
     return NextResponse.json(
       { error: "Error creating appointment" },
       { status: 500 }
-    )
+    );
   }
 }
-/* ========================= */
-/* PUT */
-/* ========================= */
+
 export async function PUT(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
   if (!id) {
-    return NextResponse.json(
-      { error: "ID requerido" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "ID requerido" }, { status: 400 });
   }
 
   const body = await request.json();
+  let updatedDate: Date | undefined;
+
+  if (body.date && body.time) {
+    updatedDate = new Date(`${body.date}T${body.time}:00-03:00`);
+
+    if (Number.isNaN(updatedDate.getTime())) {
+      return NextResponse.json(
+        { error: "Fecha invalida" },
+        { status: 400 }
+      );
+    }
+
+    const existing = await prisma.appointment.findFirst({
+      where: {
+        id: { not: id },
+        date: updatedDate,
+        status: { not: "cancelled" },
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "Horario no disponible" },
+        { status: 400 }
+      );
+    }
+  }
 
   const updated = await prisma.appointment.update({
     where: { id },
@@ -156,33 +195,22 @@ export async function PUT(request: Request) {
       instagram: body.instagram || null,
       status: body.status,
       serviceId: body.serviceId,
-      ...(body.date && body.time
-        ? {
-            date: new Date(
-              `${body.date}T${body.time}:00-03:00`
-            ),
-          }
-        : {}),
+      ...(updatedDate ? { date: updatedDate } : {}),
     },
   });
 
   return NextResponse.json(updated);
 }
 
-/* ========================= */
-/* DELETE */
-/* ========================= */
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
   if (!id) {
-    return NextResponse.json(
-      { error: "ID requerido" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "ID requerido" }, { status: 400 });
   }
 
+  await prisma.payment.deleteMany({ where: { appointmentId: id } });
   await prisma.appointment.delete({ where: { id } });
 
   return NextResponse.json({ ok: true });

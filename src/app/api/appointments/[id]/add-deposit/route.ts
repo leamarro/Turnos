@@ -11,10 +11,22 @@ export async function POST(
     const amount = Number(body.amount);
     const method = body.method || "Efectivo";
 
-    if (!amount || amount <= 0) {
+    if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json(
-        { error: "Monto inválido" },
+        { error: "Monto invalido" },
         { status: 400 }
+      );
+    }
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: params.id },
+      select: { id: true },
+    });
+
+    if (!appointment) {
+      return NextResponse.json(
+        { error: "Turno no encontrado" },
+        { status: 404 }
       );
     }
 

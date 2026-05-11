@@ -1,31 +1,56 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
+const PUBLIC_PATHS = new Set([
+  "/",
+  "/login",
+  "/appointments",
+  "/api/login",
+  "/api/logout",
+  "/api/auth/logout",
+]);
 
-  // ✅ Rutas públicas
-  if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/api") ||
+function isPublicPath(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  const isPublicBookingApi =
+    (pathname === "/api/services" && req.method === "GET") ||
+    (pathname === "/api/appointments" && req.method === "POST");
+
+  return (
+    isPublicBookingApi ||
+    PUBLIC_PATHS.has(pathname) ||
     pathname.startsWith("/_next") ||
-    pathname === "/" ||
     pathname.includes(".")
-  ) {
-    return NextResponse.next()
+  );
+}
+
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  if (isPublicPath(req)) {
+    return NextResponse.next();
   }
 
-  const isLoggedIn = false // 👈 tu lógica real acá
+  const isLoggedIn = await verifySessionToken(
+    req.cookies.get(getSessionCookieName())?.value
+  );
 
-  if (!isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.url))
+  if (isLoggedIn) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next()
+  if (pathname.startsWith("/api")) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const loginUrl = new URL("/login", req.url);
+  loginUrl.searchParams.set("next", pathname);
+
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
-}
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
