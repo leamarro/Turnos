@@ -34,7 +34,6 @@ export async function GET(req: Request) {
           gte: start,
           lte: end,
         },
-        status: "pending",
       },
       include: {
         User: true,

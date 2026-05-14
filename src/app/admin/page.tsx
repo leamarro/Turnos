@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2, Phone, User } from "lucide-react";
+import { Pencil, Trash2, Phone, User, Send, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 /* ========================= */
@@ -67,6 +67,8 @@ export default function AdminPanel() {
   const [filterOption, setFilterOption] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [showPast, setShowPast] = useState(false);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [sendingWsp, setSendingWsp] = useState(false);
+  const [wspSent, setWspSent] = useState(false);
   const router = useRouter();
   const today = new Date();
 
@@ -141,35 +143,90 @@ export default function AdminPanel() {
     fetchAppointments();
   }
 
+  async function sendAgendaToWhatsApp() {
+    setSendingWsp(true);
+    setWspSent(false);
+    try {
+      await axios.get("/api/cron/agenda?type=hoy");
+      setWspSent(true);
+      setTimeout(() => setWspSent(false), 4000);
+    } catch (err) {
+      console.error(err);
+      alert("Error al enviar la agenda");
+    } finally {
+      setSendingWsp(false);
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
 
       {/* FILTROS */}
-      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-wrap gap-3">
-        <button onClick={() => setFilterOption("all")} className="px-3 py-1 border rounded-full text-sm">
+      <div className="bg-white rounded-2xl p-4 mb-6 flex flex-wrap items-center gap-3">
+        <button onClick={() => setFilterOption("all")} className={`px-3 py-1 border rounded-full text-sm ${filterOption === "all" ? "bg-black text-white" : ""}`}>
           Todos
         </button>
 
-        <button onClick={() => setFilterOption("today")} className="px-3 py-1 border rounded-full text-sm">
+        <button onClick={() => setFilterOption("today")} className={`px-3 py-1 border rounded-full text-sm ${filterOption === "today" ? "bg-black text-white" : ""}`}>
           Hoy
         </button>
 
-        <button onClick={() => setFilterOption("tomorrow")} className="px-3 py-1 border rounded-full text-sm">
+        <button onClick={() => setFilterOption("tomorrow")} className={`px-3 py-1 border rounded-full text-sm ${filterOption === "tomorrow" ? "bg-black text-white" : ""}`}>
           Mañana
         </button>
 
-        <button onClick={() => setFilterOption("week")} className="px-3 py-1 border rounded-full text-sm">
+        <button onClick={() => setFilterOption("week")} className={`px-3 py-1 border rounded-full text-sm ${filterOption === "week" ? "bg-black text-white" : ""}`}>
           Semana
         </button>
 
+        <div className="w-px h-6 bg-gray-200 hidden sm:block" />
+
+        <input
+          type="date"
+          value={filterDate}
+          onChange={(e) => { setFilterDate(e.target.value); setFilterOption("all"); }}
+          className="px-3 py-1 border rounded-full text-sm w-auto max-w-[150px]"
+        />
+
+        <div className="w-px h-6 bg-gray-200 hidden sm:block" />
+
         <button
           onClick={() => setShowPendingOnly((v) => !v)}
-          className={`px-3 py-1 border rounded-full text-sm ${
-            showPendingOnly ? "bg-red-600 text-white" : ""
+          className={`px-3 py-1 border rounded-full text-sm whitespace-nowrap ${
+            showPendingOnly ? "bg-red-600 text-white border-red-600" : ""
           }`}
         >
           Solo pendientes
+        </button>
+
+        <button
+          onClick={() => setShowPast((v) => !v)}
+          className={`px-3 py-1 border rounded-full text-sm whitespace-nowrap ${
+            showPast ? "bg-black text-white" : ""
+          }`}
+        >
+          Mostrar pasados
+        </button>
+      </div>
+
+      {/* WHATSAPP */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">
+          {appointments.length} turno{appointments.length !== 1 && "s"}
+        </p>
+
+        <button
+          onClick={sendAgendaToWhatsApp}
+          disabled={sendingWsp}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition disabled:opacity-60"
+        >
+          {sendingWsp ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Send size={16} />
+          )}
+          {sendingWsp ? "Enviando..." : wspSent ? "¡Enviado!" : "Enviar agenda al WhatsApp"}
         </button>
       </div>
 

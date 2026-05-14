@@ -140,12 +140,16 @@ export default function DashboardPage() {
      UI
   ====================== */
   return (
-    <div className="min-h-screen bg-gray-50 px-4 pt-16 pb-20 space-y-6">
+    <div className="min-h-screen bg-gray-50 px-4 pt-16 pb-20">
+      <div className="max-w-6xl mx-auto space-y-6">
       {/* HEADER */}
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <p className="text-sm text-gray-500">{appointments.length} turnos totales</p>
+      </div>
 
       {/* KPI CARDS */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl p-4 shadow">
           <p className="text-xs text-gray-500">Ingresos del mes</p>
           <p className="text-2xl font-semibold">{money(incomeCurrent)}</p>
@@ -169,6 +173,26 @@ export default function DashboardPage() {
               : `${weekVariation > 0 ? "↑" : "↓"} ${Math.abs(
                   weekVariation
                 ).toFixed(0)}% vs semana anterior`}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow">
+          <p className="text-xs text-gray-500">Turnos este mes</p>
+          <p className="text-2xl font-semibold">{currentMonthData.length}</p>
+          <p className="text-xs mt-1 text-gray-400">
+            {prevMonthData.length === 0
+              ? "Sin mes previo"
+              : `${currentMonthData.length > prevMonthData.length ? "↑" : "↓"} ${Math.abs(
+                  ((currentMonthData.length - prevMonthData.length) / prevMonthData.length) * 100
+                ).toFixed(0)}% vs mes anterior`}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow">
+          <p className="text-xs text-gray-500">Turnos última semana</p>
+          <p className="text-2xl font-semibold">{lastWeekData.length}</p>
+          <p className="text-xs mt-1 text-gray-400">
+            Promedio {(lastWeekData.length / 7).toFixed(1)} / día
           </p>
         </div>
       </div>
@@ -206,6 +230,7 @@ export default function DashboardPage() {
           <strong>{currentMonthData.length}</strong> turnos y{" "}
           <strong>{money(incomeCurrent)}</strong> de ingresos.
         </p>
+      </div>
       </div>
     </div>
   );

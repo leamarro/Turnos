@@ -55,7 +55,7 @@ export default function Navbar() {
           {/* DESKTOP */}
           <div className="hidden sm:flex items-center gap-6">
             <NavLink href="/home">Inicio</NavLink>
-            <NavLink href="/appointments">Reservar</NavLink>
+            <NavLink href="/appointments">Nuevo turno</NavLink>
             <NavLink href="/clients">Clientes</NavLink>
             <NavLink href="/admin">Turnos</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
@@ -114,7 +114,7 @@ export default function Navbar() {
             Inicio
           </NavLink>
           <NavLink href="/appointments" onClick={() => setOpen(false)}>
-            Reservar turno
+            Nuevo turno
           </NavLink>
           <NavLink href="/clients" onClick={() => setOpen(false)}>
             Clientes

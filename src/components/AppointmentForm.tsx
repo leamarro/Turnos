@@ -141,7 +141,7 @@ export default function AppointmentForm() {
       !form.date ||
       !form.time
     ) {
-      return "Completá los datos obligatorios para reservar.";
+      return "Completá los datos obligatorios para cargar el turno.";
     }
 
     if (form.telefono.length < 8) {
@@ -203,7 +203,7 @@ export default function AppointmentForm() {
       console.error(err.response?.data || err);
       setMessage(
         err.response?.data?.error ||
-          "No se pudo reservar el turno. Revisá los datos e intentá de nuevo."
+          "No se pudo guardar el turno. Revisá los datos e intentá de nuevo."
       );
     } finally {
       setSubmitting(false);
@@ -219,10 +219,10 @@ export default function AppointmentForm() {
           <CheckCircle2 className="mt-1 h-8 w-8 shrink-0 text-emerald-600" />
           <div className="space-y-2">
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-700">
-              Turno reservado
+              Turno cargado
             </p>
             <h2 className="text-2xl font-semibold text-zinc-950">
-              Tu solicitud quedó registrada
+              El turno quedó registrado
             </h2>
             <p className="text-sm leading-6 text-zinc-600">
               Fecha:{" "}
@@ -239,10 +239,6 @@ export default function AppointmentForm() {
                 })}
               </span>
             </p>
-            <p className="text-sm leading-6 text-zinc-600">
-              Te vamos a contactar por WhatsApp si hace falta confirmar algún
-              detalle.
-            </p>
           </div>
         </div>
 
@@ -251,7 +247,7 @@ export default function AppointmentForm() {
           onClick={() => setCreatedAppointment(null)}
           className="mt-8 w-full rounded-xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
         >
-          Reservar otro turno
+          Cargar otro turno
         </button>
       </section>
     );
@@ -265,11 +261,11 @@ export default function AppointmentForm() {
             Beat Makeup
           </p>
           <h1 className="text-4xl font-semibold leading-tight text-zinc-950 sm:text-5xl">
-            Reservá tu turno
+            Nuevo turno
           </h1>
           <p className="max-w-md text-base leading-7 text-zinc-600">
-            Elegí el servicio, fecha y horario. El turno queda cargado en la
-            agenda y podés dejar una seña si corresponde.
+            Cargá el servicio, fecha y horario del turno. También podés dejar
+            una seña si corresponde.
           </p>
         </div>
 
@@ -452,7 +448,7 @@ export default function AppointmentForm() {
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting && <Loader2 size={18} className="animate-spin" />}
-          {submitting ? "Reservando..." : "Confirmar turno"}
+          {submitting ? "Guardando..." : "Guardar turno"}
         </button>
       </form>
     </section>

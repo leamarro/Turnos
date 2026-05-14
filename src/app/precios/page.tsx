@@ -45,13 +45,13 @@ export default function PreciosPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-md mx-auto px-4 pt-20 pb-16">
+      <div className="max-w-lg mx-auto px-4 pt-20 pb-16">
 
         <h1 className="text-2xl font-semibold mb-8 text-center">
           Precios
         </h1>
 
-        <div className="bg-white rounded-2xl shadow p-6 space-y-6">
+        <div className="bg-white rounded-2xl shadow p-6 sm:p-8 space-y-6">
 
           {/* PERFILADO */}
           <div>
