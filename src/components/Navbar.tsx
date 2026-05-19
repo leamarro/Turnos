@@ -4,13 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
 import { usePathname } from "next/navigation";
-import { LogOut, Home, Calendar, Users, BarChart2, Plus } from "lucide-react";
+import {
+  LogOut,
+  Home,
+  Calendar,
+  Users,
+  BarChart2,
+  Plus,
+  BadgeDollarSign,
+} from "lucide-react";
 
 const tabs = [
   { href: "/home", icon: Home, label: "Inicio" },
   { href: "/admin", icon: Calendar, label: "Turnos" },
   { href: "/clients", icon: Users, label: "Clientes" },
   { href: "/dashboard", icon: BarChart2, label: "Stats" },
+  { href: "/precios", icon: BadgeDollarSign, label: "Precios" },
 ];
 
 function getPageTitle(pathname: string) {
@@ -23,16 +32,32 @@ function getPageTitle(pathname: string) {
   return "";
 }
 
-function NavTab({ tab, pathname }: { tab: typeof tabs[number]; pathname: string }) {
+function NavTab({
+  tab,
+  pathname,
+}: {
+  tab: (typeof tabs)[number];
+  pathname: string;
+}) {
   const Icon = tab.icon;
   const active = pathname.startsWith(tab.href);
+
   return (
     <Link
       href={tab.href}
       className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-opacity active:opacity-50"
     >
-      <Icon size={21} className={active ? "text-black" : "text-gray-400"} strokeWidth={active ? 2.2 : 1.7} />
-      <span className={`text-[10px] leading-none ${active ? "text-black font-semibold" : "text-gray-400"}`}>
+      <Icon
+        size={20}
+        className={active ? "text-black" : "text-gray-400"}
+        strokeWidth={active ? 2.2 : 1.7}
+      />
+
+      <span
+        className={`text-[9px] leading-none ${
+          active ? "text-black font-semibold" : "text-gray-400"
+        }`}
+      >
         {tab.label}
       </span>
     </Link>
@@ -52,11 +77,16 @@ export default function Navbar() {
     <>
       {/* ===== TOP HEADER ===== */}
       <header className="fixed top-0 left-0 w-full z-50 bg-[#F5F3EE]/95 backdrop-blur border-b border-gray-200">
-
-        {/* Mobile: logo + título + logout */}
+        {/* Mobile */}
         <div className="sm:hidden mx-auto px-4 h-12 flex items-center justify-between">
           <Link href="/home" className="shrink-0">
-            <Image src="/logo.png" alt="Logo" width={44} height={44} priority />
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={44}
+              height={44}
+              priority
+            />
           </Link>
 
           {title && (
@@ -74,10 +104,16 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Desktop: nav completa */}
+        {/* Desktop */}
         <div className="hidden sm:flex max-w-6xl mx-auto px-4 h-14 items-center justify-between">
           <Link href="/home">
-            <Image src="/logo.png" alt="Logo" width={60} height={60} priority />
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={60}
+              height={60}
+              priority
+            />
           </Link>
 
           <nav className="flex items-center gap-6">
@@ -94,17 +130,16 @@ export default function Navbar() {
                 {tab.label === "Stats" ? "Dashboard" : tab.label}
               </Link>
             ))}
+
             <Link
               href="/appointments"
-              className={`text-sm transition ${pathname.startsWith("/appointments") ? "text-black font-medium" : "text-gray-500 hover:text-black"}`}
+              className={`text-sm transition ${
+                pathname.startsWith("/appointments")
+                  ? "text-black font-medium"
+                  : "text-gray-500 hover:text-black"
+              }`}
             >
               Nuevo turno
-            </Link>
-            <Link
-              href="/precios"
-              className={`text-sm transition ${pathname === "/precios" ? "text-black font-medium" : "text-gray-500 hover:text-black"}`}
-            >
-              Precios
             </Link>
           </nav>
 
@@ -124,22 +159,33 @@ export default function Navbar() {
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="flex items-stretch justify-around h-16">
-          {/* Primeros 2 tabs */}
-          {tabs.slice(0, 2).map((tab) => <NavTab key={tab.href} tab={tab} pathname={pathname} />)}
+          {/* Izquierda */}
+          {tabs.slice(0, 2).map((tab) => (
+            <NavTab key={tab.href} tab={tab} pathname={pathname} />
+          ))}
 
-          {/* Botón central + Nuevo */}
+          {/* Botón central */}
           <Link
             href="/appointments"
             className="flex flex-col items-center justify-center flex-1 py-2 active:opacity-70 transition-opacity"
           >
             <div className="bg-black rounded-full w-11 h-11 flex items-center justify-center -mt-4 shadow-lg">
-              <Plus size={22} className="text-white" strokeWidth={2.5} />
+              <Plus
+                size={22}
+                className="text-white"
+                strokeWidth={2.5}
+              />
             </div>
-            <span className="text-[10px] leading-none text-gray-400 mt-1">Nuevo</span>
+
+            <span className="text-[9px] leading-none text-gray-400 mt-1">
+              Nuevo
+            </span>
           </Link>
 
-          {/* Últimos 2 tabs */}
-          {tabs.slice(2).map((tab) => <NavTab key={tab.href} tab={tab} pathname={pathname} />)}
+          {/* Derecha */}
+          {tabs.slice(2).map((tab) => (
+            <NavTab key={tab.href} tab={tab} pathname={pathname} />
+          ))}
         </div>
       </nav>
     </>
