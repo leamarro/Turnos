@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2, Phone, User } from "lucide-react";
+import { Pencil, Trash2, Phone, User, CalendarDays, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 /* ========================= */
@@ -164,12 +164,35 @@ export default function AdminPanel() {
 
           <div className="w-px h-5 bg-gray-200 shrink-0" />
 
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => { setFilterDate(e.target.value); setFilterOption("all"); }}
-            className="px-3 py-1.5 border rounded-full text-sm w-[140px] shrink-0"
-          />
+          {/* Chip de fecha con picker nativo por detrás */}
+          <div className="relative shrink-0">
+            <button
+              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${
+                filterDate ? "bg-black text-white border-black" : "text-gray-600"
+              }`}
+              onClick={() => (document.getElementById("date-filter") as HTMLInputElement)?.showPicker?.()}
+            >
+              <CalendarDays size={13} />
+              {filterDate
+                ? format(new Date(filterDate + "T00:00:00"), "d MMM", { locale: es })
+                : "Fecha"}
+            </button>
+            {filterDate && (
+              <button
+                onClick={() => setFilterDate("")}
+                className="absolute -top-1 -right-1 bg-gray-300 rounded-full p-0.5"
+              >
+                <X size={9} />
+              </button>
+            )}
+            <input
+              id="date-filter"
+              type="date"
+              value={filterDate}
+              onChange={(e) => { setFilterDate(e.target.value); setFilterOption("all"); }}
+              className="absolute inset-0 opacity-0 w-full cursor-pointer"
+            />
+          </div>
 
           <div className="w-px h-5 bg-gray-200 shrink-0" />
 
