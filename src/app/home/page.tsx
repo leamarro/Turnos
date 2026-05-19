@@ -5,8 +5,10 @@ export const dynamic = "force-dynamic";
 import CalendarGrid from "@/components/CalendarGrid";
 import DayView from "@/components/DayView";
 import AvailabilityView from "@/components/AvailabilityView";
+import WeekGridView from "@/components/WeekGridView";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LayoutList, CalendarDays } from "lucide-react";
 
 type Appointment = {
   id: string;
@@ -29,6 +31,7 @@ const VIEWS: { key: View; label: string }[] = [
 export default function HomePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [view, setView] = useState<View>("month");
+  const [gridMode, setGridMode] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -79,32 +82,61 @@ export default function HomePage() {
   return (
     <div className="max-w-4xl mx-auto px-3 pt-4 pb-4">
       {/* HEADER */}
-      <div className="text-center mb-4">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Agenda</h1>
+
+        {/* Toggle lista / grilla — solo para Mes y Semana */}
+        {(view === "month" || view === "week") && (
+          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+            <button
+              onClick={() => setGridMode(false)}
+              className={`p-1.5 rounded-lg transition ${!gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
+              title="Vista lista"
+            >
+              <LayoutList size={16} />
+            </button>
+            <button
+              onClick={() => setGridMode(true)}
+              className={`p-1.5 rounded-lg transition ${gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
+              title="Vista calendario"
+            >
+              <CalendarDays size={16} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* TOGGLE VIEWS */}
-      <div className="flex justify-center gap-1.5 mb-5">
-        {VIEWS.map((v) => (
-          <button
-            key={v.key}
-            onClick={() => setView(v.key)}
-            className={`px-3 py-1.5 rounded-full text-sm transition ${
-              view === v.key
-                ? "bg-black text-white"
-                : "border border-gray-200 text-gray-600"
-            }`}
-          >
-            {v.label}
-          </button>
-        ))}
+      {/* TOGGLE VIEWS — scroll horizontal en mobile */}
+      <div className="overflow-x-auto scrollbar-hide mb-5">
+        <div className="flex gap-1.5 w-max mx-auto px-1">
+          {VIEWS.map((v) => (
+            <button
+              key={v.key}
+              onClick={() => { setView(v.key); if (v.key !== "month" && v.key !== "week") setGridMode(false); }}
+              className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition ${
+                view === v.key
+                  ? "bg-black text-white"
+                  : "border border-gray-200 text-gray-600"
+              }`}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* VISTAS */}
-      {(view === "month" || view === "week") && (
+      {(view === "month" || view === "week") && !gridMode && (
         <CalendarGrid
           appointments={calendarAppointments}
           view={view}
+          onSelectAppointment={handleSelect}
+        />
+      )}
+
+      {(view === "month" || view === "week") && gridMode && (
+        <WeekGridView
+          appointments={appointments}
           onSelectAppointment={handleSelect}
         />
       )}
