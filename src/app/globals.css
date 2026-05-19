@@ -235,6 +235,14 @@ input:focus, select:focus, textarea:focus {
   appearance: none;
 }
 
+/* Label de formulario */
+.label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.35rem;
+}
+
 /* Ocultar scrollbar manteniendo scroll funcional */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
