@@ -4,14 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
 import { usePathname } from "next/navigation";
-import { LogOut, Home, Calendar, Users, BarChart2, Tag } from "lucide-react";
+import { LogOut, Home, Calendar, Users, BarChart2, Plus } from "lucide-react";
 
 const tabs = [
   { href: "/home", icon: Home, label: "Inicio" },
   { href: "/admin", icon: Calendar, label: "Turnos" },
   { href: "/clients", icon: Users, label: "Clientes" },
-  { href: "/dashboard", icon: BarChart2, label: "Dashboard" },
-  { href: "/precios", icon: Tag, label: "Precios" },
+  { href: "/dashboard", icon: BarChart2, label: "Stats" },
 ];
 
 function getPageTitle(pathname: string) {
@@ -20,8 +19,24 @@ function getPageTitle(pathname: string) {
   if (pathname.startsWith("/clients")) return "Clientes";
   if (pathname === "/dashboard") return "Dashboard";
   if (pathname === "/precios") return "Precios";
-  if (pathname.startsWith("/appointments")) return "Turnos";
+  if (pathname.startsWith("/appointments")) return "Nuevo turno";
   return "";
+}
+
+function NavTab({ tab, pathname }: { tab: typeof tabs[number]; pathname: string }) {
+  const Icon = tab.icon;
+  const active = pathname.startsWith(tab.href);
+  return (
+    <Link
+      href={tab.href}
+      className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-opacity active:opacity-50"
+    >
+      <Icon size={21} className={active ? "text-black" : "text-gray-400"} strokeWidth={active ? 2.2 : 1.7} />
+      <span className={`text-[10px] leading-none ${active ? "text-black font-semibold" : "text-gray-400"}`}>
+        {tab.label}
+      </span>
+    </Link>
+  );
 }
 
 export default function Navbar() {
@@ -76,9 +91,21 @@ export default function Navbar() {
                     : "text-gray-500 hover:text-black"
                 }`}
               >
-                {tab.label}
+                {tab.label === "Stats" ? "Dashboard" : tab.label}
               </Link>
             ))}
+            <Link
+              href="/appointments"
+              className={`text-sm transition ${pathname.startsWith("/appointments") ? "text-black font-medium" : "text-gray-500 hover:text-black"}`}
+            >
+              Nuevo turno
+            </Link>
+            <Link
+              href="/precios"
+              className={`text-sm transition ${pathname === "/precios" ? "text-black font-medium" : "text-gray-500 hover:text-black"}`}
+            >
+              Precios
+            </Link>
           </nav>
 
           <button
@@ -97,30 +124,22 @@ export default function Navbar() {
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="flex items-stretch justify-around h-16">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const active = pathname.startsWith(tab.href);
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-opacity active:opacity-50"
-              >
-                <Icon
-                  size={21}
-                  className={active ? "text-black" : "text-gray-400"}
-                  strokeWidth={active ? 2.2 : 1.7}
-                />
-                <span
-                  className={`text-[10px] leading-none ${
-                    active ? "text-black font-semibold" : "text-gray-400"
-                  }`}
-                >
-                  {tab.label}
-                </span>
-              </Link>
-            );
-          })}
+          {/* Primeros 2 tabs */}
+          {tabs.slice(0, 2).map((tab) => <NavTab key={tab.href} tab={tab} pathname={pathname} />)}
+
+          {/* Botón central + Nuevo */}
+          <Link
+            href="/appointments"
+            className="flex flex-col items-center justify-center flex-1 py-2 active:opacity-70 transition-opacity"
+          >
+            <div className="bg-black rounded-full w-11 h-11 flex items-center justify-center -mt-4 shadow-lg">
+              <Plus size={22} className="text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-[10px] leading-none text-gray-400 mt-1">Nuevo</span>
+          </Link>
+
+          {/* Últimos 2 tabs */}
+          {tabs.slice(2).map((tab) => <NavTab key={tab.href} tab={tab} pathname={pathname} />)}
         </div>
       </nav>
     </>
