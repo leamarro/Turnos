@@ -2,194 +2,152 @@
 
 export const dynamic = "force-dynamic";
 
-import CalendarGrid from "@/components/CalendarGrid";
-import DayView from "@/components/DayView";
-import AvailabilityView from "@/components/AvailabilityView";
-import WeekGridView from "@/components/WeekGridView";
-import CalendarMonthGrid from "@/components/CalendarMonthGrid";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { LayoutList, CalendarDays } from "lucide-react";
+import Link from "next/link";
+import { Phone, Instagram, ChevronRight, Search } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
-type Appointment = {
+type Client = {
   id: string;
-  date: string;
   name: string;
-  lastName: string;
-  service: { name: string };
-  timeStatus: "past" | "today" | "future";
+  lastName?: string;
+  telefono?: string;
+  instagram?: string;
+  totalAppointments: number;
+  lastAppointment: string | null;
 };
 
-type View = "month" | "week" | "day" | "available";
-
-const VIEWS: { key: View; label: string }[] = [
-  { key: "month", label: "Mes" },
-  { key: "day", label: "Día" },
-  { key: "available", label: "Disponibles" },
-];
-
-export default function HomePage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [view, setView] = useState<View>("month");
-  const [gridMode, setGridMode] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+export default function ClientsPage() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const res = await fetch("/api/appointments", { cache: "no-store" });
-        const data = await res.json();
-        if (!Array.isArray(data)) { setAppointments([]); return; }
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        setAppointments(data.map((a: any) => {
-          const date = new Date(a.date);
-          const compareDate = new Date(date);
-          compareDate.setHours(0, 0, 0, 0);
-
-          let timeStatus: "past" | "today" | "future" = "future";
-          if (compareDate.getTime() === today.getTime()) timeStatus = "today";
-          else if (compareDate < today) timeStatus = "past";
-
-          return {
-            id: a.id,
-            date: date.toISOString(),
-            name: a.name ?? "",
-            lastName: a.lastName ?? "",
-            service: { name: a.service?.name ?? "" },
-            timeStatus,
-          };
-        }));
-      } catch {
-        setAppointments([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAppointments();
+    fetch("/api/clients", { cache: "no-store" })
+      .then((res) => res.json())
+      .then(setClients)
+      .catch(console.error);
   }, []);
 
-  const handleSelect = (id: string) => router.push(`/appointments/${id}`);
-
-  // CalendarGrid espera { user: { name, lastName } } — adaptamos
-  const calendarAppointments = appointments.map((a) => ({
-    id: a.id,
-    date: a.date,
-    service: a.service,
-    user: { name: a.name, lastName: a.lastName },
-  }));
-
-  const todayCount = appointments.filter((a) => a.timeStatus === "today").length;
+  const filtered = query.trim()
+    ? clients.filter((c) => {
+        const q = query.toLowerCase();
+        return (
+          c.name.toLowerCase().includes(q) ||
+          (c.lastName ?? "").toLowerCase().includes(q) ||
+          (c.telefono ?? "").includes(q) ||
+          (c.instagram ?? "").toLowerCase().includes(q)
+        );
+      })
+    : clients;
 
   return (
-    <div className="max-w-4xl mx-auto px-3 pt-4 pb-4">
-      {/* HEADER */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-semibold">Agenda</h1>
-          <p className="text-sm mt-0.5 font-medium">
-            {loading ? (
-              <span className="inline-block h-3 w-24 bg-gray-100 rounded-full animate-pulse" />
-            ) : todayCount > 0 ? (
-              <span className="text-black">
-                Hoy · {todayCount} {todayCount === 1 ? "turno" : "turnos"}
-              </span>
-            ) : (
-              <span className="text-gray-400">Hoy · sin turnos</span>
-            )}
-          </p>
-        </div>
+    <div className="max-w-2xl mx-auto px-4 py-4">
+      <h1 className="text-xl font-semibold mb-4">
+        Clientes
+        <span className="ml-2 text-sm font-normal text-gray-400">
+          {filtered.length}
+        </span>
+      </h1>
 
-        {/* Toggle lista / grilla — solo para Mes */}
-        {view === "month" && (
-          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
-            <button
-              onClick={() => setGridMode(false)}
-              className={`p-1.5 rounded-lg transition ${!gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
-              title="Vista lista"
-            >
-              <LayoutList size={16} />
-            </button>
-            <button
-              onClick={() => setGridMode(true)}
-              className={`p-1.5 rounded-lg transition ${gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
-              title="Vista calendario"
-            >
-              <CalendarDays size={16} />
-            </button>
-          </div>
+      {/* Buscador */}
+      <div className="relative mb-4">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar por nombre, teléfono o Instagram…"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-gray-400 transition"
+        />
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="sm:hidden space-y-2">
+        {filtered.map((c) => (
+          <Link
+            key={c.id}
+            href={`/clients/${c.id}`}
+            className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:bg-gray-50 transition"
+          >
+            <div className="min-w-0">
+              <p className="font-medium text-sm truncate">
+                {c.name} {c.lastName ?? ""}
+              </p>
+
+              {c.telefono && (
+                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                  <Phone size={11} />
+                  {c.telefono}
+                </p>
+              )}
+              {!c.telefono && c.instagram && (
+                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                  <Instagram size={11} />
+                  {c.instagram}
+                </p>
+              )}
+
+              {c.lastAppointment && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Último:{" "}
+                  {format(new Date(c.lastAppointment), "d MMM yyyy", {
+                    locale: es,
+                  })}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0 ml-3">
+              <div className="text-right">
+                <p className="text-sm font-semibold">{c.totalAppointments}</p>
+                <p className="text-[10px] text-gray-400">turnos</p>
+              </div>
+              <ChevronRight size={16} className="text-gray-300" />
+            </div>
+          </Link>
+        ))}
+
+        {filtered.length === 0 && (
+          <p className="text-center text-gray-400 text-sm py-8">
+            {query ? "Sin resultados" : "Sin clientes aún"}
+          </p>
         )}
       </div>
 
-      {/* TOGGLE VIEWS — scroll horizontal en mobile */}
-      <div className="overflow-x-auto scrollbar-hide mb-5">
-        <div className="flex gap-1.5 w-max mx-auto px-1">
-          {VIEWS.map((v) => (
-            <button
-              key={v.key}
-              onClick={() => { setView(v.key); if (v.key !== "month") setGridMode(false); }}
-              className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition ${
-                view === v.key
-                  ? "bg-black text-white"
-                  : "border border-gray-200 text-gray-600"
-              }`}
-            >
-              {v.label}
-            </button>
-          ))}
-        </div>
+      {/* Desktop: tabla */}
+      <div className="hidden sm:block bg-white rounded-xl shadow overflow-hidden border border-gray-100">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th className="p-3 text-left font-medium text-gray-600">Nombre</th>
+              <th className="p-3 text-left font-medium text-gray-600">Contacto</th>
+              <th className="p-3 text-center font-medium text-gray-600">Turnos</th>
+              <th className="p-3 text-left font-medium text-gray-600">Último turno</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((c) => (
+              <tr key={c.id} className="border-t border-gray-50 hover:bg-gray-50 transition">
+                <td className="p-3">
+                  <Link href={`/clients/${c.id}`} className="font-medium hover:underline">
+                    {c.name} {c.lastName ?? ""}
+                  </Link>
+                </td>
+                <td className="p-3 text-gray-500">
+                  {c.telefono || c.instagram || "—"}
+                </td>
+                <td className="p-3 text-center font-medium">{c.totalAppointments}</td>
+                <td className="p-3 text-gray-500">
+                  {c.lastAppointment
+                    ? format(new Date(c.lastAppointment), "d MMM yyyy", { locale: es })
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      {/* SKELETON de carga */}
-      {loading && (
-        <div className="space-y-3 mt-2 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-4 w-20 bg-gray-100 rounded-full" />
-                <div className="h-7 w-7 bg-gray-100 rounded-full" />
-              </div>
-              <div className="space-y-2">
-                <div className="h-12 bg-gray-50 rounded-xl" />
-                {i === 1 && <div className="h-12 bg-gray-50 rounded-xl" />}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* VISTAS */}
-      {!loading && view === "month" && !gridMode && (
-        <CalendarGrid
-          appointments={calendarAppointments}
-          view="month"
-          onSelectAppointment={handleSelect}
-        />
-      )}
-
-      {!loading && view === "month" && gridMode && (
-        <CalendarMonthGrid
-          appointments={calendarAppointments}
-          onSelectAppointment={handleSelect}
-        />
-      )}
-
-      {!loading && view === "day" && (
-        <DayView
-          appointments={appointments}
-          onSelectAppointment={handleSelect}
-        />
-      )}
-
-      {!loading && view === "available" && (
-        <AvailabilityView
-          appointments={appointments}
-          onSelectAppointment={handleSelect}
-        />
-      )}
     </div>
   );
 }
