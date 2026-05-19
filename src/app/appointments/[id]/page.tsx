@@ -15,6 +15,7 @@ import {
   Save,
   Instagram,
   FileText,
+  ChevronLeft,
 } from "lucide-react";
 
 type Service = {
@@ -67,15 +68,12 @@ export default function EditAppointmentPage({
   useEffect(() => {
     async function loadData() {
       try {
-        // 🔥 CORREGIDO
         const ap = await axios.get(`/api/appointments/${id}`);
         const sv = await axios.get("/api/services");
-
         const a: Appointment = ap.data;
 
         setAppointment(a);
         setServices(Array.isArray(sv.data) ? sv.data : []);
-
         setName(a.name ?? "");
         setLastName(a.lastName ?? "");
         setTelefono(a.telefono ?? "");
@@ -86,191 +84,176 @@ export default function EditAppointmentPage({
 
         if (a.date) {
           const d = new Date(a.date);
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, "0");
-          const dd = String(d.getDate()).padStart(2, "0");
-          const hh = String(d.getHours()).padStart(2, "0");
-          const mi = String(d.getMinutes()).padStart(2, "0");
-
-          setDate(`${yyyy}-${mm}-${dd}`);
-          setTime(`${hh}:${mi}`);
+          setDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+          setTime(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
         }
       } catch (err) {
         console.error(err);
         alert("Error al cargar el turno");
       }
     }
-
     loadData();
   }, [id]);
 
   if (!appointment) {
-    return <p className="p-6 text-center text-gray-500">Cargando…</p>;
+    return (
+      <div className="flex items-center justify-center h-40">
+        <p className="text-sm text-gray-400">Cargando…</p>
+      </div>
+    );
   }
 
-  // 🔥 CÁLCULOS FINANCIEROS
   const totalServicio = appointment.servicePrice ?? 0;
-  const totalPagado =
-    appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+  const totalPagado = appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
   const restante = totalServicio - totalPagado;
 
   async function handleSave() {
-    if (!name.trim()) {
-      alert("El nombre es obligatorio");
-      return;
-    }
-
+    if (!name.trim()) { alert("El nombre es obligatorio"); return; }
     try {
       const payload: any = {
-        name: name.trim(),
-        lastName: lastName.trim(),
-        telefono: telefono.trim() || null,
-        instagram: instagram.trim() || null,
-        notes: notes.trim() || null,
-        serviceId,
-        status,
+        name: name.trim(), lastName: lastName.trim(),
+        telefono: telefono.trim() || null, instagram: instagram.trim() || null,
+        notes: notes.trim() || null, serviceId, status,
       };
-
-      if (date && time) {
-        payload.date = new Date(`${date}T${time}`);
-      }
-
+      if (date && time) payload.date = new Date(`${date}T${time}`);
       await axios.put(`/api/appointments/${id}`, payload);
-
       router.push("/admin");
-    } catch (err) {
-      console.error(err);
-      alert("Error al guardar");
-    }
+    } catch { alert("Error al guardar"); }
   }
 
   async function handleAddDeposit() {
     if (!depositAmount || Number(depositAmount) <= 0) return;
-
     try {
-      await axios.post(`/api/appointments/${id}/add-deposit`, {
-        amount: Number(depositAmount),
-      });
-
+      await axios.post(`/api/appointments/${id}/add-deposit`, { amount: Number(depositAmount) });
       router.refresh();
-    } catch (err) {
-      console.error(err);
-      alert("Error al agregar seña");
-    }
+    } catch { alert("Error al agregar seña"); }
   }
 
   async function handleCompletePayment() {
     try {
       await axios.post(`/api/appointments/${id}/complete-payment`);
       router.refresh();
-    } catch (err) {
-      console.error(err);
-      alert("Error al completar pago");
-    }
+    } catch { alert("Error al completar pago"); }
   }
 
   async function handleDelete() {
     if (!confirm("¿Eliminar el turno definitivamente?")) return;
-
     try {
       await axios.delete(`/api/appointments/${id}`);
       router.push("/admin");
-    } catch (err) {
-      console.error(err);
-      alert("No se pudo eliminar");
-    }
+    } catch { alert("No se pudo eliminar"); }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 pt-6 sm:pt-16">
-      <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 space-y-5 max-h-[85vh] overflow-y-auto">
-        <h1 className="text-lg font-semibold text-center">
-          Editar turno
-        </h1>
+    <div className="max-w-md mx-auto px-4 py-4">
+      {/* Back */}
+      <button
+        onClick={() => router.push("/admin")}
+        className="flex items-center gap-1 text-sm text-gray-500 mb-4 -ml-1"
+      >
+        <ChevronLeft size={16} />
+        Turnos
+      </button>
 
-        {/* DATOS */}
-        <Field icon={<User size={16} />} label="Nombre">
-          <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
-        </Field>
+      <h1 className="text-lg font-semibold mb-5">Editar turno</h1>
 
-        <Field icon={<User size={16} />} label="Apellido">
-          <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="input" />
-        </Field>
+      <div className="space-y-4">
+        {/* DATOS PERSONALES */}
+        <section className="bg-white rounded-2xl p-4 space-y-4 shadow-sm">
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Cliente</p>
+          <Field icon={<User size={15} />} label="Nombre">
+            <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
+          </Field>
+          <Field icon={<User size={15} />} label="Apellido">
+            <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="input" />
+          </Field>
+          <Field icon={<Phone size={15} />} label="Teléfono">
+            <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" />
+          </Field>
+          <Field icon={<Instagram size={15} />} label="Instagram">
+            <input value={instagram} onChange={(e) => setInstagram(e.target.value)} className="input" />
+          </Field>
+          <Field icon={<FileText size={15} />} label="Notas">
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="input" rows={2} />
+          </Field>
+        </section>
 
-        <Field icon={<Phone size={16} />} label="Teléfono">
-          <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" />
-        </Field>
+        {/* TURNO */}
+        <section className="bg-white rounded-2xl p-4 space-y-4 shadow-sm">
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Turno</p>
+          <Field icon={<Sparkles size={15} />} label="Servicio">
+            <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input">
+              <option value="">Seleccionar servicio</option>
+              {services.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </Field>
+          <Field icon={<CalendarClock size={15} />} label="Fecha">
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+          </Field>
+          <Field icon={<CalendarClock size={15} />} label="Hora">
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input" />
+          </Field>
+        </section>
 
-        <Field icon={<Instagram size={16} />} label="Instagram">
-          <input value={instagram} onChange={(e) => setInstagram(e.target.value)} className="input" />
-        </Field>
+        {/* PAGOS */}
+        <section className="bg-white rounded-2xl p-4 space-y-3 shadow-sm">
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Pagos</p>
 
-        <Field icon={<FileText size={16} />} label="Notas">
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="input" />
-        </Field>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Total servicio</span>
+            <span className="font-medium">${totalServicio}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Pagado</span>
+            <span className="font-medium text-green-600">${totalPagado}</span>
+          </div>
+          {restante > 0 && (
+            <div className="flex justify-between text-sm border-t pt-2">
+              <span className="text-gray-500">Restante</span>
+              <span className="font-semibold text-red-500">${restante}</span>
+            </div>
+          )}
+          {restante === 0 && totalServicio > 0 && (
+            <p className="text-sm text-green-600 font-medium text-center">Pago completo ✓</p>
+          )}
 
-        <Field icon={<Sparkles size={16} />} label="Servicio">
-          <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input">
-            <option value="">Seleccionar servicio</option>
-            {services.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </Field>
+          <Field icon={<BadgeCheck size={15} />} label="Agregar seña">
+            <input
+              type="number"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              className="input"
+              placeholder="Monto"
+            />
+          </Field>
 
-        {/* RESUMEN FINANCIERO */}
-        <div className="bg-gray-100 p-4 rounded-xl text-sm space-y-1">
-          <p>Total servicio: ${totalServicio}</p>
-          <p>Total pagado: ${totalPagado}</p>
-          <p className="font-semibold text-red-600">
-            Restante: ${restante}
-          </p>
-        </div>
-
-        {/* AGREGAR SEÑA */}
-        <Field icon={<BadgeCheck size={16} />} label="Agregar seña">
-          <input
-            type="number"
-            value={depositAmount}
-            onChange={(e) => setDepositAmount(e.target.value)}
-            className="input"
-            placeholder="Monto"
-          />
-        </Field>
-
-        <button
-          onClick={handleAddDeposit}
-          className="w-full bg-blue-600 text-white py-2 rounded-xl"
-        >
-          Agregar seña
-        </button>
-
-        {/* COMPLETAR PAGO */}
-        {restante > 0 && (
-          <button
-            onClick={handleCompletePayment}
-            className="w-full bg-green-600 text-white py-2 rounded-xl"
-          >
-            Completar pago
+          <button onClick={handleAddDeposit} className="w-full bg-gray-100 text-gray-800 py-2.5 rounded-xl text-sm font-medium">
+            Registrar seña
           </button>
-        )}
 
-        <div className="flex gap-3 pt-2">
+          {restante > 0 && (
+            <button onClick={handleCompletePayment} className="w-full bg-green-600 text-white py-2.5 rounded-xl text-sm font-medium">
+              Marcar pago completo
+            </button>
+          )}
+        </section>
+
+        {/* ACCIONES */}
+        <div className="flex gap-3 pb-2">
           <button
             onClick={handleDelete}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-red-600 w-full"
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-red-200 text-red-500 flex-1 text-sm"
           >
-            <Trash2 size={16} />
+            <Trash2 size={15} />
             Eliminar
           </button>
-
           <button
             onClick={handleSave}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-black text-white w-full"
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-black text-white flex-1 text-sm font-medium"
           >
-            <Save size={16} />
+            <Save size={15} />
             Guardar
           </button>
         </div>
@@ -290,7 +273,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1 w-full">
-      <label className="flex items-center gap-2 text-xs text-gray-500">
+      <label className="flex items-center gap-1.5 text-xs text-gray-400">
         {icon}
         {label}
       </label>
