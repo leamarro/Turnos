@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Phone, Instagram, ChevronRight } from "lucide-react";
+import { Phone, Instagram, ChevronRight, Search } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -20,6 +20,7 @@ type Client = {
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     fetch("/api/clients", { cache: "no-store" })
@@ -28,18 +29,42 @@ export default function ClientsPage() {
       .catch(console.error);
   }, []);
 
+  const filtered = query.trim()
+    ? clients.filter((c) => {
+        const q = query.toLowerCase();
+        return (
+          c.name.toLowerCase().includes(q) ||
+          (c.lastName ?? "").toLowerCase().includes(q) ||
+          (c.telefono ?? "").includes(q) ||
+          (c.instagram ?? "").toLowerCase().includes(q)
+        );
+      })
+    : clients;
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
       <h1 className="text-xl font-semibold mb-4">
         Clientes
         <span className="ml-2 text-sm font-normal text-gray-400">
-          {clients.length}
+          {filtered.length}
         </span>
       </h1>
 
+      {/* Buscador */}
+      <div className="relative mb-4">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar por nombre, teléfono o Instagram…"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-gray-400 transition"
+        />
+      </div>
+
       {/* Mobile: cards */}
       <div className="sm:hidden space-y-2">
-        {clients.map((c) => (
+        {filtered.map((c) => (
           <Link
             key={c.id}
             href={`/clients/${c.id}`}
@@ -83,9 +108,9 @@ export default function ClientsPage() {
           </Link>
         ))}
 
-        {clients.length === 0 && (
+        {filtered.length === 0 && (
           <p className="text-center text-gray-400 text-sm py-8">
-            Sin clientes aún
+            {query ? "Sin resultados" : "Sin clientes aún"}
           </p>
         )}
       </div>
@@ -102,7 +127,7 @@ export default function ClientsPage() {
             </tr>
           </thead>
           <tbody>
-            {clients.map((c) => (
+            {filtered.map((c) => (
               <tr key={c.id} className="border-t border-gray-50 hover:bg-gray-50 transition">
                 <td className="p-3">
                   <Link href={`/clients/${c.id}`} className="font-medium hover:underline">
