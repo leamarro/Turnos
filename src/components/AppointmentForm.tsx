@@ -65,6 +65,7 @@ export default function AppointmentForm() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [createdDates, setCreatedDates] = useState<string[]>([]);
+  const [takenTimes, setTakenTimes] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -79,12 +80,23 @@ export default function AppointmentForm() {
     setForm((cur) => ({ ...cur, [key]: value }));
   }
 
+  async function handleDateChange(date: string) {
+    updateField("date", date);
+    updateField("times", []);
+    if (!date) { setTakenTimes([]); return; }
+    try {
+      const res = await axios.get(`/api/appointments/taken?date=${date}`);
+      setTakenTimes(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setTakenTimes([]);
+    }
+  }
+
   function toggleTime(slot: string) {
+    if (takenTimes.includes(slot)) return;
     setForm((cur) => {
       const already = cur.times.includes(slot);
-      if (already) return { ...cur, times: cur.times.filter((t) => t !== slot) };
-      if (cur.times.length >= 2) return cur; // máximo 2
-      return { ...cur, times: [...cur.times, slot] };
+      return { ...cur, times: already ? cur.times.filter((t) => t !== slot) : [...cur.times, slot] };
     });
   }
 
@@ -240,7 +252,7 @@ export default function AppointmentForm() {
           type="date"
           value={form.date}
           min={getTodayInputValue()}
-          onChange={(e) => { updateField("date", e.target.value); updateField("times", []); }}
+          onChange={(e) => handleDateChange(e.target.value)}
           className="booking-input"
         />
       </div>
@@ -249,27 +261,26 @@ export default function AppointmentForm() {
       <div className="space-y-2">
         <div className="flex items-baseline justify-between">
           <label className="label">Horario *</label>
-          <span className="text-xs text-gray-400">
-            {form.times.length === 0 && "Elegí hasta 2"}
-            {form.times.length === 1 && "Podés elegir uno más"}
-            {form.times.length === 2 && "2 turnos seleccionados"}
-          </span>
+          {form.times.length > 0 && (
+            <span className="text-xs text-gray-400">{form.times.length} seleccionado{form.times.length > 1 ? "s" : ""}</span>
+          )}
         </div>
         <div className="grid grid-cols-4 gap-1.5">
           {timeSlots.map((slot) => {
             const selected = form.times.includes(slot);
-            const disabled = !selected && form.times.length >= 2;
+            const taken = takenTimes.includes(slot);
             return (
               <button
                 type="button"
                 key={slot}
                 onClick={() => toggleTime(slot)}
-                disabled={disabled}
+                disabled={taken}
+                title={taken ? "Horario ocupado" : undefined}
                 className={`py-2 rounded-lg text-sm font-medium transition ${
-                  selected
+                  taken
+                    ? "bg-gray-100 text-gray-300 line-through cursor-not-allowed"
+                    : selected
                     ? "bg-black text-white"
-                    : disabled
-                    ? "bg-gray-50 text-gray-300 border border-gray-100"
                     : "bg-white text-gray-700 border border-gray-200 active:bg-gray-100"
                 }`}
               >
@@ -317,7 +328,7 @@ export default function AppointmentForm() {
         className="w-full bg-black text-white py-3.5 rounded-xl font-medium text-sm disabled:opacity-60 flex items-center justify-center gap-2"
       >
         {submitting && <Loader2 size={16} className="animate-spin" />}
-        {submitting ? "Guardando..." : form.times.length === 2 ? "Guardar 2 turnos" : "Guardar turno"}
+        {submitting ? "Guardando..." : form.times.length > 1 ? `Guardar ${form.times.length} turnos` : "Guardar turno"}
       </button>
     </form>
   );
