@@ -1,9 +1,11 @@
-import AppointmentForm from "@/components/AppointmentForm";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-[#f6f1ea] px-4 py-10 sm:px-6 lg:px-8">
-      <AppointmentForm />
-    </div>
-  );
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const token = cookies().get(getSessionCookieName())?.value;
+  const isLoggedIn = await verifySessionToken(token);
+  redirect(isLoggedIn ? "/home" : "/login");
 }
