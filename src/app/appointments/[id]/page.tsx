@@ -106,7 +106,9 @@ export default function EditAppointmentPage({
     );
   }
 
-  const totalServicio = appointment.servicePrice ?? 0;
+  const totalServicio = Math.round(appointment.service?.price ?? appointment.servicePrice ?? 0);
+  const precioOriginal = appointment.servicePrice ?? 0;
+  const precioCambio = precioOriginal > 0 && precioOriginal !== totalServicio;
   const totalPagado = appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
   const restante = totalServicio - totalPagado;
 
@@ -288,7 +290,12 @@ export default function EditAppointmentPage({
 
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Total servicio</span>
-            <span className="font-medium">${totalServicio}</span>
+            <div className="flex items-center gap-2">
+              {precioCambio && (
+                <span className="text-gray-300 line-through text-xs">${precioOriginal}</span>
+              )}
+              <span className="font-medium">${totalServicio}</span>
+            </div>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Pagado</span>
