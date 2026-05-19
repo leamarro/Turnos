@@ -78,7 +78,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-3 pt-4 pb-16">
+    <div className="max-w-4xl mx-auto px-3 pt-4 pb-4">
       {/* HEADER */}
       <div className="text-center mb-5">
         <h1 className="text-xl font-semibold">Agenda</h1>
