@@ -23,7 +23,6 @@ type View = "month" | "week" | "day" | "available";
 
 const VIEWS: { key: View; label: string }[] = [
   { key: "month", label: "Mes" },
-  { key: "week", label: "Semana" },
   { key: "day", label: "Día" },
   { key: "available", label: "Disponibles" },
 ];
@@ -85,8 +84,8 @@ export default function HomePage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Agenda</h1>
 
-        {/* Toggle lista / grilla — solo para Mes y Semana */}
-        {(view === "month" || view === "week") && (
+        {/* Toggle lista / grilla — solo para Mes */}
+        {view === "month" && (
           <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
             <button
               onClick={() => setGridMode(false)}
@@ -112,7 +111,7 @@ export default function HomePage() {
           {VIEWS.map((v) => (
             <button
               key={v.key}
-              onClick={() => { setView(v.key); if (v.key !== "month" && v.key !== "week") setGridMode(false); }}
+              onClick={() => { setView(v.key); if (v.key !== "month") setGridMode(false); }}
               className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition ${
                 view === v.key
                   ? "bg-black text-white"
@@ -126,15 +125,15 @@ export default function HomePage() {
       </div>
 
       {/* VISTAS */}
-      {(view === "month" || view === "week") && !gridMode && (
+      {view === "month" && !gridMode && (
         <CalendarGrid
           appointments={calendarAppointments}
-          view={view}
+          view="month"
           onSelectAppointment={handleSelect}
         />
       )}
 
-      {(view === "month" || view === "week") && gridMode && (
+      {view === "month" && gridMode && (
         <WeekGridView
           appointments={appointments}
           onSelectAppointment={handleSelect}
