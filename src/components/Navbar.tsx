@@ -158,34 +158,37 @@ export default function Navbar() {
         className="sm:hidden fixed bottom-0 left-0 w-full z-50 bg-[#F5F3EE]/95 backdrop-blur border-t border-gray-200"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="flex items-stretch justify-around h-16">
-          {/* Izquierda */}
-          {tabs.slice(0, 2).map((tab) => (
-            <NavTab key={tab.href} tab={tab} pathname={pathname} />
-          ))}
+        <div className="relative flex items-stretch justify-around h-16">
+          {/* Tabs izquierda */}
+          <div className="flex flex-1">
+            {tabs.slice(0, 2).map((tab) => (
+              <NavTab key={tab.href} tab={tab} pathname={pathname} />
+            ))}
+          </div>
 
-          {/* Botón central */}
+          {/* Espacio central para el botón */}
+          <div className="w-16 shrink-0" />
+
+          {/* Tabs derecha */}
+          <div className="flex flex-1">
+            {tabs.slice(2).map((tab) => (
+              <NavTab key={tab.href} tab={tab} pathname={pathname} />
+            ))}
+          </div>
+
+          {/* FAB central */}
           <Link
             href="/appointments"
-            className="flex flex-col items-center justify-center flex-1 py-2 active:opacity-70 transition-opacity"
+            className="absolute left-1/2 -translate-x-1/2 -top-5 z-10 active:scale-95 transition-transform"
           >
-            <div className="bg-black rounded-full w-11 h-11 flex items-center justify-center -mt-4 shadow-lg">
+            <div className="bg-black rounded-full w-14 h-14 flex items-center justify-center shadow-xl border-4 border-[#F5F3EE]">
               <Plus
-                size={22}
+                size={24}
                 className="text-white"
-                strokeWidth={2.5}
+                strokeWidth={2.7}
               />
             </div>
-
-            <span className="text-[9px] leading-none text-gray-400 mt-1">
-              Nuevo
-            </span>
           </Link>
-
-          {/* Derecha */}
-          {tabs.slice(2).map((tab) => (
-            <NavTab key={tab.href} tab={tab} pathname={pathname} />
-          ))}
         </div>
       </nav>
     </>
