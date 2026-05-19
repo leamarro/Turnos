@@ -163,7 +163,7 @@ export default function EditAppointmentPage({
   }
 
   function handleSendWhatsapp() {
-    if (!telefono) return;
+    if (!appointment || !telefono) return;
     const d = appointment.date ? new Date(appointment.date) : null;
     const fechaHora = d ? format(d, "dd/MM/yyyy HH:mm", { locale: es }) : "—";
     const msg = `Hola ${name} ${lastName}! 👋✨\n\nTu turno está confirmado 💄\n\n🧾 Servicio: ${appointment.service?.name ?? "—"}\n📅 Fecha y hora: ${fechaHora}\n\n¡Te esperamos! 💕`;
@@ -172,7 +172,7 @@ export default function EditAppointmentPage({
   }
 
   async function handleSendInstagram() {
-    if (!instagram) return;
+    if (!appointment || !instagram) return;
     const username = instagram.replace("@", "");
     const d = appointment.date ? new Date(appointment.date) : null;
     const fechaHora = d ? format(d, "dd/MM/yyyy HH:mm", { locale: es }) : "—";
