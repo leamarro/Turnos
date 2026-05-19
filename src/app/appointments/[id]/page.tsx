@@ -5,6 +5,8 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import {
   User,
   Phone,
@@ -16,6 +18,7 @@ import {
   Instagram,
   FileText,
   ChevronLeft,
+  MessageCircle,
 } from "lucide-react";
 
 type Service = {
@@ -144,6 +147,38 @@ export default function EditAppointmentPage({
     } catch { alert("No se pudo eliminar"); }
   }
 
+  async function handleQuickStatus(newStatus: string) {
+    try {
+      const payload: any = {
+        name: name.trim(), lastName: lastName.trim(),
+        telefono: telefono.trim() || null, instagram: instagram.trim() || null,
+        notes: notes.trim() || null, serviceId, status: newStatus,
+      };
+      if (date && time) payload.date = new Date(`${date}T${time}`);
+      await axios.put(`/api/appointments/${id}`, payload);
+      setStatus(newStatus);
+    } catch { alert("Error al actualizar estado"); }
+  }
+
+  function handleSendWhatsapp() {
+    if (!telefono) return;
+    const d = appointment.date ? new Date(appointment.date) : null;
+    const fechaHora = d ? format(d, "dd/MM/yyyy HH:mm", { locale: es }) : "—";
+    const msg = `Hola ${name} ${lastName}! 👋✨\n\nTu turno está confirmado 💄\n\n🧾 Servicio: ${appointment.service?.name ?? "—"}\n📅 Fecha y hora: ${fechaHora}\n\n¡Te esperamos! 💕`;
+    const phone = telefono.replace(/\D/g, "");
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
+  }
+
+  async function handleSendInstagram() {
+    if (!instagram) return;
+    const username = instagram.replace("@", "");
+    const d = appointment.date ? new Date(appointment.date) : null;
+    const fechaHora = d ? format(d, "dd/MM/yyyy HH:mm", { locale: es }) : "—";
+    const msg = `Hola ${name}! 💕✨\n\nTu turno está confirmado 💄\n\n🧾 Servicio: ${appointment.service?.name ?? "—"}\n📅 Fecha y hora: ${fechaHora}\n\n¡Te esperamos! 💖`;
+    try { await navigator.clipboard.writeText(msg); } catch { /* clipboard no disponible */ }
+    window.open(`https://www.instagram.com/${username}/`, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <div className="max-w-md mx-auto px-4 py-4">
       {/* Back */}
@@ -196,6 +231,56 @@ export default function EditAppointmentPage({
             <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input" />
           </Field>
         </section>
+
+        {/* ESTADO */}
+        <section className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Estado</p>
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+              status === "completed" ? "bg-gray-100 text-gray-600" :
+              status === "cancelled" ? "bg-red-50 text-red-500" :
+              status === "confirmed" ? "bg-green-50 text-green-600" :
+              "bg-yellow-50 text-yellow-600"
+            }`}>
+              {status === "completed" ? "Realizado" :
+               status === "cancelled" ? "Cancelado" :
+               status === "confirmed" ? "Confirmado" : "Pendiente"}
+            </span>
+          </div>
+          {(status === "confirmed" || status === "pending") && (
+            <button
+              onClick={() => handleQuickStatus("completed")}
+              className="w-full py-2.5 rounded-xl bg-black text-white text-sm font-medium active:opacity-80 transition"
+            >
+              Realizado ✓
+            </button>
+          )}
+        </section>
+
+        {/* CONFIRMAR */}
+        {(telefono || instagram) && (
+          <section className="bg-white rounded-2xl p-4 space-y-2.5 shadow-sm">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Enviar confirmación</p>
+            {telefono && (
+              <button
+                onClick={handleSendWhatsapp}
+                className="w-full flex items-center justify-center gap-2 bg-green-500 text-white py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
+              >
+                <MessageCircle size={15} />
+                Confirmar por WhatsApp
+              </button>
+            )}
+            {instagram && (
+              <button
+                onClick={handleSendInstagram}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
+              >
+                <Instagram size={15} />
+                Copiar mensaje · Instagram
+              </button>
+            )}
+          </section>
+        )}
 
         {/* PAGOS */}
         <section className="bg-white rounded-2xl p-4 space-y-3 shadow-sm">
