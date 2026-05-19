@@ -6,6 +6,7 @@ import CalendarGrid from "@/components/CalendarGrid";
 import DayView from "@/components/DayView";
 import AvailabilityView from "@/components/AvailabilityView";
 import WeekGridView from "@/components/WeekGridView";
+import CalendarMonthGrid from "@/components/CalendarMonthGrid";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutList, CalendarDays } from "lucide-react";
@@ -134,8 +135,8 @@ export default function HomePage() {
       )}
 
       {view === "month" && gridMode && (
-        <WeekGridView
-          appointments={appointments}
+        <CalendarMonthGrid
+          appointments={calendarAppointments}
           onSelectAppointment={handleSelect}
         />
       )}
