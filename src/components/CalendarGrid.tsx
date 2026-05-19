@@ -35,7 +35,6 @@ export default function CalendarGrid({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showPastDays, setShowPastDays] = useState(false);
 
   const today = startOfDay(new Date());
 
@@ -66,13 +65,7 @@ export default function CalendarGrid({
   const getMonthDays = () => {
     const start = startOfMonth(currentDate);
     const end = endOfMonth(currentDate);
-    const allDays = eachDayOfInterval({ start, end });
-
-    if (isMobile && !showPastDays) {
-      return allDays.filter((d) => d >= today);
-    }
-
-    return allDays;
+    return eachDayOfInterval({ start, end });
   };
 
   const days = view === "week" ? getWeekDays() : getMonthDays();
@@ -100,17 +93,14 @@ export default function CalendarGrid({
       view === "week" ? addDays(d, -7) : addDays(d, -30)
     );
 
-  const goToday = () => {
-    setCurrentDate(new Date());
-    setShowPastDays(false);
-  };
+  const goToday = () => setCurrentDate(new Date());
 
   if (!isClient) return null;
 
   /* ================= MOBILE ================= */
   if (isMobile) {
     return (
-      <div className="relative space-y-4 mt-4 pb-20">
+      <div className="relative space-y-4 mt-2 pt-1 pb-4">
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button onClick={prev} className="text-gray-500 text-lg">←</button>
@@ -126,21 +116,6 @@ export default function CalendarGrid({
           <button onClick={next} className="text-gray-500 text-lg">→</button>
         </div>
 
-        {/* ACTIONS */}
-        {view === "month" && (
-          <div>
-            <button
-              onClick={() => setShowPastDays((v) => !v)}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all active:scale-95 ${
-                showPastDays
-                  ? "bg-black text-white border-black"
-                  : "border-gray-300 text-gray-600"
-              }`}
-            >
-              {showPastDays ? "Ocultar días anteriores" : "Ver días anteriores"}
-            </button>
-          </div>
-        )}
 
         {/* DAYS */}
         {days.map((day) => {
