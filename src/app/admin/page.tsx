@@ -159,7 +159,7 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
+    <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
 
       {/* FILTROS */}
