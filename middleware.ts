@@ -16,7 +16,8 @@ function isPublicPath(req: NextRequest) {
 
   const isPublicBookingApi =
     (pathname === "/api/services" && req.method === "GET") ||
-    (pathname === "/api/appointments" && req.method === "POST");
+    (pathname === "/api/appointments" && req.method === "POST") ||
+    (pathname === "/api/appointments/taken" && req.method === "GET");
 
   return (
     isPublicBookingApi ||
