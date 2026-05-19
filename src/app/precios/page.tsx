@@ -45,7 +45,7 @@ export default function PreciosPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-lg mx-auto px-4 pt-20 pb-16">
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-6">
 
         <h1 className="text-2xl font-semibold mb-8 text-center">
           Precios
