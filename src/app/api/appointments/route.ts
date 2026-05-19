@@ -45,27 +45,13 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET() {
   try {
-    const appointment = await prisma.appointment.findUnique({
-      where: { id: params.id },
-      include: {
-        service: true,
-        payments: true,
-      },
+    const appointments = await prisma.appointment.findMany({
+      include: { service: true, payments: true },
+      orderBy: { date: "desc" },
     });
-
-    if (!appointment) {
-      return NextResponse.json(
-        { error: "Turno no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(appointment);
+    return NextResponse.json(appointments);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
