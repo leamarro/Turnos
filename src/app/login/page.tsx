@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState } from "react";
+import Image from "next/image";
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
 
@@ -43,9 +44,10 @@ export default function LoginPage() {
         onSubmit={handleLogin}
         className="relative w-full max-w-sm bg-white rounded-2xl shadow-lg p-8 space-y-6"
       >
-        <h1 className="text-2xl font-semibold text-center">
-          Acceso Admin
-        </h1>
+        <div className="flex flex-col items-center gap-2">
+          <Image src="/logo.png" alt="Logo" width={80} height={80} priority />
+          <h1 className="text-xl font-semibold">Acceso Admin</h1>
+        </div>
 
         <div>
           <label className="block text-sm text-gray-500 mb-1">
