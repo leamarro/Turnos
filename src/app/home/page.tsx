@@ -32,6 +32,7 @@ export default function HomePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [view, setView] = useState<View>("month");
   const [gridMode, setGridMode] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -64,6 +65,8 @@ export default function HomePage() {
         }));
       } catch {
         setAppointments([]);
+      } finally {
+        setLoading(false);
       }
     };
     fetchAppointments();
@@ -88,7 +91,9 @@ export default function HomePage() {
         <div>
           <h1 className="text-xl font-semibold">Agenda</h1>
           <p className="text-sm mt-0.5 font-medium">
-            {todayCount > 0 ? (
+            {loading ? (
+              <span className="inline-block h-3 w-24 bg-gray-100 rounded-full animate-pulse" />
+            ) : todayCount > 0 ? (
               <span className="text-black">
                 Hoy · {todayCount} {todayCount === 1 ? "turno" : "turnos"}
               </span>
@@ -138,8 +143,26 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* SKELETON de carga */}
+      {loading && (
+        <div className="space-y-3 mt-2 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-4 w-20 bg-gray-100 rounded-full" />
+                <div className="h-7 w-7 bg-gray-100 rounded-full" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-12 bg-gray-50 rounded-xl" />
+                {i === 1 && <div className="h-12 bg-gray-50 rounded-xl" />}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* VISTAS */}
-      {view === "month" && !gridMode && (
+      {!loading && view === "month" && !gridMode && (
         <CalendarGrid
           appointments={calendarAppointments}
           view="month"
@@ -147,21 +170,21 @@ export default function HomePage() {
         />
       )}
 
-      {view === "month" && gridMode && (
+      {!loading && view === "month" && gridMode && (
         <CalendarMonthGrid
           appointments={calendarAppointments}
           onSelectAppointment={handleSelect}
         />
       )}
 
-      {view === "day" && (
+      {!loading && view === "day" && (
         <DayView
           appointments={appointments}
           onSelectAppointment={handleSelect}
         />
       )}
 
-      {view === "available" && (
+      {!loading && view === "available" && (
         <AvailabilityView
           appointments={appointments}
           onSelectAppointment={handleSelect}
