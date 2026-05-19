@@ -79,11 +79,24 @@ export default function HomePage() {
     user: { name: a.name, lastName: a.lastName },
   }));
 
+  const todayCount = appointments.filter((a) => a.timeStatus === "today").length;
+
   return (
     <div className="max-w-4xl mx-auto px-3 pt-4 pb-4">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Agenda</h1>
+        <div>
+          <h1 className="text-xl font-semibold">Agenda</h1>
+          <p className="text-sm mt-0.5 font-medium">
+            {todayCount > 0 ? (
+              <span className="text-black">
+                Hoy · {todayCount} {todayCount === 1 ? "turno" : "turnos"}
+              </span>
+            ) : (
+              <span className="text-gray-400">Hoy · sin turnos</span>
+            )}
+          </p>
+        </div>
 
         {/* Toggle lista / grilla — solo para Mes */}
         {view === "month" && (
