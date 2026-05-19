@@ -36,10 +36,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(appointment, { status: 201 });
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    console.error("Error en POST /api/appointments:", error);
     return NextResponse.json(
-      { error: "Error al crear el turno" },
+      { error: error?.message || "Error al crear el turno" },
       { status: 500 }
     );
   }
