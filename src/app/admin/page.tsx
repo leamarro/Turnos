@@ -137,7 +137,7 @@ export default function AdminPanel() {
 
   async function deleteAppointment(id: string) {
     if (!confirm("¿Eliminar este turno?")) return;
-    await axios.delete(`/api/appointments?id=${id}`);
+    await axios.delete(`/api/appointments/${id}`);
     fetchAppointments();
   }
 
