@@ -11,7 +11,7 @@ import {
   Users,
   BarChart2,
   Plus,
-  BadgeDollarSign,
+  CircleDollarSign,
 } from "lucide-react";
 
 const tabs = [
@@ -19,7 +19,7 @@ const tabs = [
   { href: "/admin", icon: Calendar, label: "Turnos" },
   { href: "/clients", icon: Users, label: "Clientes" },
   { href: "/dashboard", icon: BarChart2, label: "Stats" },
-  { href: "/precios", icon: BadgeDollarSign, label: "Precios" },
+  { href: "/precios", icon: CircleDollarSign, label: "Precios" },
 ];
 
 function getPageTitle(pathname: string) {
