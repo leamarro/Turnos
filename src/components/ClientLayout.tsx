@@ -14,7 +14,7 @@ export default function ClientLayout({
   return (
     <>
       {!hideNavbar && <Navbar />}
-      <main className={!hideNavbar ? "pt-20" : ""}>
+      <main className={hideNavbar ? "" : "pt-12 pb-safe-nav sm:pt-14 sm:pb-0"}>
         {children}
       </main>
     </>
