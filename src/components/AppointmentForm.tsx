@@ -101,10 +101,8 @@ export default function AppointmentForm() {
   }
 
   function validate() {
-    if (!form.name.trim() || !form.lastName.trim() || !form.telefono.trim() || !form.serviceId || !form.date || form.times.length === 0)
+    if (!form.name.trim() || !form.serviceId || !form.date || form.times.length === 0)
       return "Completá los datos obligatorios.";
-    if (form.telefono.length < 8)
-      return "Revisá el teléfono (solo números, sin 0 ni 15).";
     for (const t of form.times) {
       const dt = new Date(`${form.date}T${t}:00`);
       if (dt.getTime() < Date.now()) return "Elegí una fecha y hora futuras.";
@@ -120,13 +118,15 @@ export default function AppointmentForm() {
     setMessage("");
     setSubmitting(true);
 
-    const telefonoFinal = form.telefono.startsWith("54")
-      ? `+${form.telefono}`
-      : `+54${form.telefono}`;
+    const telefonoFinal = form.telefono
+      ? form.telefono.startsWith("54")
+        ? `+${form.telefono}`
+        : `+54${form.telefono}`
+      : null;
 
     const base = {
       name: form.name.trim(),
-      lastName: form.lastName.trim(),
+      lastName: form.lastName.trim() || null,
       telefono: telefonoFinal,
       instagram: form.instagram.trim() || null,
       serviceId: form.serviceId,
@@ -194,14 +194,14 @@ export default function AppointmentForm() {
               placeholder="Nombre" className="booking-input" autoComplete="given-name" />
           </div>
           <div>
-            <label className="label">Apellido *</label>
+            <label className="label">Apellido</label>
             <input value={form.lastName} onChange={(e) => updateField("lastName", e.target.value)}
               placeholder="Apellido" className="booking-input" autoComplete="family-name" />
           </div>
         </div>
 
         <div>
-          <label className="label">Teléfono *</label>
+          <label className="label">Teléfono</label>
           <input value={form.telefono}
             onChange={(e) => updateField("telefono", normalizePhone(e.target.value))}
             placeholder="1123456789" inputMode="tel" className="booking-input" />

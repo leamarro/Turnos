@@ -33,7 +33,7 @@ export default function AppointmentForm() {
     e.preventDefault();
     setMessage("");
 
-    if (!name || !telefono || !date || !time || !serviceId) {
+    if (!name || !date || !time || !serviceId) {
       setMessage("Por favor completá todos los campos.");
       return;
     }

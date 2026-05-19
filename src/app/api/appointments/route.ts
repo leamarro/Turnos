@@ -1,6 +1,50 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const userData = body.user || body;
+
+    let servicePrice: number | undefined;
+    if (body.serviceId) {
+      const svc = await prisma.service.findUnique({ where: { id: body.serviceId } });
+      if (svc) servicePrice = Math.round(svc.price);
+    }
+
+    const appointment = await prisma.appointment.create({
+      data: {
+        name: userData.name || null,
+        lastName: userData.lastName || null,
+        telefono: userData.telefono || null,
+        instagram: body.instagram || null,
+        notes: body.notes || null,
+        serviceId: body.serviceId,
+        servicePrice,
+        date: new Date(body.date),
+      },
+    });
+
+    if (body.depositAmount) {
+      await prisma.payment.create({
+        data: {
+          amount: Number(body.depositAmount),
+          method: "Efectivo",
+          appointmentId: appointment.id,
+        },
+      });
+    }
+
+    return NextResponse.json(appointment, { status: 201 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Error al crear el turno" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
