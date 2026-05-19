@@ -231,6 +231,11 @@ input:focus, select:focus, textarea:focus {
   appearance: none;
 }
 
+/* Padding seguro para bottom nav en iOS (home indicator) */
+.pb-safe-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
