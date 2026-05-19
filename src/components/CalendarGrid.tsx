@@ -197,7 +197,7 @@ export default function CalendarGrid({
         {/* 🔘 BOTÓN HOY FIJO */}
         <button
           onClick={goToday}
-          className="fixed bottom-6 right-4 z-50 bg-black text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium transition active:scale-95"
+          className="fixed bottom-24 right-4 sm:bottom-6 z-50 bg-black text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium transition active:scale-95"
         >
           Hoy
         </button>
