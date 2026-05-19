@@ -3,6 +3,8 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 type Appointment = {
   id: string;
@@ -30,6 +32,8 @@ export default function ClientDetail({
   const [client, setClient] = useState<Client | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetch(`/api/clients/${params.id}`, { cache: "no-store" })
@@ -49,6 +53,18 @@ export default function ClientDetail({
         setLoading(false);
       });
   }, [params.id]);
+
+  async function handleDelete() {
+    if (!confirm(`¿Borrar a ${client?.name} ${client?.lastName ?? ""} y todos sus turnos?`)) return;
+    setDeleting(true);
+    try {
+      await axios.delete(`/api/clients/${params.id}`);
+      router.push("/clients");
+    } catch {
+      alert("Error al borrar el cliente");
+      setDeleting(false);
+    }
+  }
 
   if (loading) return <p className="p-6">Cargando...</p>;
 
@@ -76,7 +92,16 @@ export default function ClientDetail({
           : "Sin contacto"}
       </p>
 
-      <h2 className="font-semibold mb-3">Historial de turnos</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold">Historial de turnos</h2>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="text-xs text-red-500 border border-red-200 px-3 py-1 rounded-full disabled:opacity-50"
+        >
+          {deleting ? "Borrando..." : "Borrar cliente"}
+        </button>
+      </div>
 
       {client.appointments.length === 0 ? (
         <p className="text-gray-500">
