@@ -30,6 +30,7 @@ export default function CalendarGrid({
 }) {
   const today = startOfDay(new Date());
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showPastDays, setShowPastDays] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -41,10 +42,13 @@ export default function CalendarGrid({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const days = eachDayOfInterval({
+  const allDays = eachDayOfInterval({
     start: startOfMonth(currentDate),
     end: endOfMonth(currentDate),
   });
+  const days = isMobile && !showPastDays
+    ? allDays.filter((d) => d >= today)
+    : allDays;
 
   const getAppointmentsByDay = (day: Date) =>
     appointments
@@ -53,7 +57,7 @@ export default function CalendarGrid({
 
   const prev = () => setCurrentDate((d) => addDays(startOfMonth(d), -1));
   const next = () => setCurrentDate((d) => addDays(endOfMonth(d), 1));
-  const goToday = () => setCurrentDate(new Date());
+  const goToday = () => { setCurrentDate(new Date()); setShowPastDays(false); };
 
   if (!isClient) return null;
 
@@ -71,6 +75,18 @@ export default function CalendarGrid({
           </h2>
           <button onClick={next} className="p-2 active:bg-gray-100 rounded-full transition">
             <ChevronRight size={20} className="text-gray-500" />
+          </button>
+        </div>
+
+        {/* Filtro días anteriores */}
+        <div>
+          <button
+            onClick={() => setShowPastDays((v) => !v)}
+            className={`text-xs px-3 py-1.5 rounded-full border transition active:scale-95 ${
+              showPastDays ? "bg-black text-white border-black" : "border-gray-300 text-gray-600"
+            }`}
+          >
+            {showPastDays ? "Ocultar días anteriores" : "Ver días anteriores"}
           </button>
         </div>
 
