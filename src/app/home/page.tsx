@@ -16,7 +16,7 @@ type Appointment = {
   date: string;
   name: string;
   lastName: string;
-  service: { name: string };
+  service: { name: string; color: string; id: string };
   timeStatus: "past" | "today" | "future";
 };
 
@@ -62,7 +62,11 @@ export default function HomePage() {
           date: date.toISOString(),
           name: a.name ?? "",
           lastName: a.lastName ?? "",
-          service: { name: a.service?.name ?? "" },
+          service: {
+            name: a.service?.name ?? "",
+            color: a.service?.color ?? "#000000",
+            id: a.service?.id ?? "",
+          },
           timeStatus,
         };
       }));
