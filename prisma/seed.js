@@ -11,16 +11,19 @@ async function main() {
       name: "Perfilado",
       duration: 30,
       price: randomPrice(5000, 9000),
+      color: "#E8A87C",
     },
     {
       name: "Maquillaje",
       duration: 60,
       price: randomPrice(8000, 15000),
+      color: "#D495A7",
     },
     {
       name: "Prueba maquillaje",
       duration: 45,
       price: randomPrice(6000, 12000),
+      color: "#9FB4C7",
     },
   ];
 
