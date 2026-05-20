@@ -12,6 +12,7 @@ import {
   BarChart2,
   Plus,
   CircleDollarSign,
+  Sparkles,
 } from "lucide-react";
 
 const tabs = [
@@ -19,6 +20,7 @@ const tabs = [
   { href: "/admin", icon: Calendar, label: "Turnos" },
   { href: "/clients", icon: Users, label: "Clientes" },
   { href: "/dashboard", icon: BarChart2, label: "Stats" },
+  { href: "/services", icon: Sparkles, label: "Servicios" },
   { href: "/precios", icon: CircleDollarSign, label: "Precios" },
 ];
 
@@ -27,6 +29,7 @@ function getPageTitle(pathname: string) {
   if (pathname.startsWith("/admin")) return "Turnos";
   if (pathname.startsWith("/clients")) return "Clientes";
   if (pathname === "/dashboard") return "Dashboard";
+  if (pathname.startsWith("/services")) return "Servicios";
   if (pathname === "/precios") return "Precios";
   if (pathname.startsWith("/appointments")) return "Nuevo turno";
   return "";
@@ -161,7 +164,7 @@ export default function Navbar() {
         <div className="relative flex items-stretch justify-around h-16">
           {/* Tabs izquierda */}
           <div className="flex flex-1">
-            {tabs.slice(0, 2).map((tab) => (
+            {tabs.slice(0, 3).map((tab) => (
               <NavTab key={tab.href} tab={tab} pathname={pathname} />
             ))}
           </div>
@@ -171,7 +174,7 @@ export default function Navbar() {
 
           {/* Tabs derecha */}
           <div className="flex flex-1">
-            {tabs.slice(2).map((tab) => (
+            {tabs.slice(3).map((tab) => (
               <NavTab key={tab.href} tab={tab} pathname={pathname} />
             ))}
           </div>
