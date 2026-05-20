@@ -22,7 +22,7 @@ const DEFAULT_COLORS = [
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", color: "" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", duration: "", color: "" });
   const [showNew, setShowNew] = useState(false);
   const [newForm, setNewForm] = useState({ name: "", price: "", duration: "", color: "#000000" });
 
@@ -39,7 +39,7 @@ export default function ServicesPage() {
 
   const startEdit = (s: Service) => {
     setEditingId(s.id);
-    setEditForm({ name: s.name, color: s.color });
+    setEditForm({ name: s.name, price: String(s.price), duration: String(s.duration), color: s.color });
   };
 
   const cancelEdit = () => {
@@ -50,9 +50,9 @@ export default function ServicesPage() {
     try {
       await axios.put(`/api/services/${id}`, {
         name: editForm.name,
+        price: Number(editForm.price),
+        duration: Number(editForm.duration),
         color: editForm.color,
-        price: services.find(s => s.id === id)?.price,
-        duration: services.find(s => s.id === id)?.duration,
       });
       setEditingId(null);
       loadServices();
@@ -168,7 +168,24 @@ export default function ServicesPage() {
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
+                    placeholder="Nombre"
                   />
+                  <div className="flex gap-3">
+                    <input
+                      value={editForm.price}
+                      type="number"
+                      onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
+                      placeholder="Precio"
+                    />
+                    <input
+                      value={editForm.duration}
+                      type="number"
+                      onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
+                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
+                      placeholder="Duración (min)"
+                    />
+                  </div>
                   <div className="flex gap-2 flex-wrap">
                     {DEFAULT_COLORS.map((c) => (
                       <button
