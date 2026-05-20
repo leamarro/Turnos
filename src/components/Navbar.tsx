@@ -11,7 +11,6 @@ import {
   Users,
   BarChart2,
   Plus,
-  CircleDollarSign,
   Sparkles,
 } from "lucide-react";
 
@@ -21,7 +20,6 @@ const tabs = [
   { href: "/clients", icon: Users, label: "Clientes" },
   { href: "/dashboard", icon: BarChart2, label: "Stats" },
   { href: "/services", icon: Sparkles, label: "Servicios" },
-  { href: "/precios", icon: CircleDollarSign, label: "Precios" },
 ];
 
 function getPageTitle(pathname: string) {
@@ -30,7 +28,6 @@ function getPageTitle(pathname: string) {
   if (pathname.startsWith("/clients")) return "Clientes";
   if (pathname === "/dashboard") return "Dashboard";
   if (pathname.startsWith("/services")) return "Servicios";
-  if (pathname === "/precios") return "Precios";
   if (pathname.startsWith("/appointments")) return "Nuevo turno";
   return "";
 }
