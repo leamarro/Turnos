@@ -21,10 +21,11 @@ const DEFAULT_COLORS = [
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
+  const DEFAULT_DURATION = 30;
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", duration: "", color: "" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", color: "" });
   const [showNew, setShowNew] = useState(false);
-  const [newForm, setNewForm] = useState({ name: "", price: "", duration: "", color: "#000000" });
+  const [newForm, setNewForm] = useState({ name: "", price: "", color: "#000000" });
 
   const loadServices = async () => {
     try {
@@ -39,7 +40,7 @@ export default function ServicesPage() {
 
   const startEdit = (s: Service) => {
     setEditingId(s.id);
-    setEditForm({ name: s.name, price: String(s.price), duration: String(s.duration), color: s.color });
+    setEditForm({ name: s.name, price: String(s.price), color: s.color });
   };
 
   const cancelEdit = () => {
@@ -51,7 +52,7 @@ export default function ServicesPage() {
       await axios.put(`/api/services/${id}`, {
         name: editForm.name,
         price: Number(editForm.price),
-        duration: Number(editForm.duration),
+        duration: DEFAULT_DURATION,
         color: editForm.color,
       });
       setEditingId(null);
@@ -73,12 +74,12 @@ export default function ServicesPage() {
 
   const createService = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newForm.name || !newForm.price || !newForm.duration) return;
+    if (!newForm.name || !newForm.price) return;
     try {
       await axios.post("/api/services", {
         name: newForm.name,
         price: Number(newForm.price),
-        duration: Number(newForm.duration),
+        duration: DEFAULT_DURATION,
         color: newForm.color,
       });
       setNewForm({ name: "", price: "", duration: "", color: "#000000" });
@@ -114,24 +115,14 @@ export default function ServicesPage() {
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-black"
               required
             />
-            <div className="flex gap-3">
-              <input
-                placeholder="Precio"
-                type="number"
-                value={newForm.price}
-                onChange={(e) => setNewForm({ ...newForm, price: e.target.value })}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-black"
-                required
-              />
-              <input
-                placeholder="Duración (min)"
-                type="number"
-                value={newForm.duration}
-                onChange={(e) => setNewForm({ ...newForm, duration: e.target.value })}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-black"
-                required
-              />
-            </div>
+            <input
+              placeholder="Precio"
+              type="number"
+              value={newForm.price}
+              onChange={(e) => setNewForm({ ...newForm, price: e.target.value })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-black"
+              required
+            />
             <div>
               <label className="block text-xs text-gray-400 mb-2">Color</label>
               <div className="flex gap-2 flex-wrap">
@@ -170,22 +161,13 @@ export default function ServicesPage() {
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
                     placeholder="Nombre"
                   />
-                  <div className="flex gap-3">
-                    <input
-                      value={editForm.price}
-                      type="number"
-                      onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
-                      placeholder="Precio"
-                    />
-                    <input
-                      value={editForm.duration}
-                      type="number"
-                      onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
-                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
-                      placeholder="Duración (min)"
-                    />
-                  </div>
+                  <input
+                    value={editForm.price}
+                    type="number"
+                    onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
+                    placeholder="Precio"
+                  />
                   <div className="flex gap-2 flex-wrap">
                     {DEFAULT_COLORS.map((c) => (
                       <button
@@ -222,7 +204,7 @@ export default function ServicesPage() {
                   <div className="flex-1 min-w-0" onClick={() => startEdit(s)}>
                     <p className="font-medium text-sm">{s.name}</p>
                     <p className="text-xs text-gray-400">
-                      ${s.price.toLocaleString()} · {s.duration} min
+                      ${s.price.toLocaleString()}
                     </p>
                   </div>
                   <button
