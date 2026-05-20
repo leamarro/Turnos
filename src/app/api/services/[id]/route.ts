@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
-    const { name, price, duration } = await req.json();
+    const { name, price, duration, color } = await req.json();
     const parsedPrice = Number(price);
     const parsedDuration = Number(duration);
 
@@ -24,6 +24,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         ...(Number.isFinite(parsedDuration) && parsedDuration > 0
           ? { duration: parsedDuration }
           : {}),
+        ...(color ? { color } : {}),
       },
     });
 
