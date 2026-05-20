@@ -82,7 +82,7 @@ export default function ServicesPage() {
         duration: DEFAULT_DURATION,
         color: newForm.color,
       });
-      setNewForm({ name: "", price: "", duration: "", color: "#000000" });
+      setNewForm({ name: "", price: "", color: "#000000" });
       setShowNew(false);
       loadServices();
     } catch {
