@@ -9,7 +9,7 @@ type Appointment = {
   id: string;
   date: string;
   user: { name: string; lastName: string };
-  service: { name: string };
+  service: { name: string; color?: string; id?: string };
 };
 
 const DAY_HEADERS = ["L", "M", "X", "J", "V", "S", "D"];
@@ -83,8 +83,12 @@ export default function CalendarMonthGrid({
               </span>
               {/* Puntos de turnos */}
               <div className="flex gap-0.5 mt-0.5 h-1.5">
-                {appts.slice(0, 3).map((_, i) => (
-                  <div key={i} className={`w-1 h-1 rounded-full ${isPast ? "bg-gray-300" : "bg-black"}`} />
+                {appts.slice(0, 3).map((a, i) => (
+                  <div
+                    key={i}
+                    className="w-1 h-1 rounded-full"
+                    style={{ backgroundColor: isPast ? "#d1d5db" : (a.service.color || "#000000") }}
+                  />
                 ))}
               </div>
             </div>
@@ -106,9 +110,10 @@ export default function CalendarMonthGrid({
               <div
                 key={a.id}
                 onClick={() => onSelectAppointment?.(a.id)}
-                className="bg-white rounded-xl px-4 py-3 flex justify-between items-center shadow-sm cursor-pointer active:bg-gray-50 transition"
+                className="bg-white rounded-xl px-4 py-3 flex justify-between items-center shadow-sm cursor-pointer active:bg-gray-50 transition overflow-hidden relative"
               >
-                <div>
+                <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: a.service.color || "#000000" }} />
+                <div className="pl-2">
                   <p className="text-sm font-medium">{a.user.name} {a.user.lastName}</p>
                   <p className="text-xs text-gray-400 mt-0.5">{a.service.name}</p>
                 </div>
