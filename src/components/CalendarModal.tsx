@@ -23,7 +23,7 @@ export default function CalendarModal({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    axios.get("/api/services").then((res) => setServices(res.data));
+    axios.get("/api/services").then((res) => setServices(Array.isArray(res.data) ? res.data : [])).catch(() => {});
 
     // Si es edición, pre-cargamos datos
     if (appointment) {

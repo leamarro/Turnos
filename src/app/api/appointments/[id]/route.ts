@@ -41,11 +41,11 @@ export async function PUT(
     const updated = await prisma.appointment.update({
       where: { id: params.id },
       data: {
-        name: body.name,
-        lastName: body.lastName,
-        telefono: body.telefono,
-        instagram: body.instagram,
-        notes: body.notes,
+        name: body.name || null,
+        lastName: body.lastName || null,
+        telefono: body.telefono || null,
+        instagram: body.instagram || null,
+        notes: body.notes || null,
         serviceId: body.serviceId,
         date: body.date ? new Date(body.date) : undefined,
         status: body.status,

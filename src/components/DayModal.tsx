@@ -26,7 +26,7 @@ export default function AppointmentForm() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    axios.get("/api/services").then((res) => setServices(res.data));
+    axios.get("/api/services").then((res) => setServices(Array.isArray(res.data) ? res.data : [])).catch(() => {});
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

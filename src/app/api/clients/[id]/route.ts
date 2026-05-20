@@ -9,10 +9,31 @@ export async function DELETE(
 ) {
   const identifier = decodeURIComponent(params.id);
 
-  const appointments = await prisma.appointment.findMany({
+  let appointments = await prisma.appointment.findMany({
     where: { OR: [{ telefono: identifier }, { instagram: identifier }] },
     select: { id: true },
   });
+
+  if (appointments.length === 0 && identifier.includes("_")) {
+    const parts = identifier.split("_");
+    const name = parts[0];
+    const lastName = parts.slice(1).join("_");
+
+    appointments = await prisma.appointment.findMany({
+      where: { name, lastName: lastName || null },
+      select: { id: true },
+    });
+  }
+
+  if (appointments.length === 0) {
+    const single = await prisma.appointment.findUnique({
+      where: { id: identifier },
+      select: { id: true },
+    });
+    if (single) {
+      appointments = [single];
+    }
+  }
 
   const ids = appointments.map((a) => a.id);
 
@@ -28,8 +49,7 @@ export async function GET(
 ) {
   const identifier = decodeURIComponent(params.id);
 
-  // 🔍 buscamos turnos por teléfono O instagram
-  const appointments = await prisma.appointment.findMany({
+  let appointments = await prisma.appointment.findMany({
     where: {
       OR: [
         { telefono: identifier },
@@ -41,6 +61,28 @@ export async function GET(
       service: true,
     },
   });
+
+  if (appointments.length === 0 && identifier.includes("_")) {
+    const parts = identifier.split("_");
+    const name = parts[0];
+    const lastName = parts.slice(1).join("_");
+
+    appointments = await prisma.appointment.findMany({
+      where: { name, lastName: lastName || null },
+      orderBy: { date: "desc" },
+      include: { service: true },
+    });
+  }
+
+  if (appointments.length === 0) {
+    const single = await prisma.appointment.findUnique({
+      where: { id: identifier },
+      include: { service: true },
+    });
+    if (single) {
+      appointments = [single];
+    }
+  }
 
   if (appointments.length === 0) {
     return NextResponse.json(

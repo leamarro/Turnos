@@ -18,6 +18,7 @@ export async function GET() {
     const appointments = await prisma.appointment.findMany({
       orderBy: { date: "desc" },
       select: {
+        id: true,
         name: true,
         lastName: true,
         telefono: true,
@@ -29,8 +30,8 @@ export async function GET() {
     const map = new Map<string, ClientSummary>();
 
     for (const a of appointments) {
-      const key = a.telefono || a.instagram;
-      if (!key) continue;
+      const nameKey = [a.name, a.lastName].filter(Boolean).join("_");
+      const key = a.telefono || a.instagram || nameKey || a.id;
 
       if (!map.has(key)) {
         map.set(key, {
