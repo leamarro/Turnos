@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
@@ -59,6 +60,7 @@ function normalizePhone(value: string) {
 }
 
 export default function AppointmentForm() {
+  const router = useRouter();
   const [form, setForm] = useState<FormState>(initialForm);
   const [services, setServices] = useState<Service[]>([]);
   const [loadingServices, setLoadingServices] = useState(true);
@@ -157,6 +159,11 @@ export default function AppointmentForm() {
 
   /* ===== ÉXITO ===== */
   if (createdDates.length > 0) {
+    useEffect(() => {
+      const t = setTimeout(() => router.push("/home"), 1500);
+      return () => clearTimeout(t);
+    }, [createdDates]);
+
     return (
       <div className="max-w-sm mx-auto text-center space-y-4 py-8">
         <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
@@ -173,11 +180,12 @@ export default function AppointmentForm() {
             </p>
           );
         })}
+        <p className="text-xs text-gray-400">Redirigiendo a la agenda…</p>
         <button
-          onClick={() => setCreatedDates([])}
-          className="mt-4 w-full bg-black text-white py-3 rounded-xl text-sm font-medium"
+          onClick={() => router.push("/home")}
+          className="mt-2 w-full bg-black text-white py-3 rounded-xl text-sm font-medium"
         >
-          Cargar otro turno
+          Ver en agenda
         </button>
       </div>
     );
