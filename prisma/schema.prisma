@@ -32,6 +32,7 @@ model Service {
   name         String
   duration     Int
   price        Float
+  color        String        @default("#000000")
   createdAt    DateTime      @default(now())
   appointments Appointment[]
 }
