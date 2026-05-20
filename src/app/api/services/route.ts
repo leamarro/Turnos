@@ -8,7 +8,7 @@ import prisma from "@/lib/prisma";
 export async function GET() {
   try {
     const services = await prisma.service.findMany({
-      select: { id: true, name: true, price: true, duration: true },
+      select: { id: true, name: true, price: true, duration: true, color: true },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(services);
@@ -26,7 +26,7 @@ export async function GET() {
 // =========================
 export async function POST(req: Request) {
   try {
-    const { name, price, duration } = await req.json();
+    const { name, price, duration, color } = await req.json();
 
     if (!name || !price || !duration) {
       return NextResponse.json(
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
         name,
         price: Number(price),
         duration: Number(duration),
+        color: color || "#000000",
       },
     });
 
