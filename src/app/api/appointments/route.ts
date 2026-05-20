@@ -98,33 +98,4 @@ export async function PUT(
     );
   }
 }
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
 
-    await prisma.payment.deleteMany({
-      where: {
-        appointmentId: params.id,
-      },
-    })
-
-    await prisma.appointment.delete({
-      where: {
-        id: params.id,
-      },
-    })
-
-    return NextResponse.json({ success: true })
-
-  } catch (error) {
-
-    console.error(error)
-
-    return NextResponse.json(
-      { error: "Error eliminando turno" },
-      { status: 500 }
-    )
-  }
-}
