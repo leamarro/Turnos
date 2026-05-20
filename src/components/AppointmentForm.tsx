@@ -292,6 +292,19 @@ export default function AppointmentForm() {
             );
           })}
         </div>
+        <div className="flex items-center gap-2 pt-1">
+          <span className="text-xs text-gray-400">Otro:</span>
+          <input
+            type="time"
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val && !form.times.includes(val)) {
+                setForm((cur) => ({ ...cur, times: [...cur.times, val] }));
+              }
+            }}
+            className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-black"
+          />
+        </div>
       </div>
 
       {/* SEÑA Y NOTAS */}
