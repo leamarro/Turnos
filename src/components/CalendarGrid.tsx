@@ -17,7 +17,7 @@ type Appointment = {
   id: string;
   date: string;
   user: { name: string; lastName: string };
-  service: { name: string };
+  service: { name: string; color?: string; id?: string };
 };
 
 export default function CalendarGrid({
@@ -120,9 +120,10 @@ export default function CalendarGrid({
                     <div
                       key={a.id}
                       onClick={() => onSelectAppointment?.(a.id)}
-                      className="bg-gray-50 rounded-xl px-3 py-3 cursor-pointer active:bg-gray-100 transition"
+                      className="bg-gray-50 rounded-xl px-3 py-3 cursor-pointer active:bg-gray-100 transition overflow-hidden relative"
                     >
-                      <div className="flex justify-between items-center">
+                      <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ backgroundColor: a.service.color || "#000000" }} />
+                      <div className="flex justify-between items-center pl-2">
                         <div>
                           <p className="text-sm font-medium">
                             {a.user.name} {a.user.lastName}
@@ -196,7 +197,7 @@ export default function CalendarGrid({
               </span>
               <div className="space-y-1">
                 {items.slice(0, 3).map((a) => (
-                  <div key={a.id} onClick={() => onSelectAppointment?.(a.id)} className="text-[11px] bg-gray-100 rounded-md px-1.5 py-1 cursor-pointer hover:bg-gray-200 transition truncate" title={`${a.user.name} ${a.user.lastName}`}>
+                  <div key={a.id} onClick={() => onSelectAppointment?.(a.id)} className="text-[11px] rounded-md px-1.5 py-1 cursor-pointer hover:opacity-80 transition truncate flex items-center gap-1" title={`${a.user.name} ${a.user.lastName}`} style={{ backgroundColor: a.service.color ? `${a.service.color}20` : "#f3f4f6", borderLeft: `3px solid ${a.service.color || "#000000"}` }}>
                     <span className="font-medium">{format(new Date(a.date), "HH:mm")}</span>{" "}
                     <span className="text-gray-600">{a.user.name}</span>
                   </div>
