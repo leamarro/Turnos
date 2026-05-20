@@ -24,8 +24,13 @@ export default function ClientsPage() {
 
   useEffect(() => {
     fetch("/api/clients", { cache: "no-store" })
-      .then((res) => res.json())
-      .then(setClients)
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al obtener clientes");
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) setClients(data);
+      })
       .catch(console.error);
   }, []);
 
