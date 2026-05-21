@@ -58,13 +58,13 @@ export default function ClientsPage() {
       {/* Buscador */}
       <div className="relative mb-4">
         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por nombre, teléfono o Instagram…"
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-gray-400 transition"
-        />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar por nombre, teléfono o Instagram…"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm focus:outline-none focus:border-gray-400 transition"
+          />
       </div>
 
       {/* Mobile: cards */}
@@ -73,7 +73,7 @@ export default function ClientsPage() {
           <Link
             key={c.id}
             href={`/clients/${c.id}`}
-            className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:bg-gray-50 transition"
+            className="flex items-center justify-between bg-white dark:bg-[#1a1a1a] rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-[#222] transition"
           >
             <div className="min-w-0">
               <p className="font-medium text-sm truncate">
@@ -121,9 +121,9 @@ export default function ClientsPage() {
       </div>
 
       {/* Desktop: tabla */}
-      <div className="hidden sm:block bg-white rounded-xl shadow overflow-hidden border border-gray-100">
+      <div className="hidden sm:block bg-white dark:bg-[#1a1a1a] rounded-xl shadow overflow-hidden border border-gray-100 dark:border-gray-800">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead className="bg-gray-50 dark:bg-[#222] border-b border-gray-100 dark:border-gray-800">
             <tr>
               <th className="p-3 text-left font-medium text-gray-600">Nombre</th>
               <th className="p-3 text-left font-medium text-gray-600">Contacto</th>
