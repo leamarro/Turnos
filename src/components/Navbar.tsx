@@ -13,6 +13,7 @@ import {
   Plus,
   Sparkles,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const tabs = [
   { href: "/home", icon: Home, label: "Inicio" },
@@ -76,7 +77,7 @@ export default function Navbar() {
   return (
     <>
       {/* ===== TOP HEADER ===== */}
-      <header className="fixed top-0 left-0 w-full z-50 bg-[#F5F3EE]/95 backdrop-blur border-b border-gray-200">
+      <header className="fixed top-0 left-0 w-full z-50 bg-[#F5F3EE]/95 dark:bg-[#0f0f0f]/95 backdrop-blur border-b border-gray-200 dark:border-gray-800">
         {/* Mobile */}
         <div className="sm:hidden mx-auto px-4 h-12 flex items-center justify-between">
           <Link href="/home" className="shrink-0">
@@ -95,13 +96,16 @@ export default function Navbar() {
             </span>
           )}
 
-          <button
-            onClick={handleLogout}
-            className="shrink-0 p-2 -mr-2 text-gray-500 active:text-black transition"
-            aria-label="Cerrar sesión"
-          >
-            <LogOut size={18} />
-          </button>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <button
+              onClick={handleLogout}
+              className="shrink-0 p-2 -mr-2 text-gray-500 active:text-black dark:text-gray-400 transition"
+              aria-label="Cerrar sesión"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Desktop */}
@@ -143,19 +147,22 @@ export default function Navbar() {
             </Link>
           </nav>
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-black transition"
-          >
-            <LogOut size={15} />
-            Salir
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition"
+            >
+              <LogOut size={15} />
+              Salir
+            </button>
+          </div>
         </div>
       </header>
 
       {/* ===== BOTTOM TAB BAR (solo mobile) ===== */}
       <nav
-        className="sm:hidden fixed bottom-0 left-0 w-full z-50 bg-[#F5F3EE]/95 backdrop-blur border-t border-gray-200"
+        className="sm:hidden fixed bottom-0 left-0 w-full z-50 bg-[#F5F3EE]/95 dark:bg-[#0f0f0f]/95 backdrop-blur border-t border-gray-200 dark:border-gray-800"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="relative flex items-stretch justify-around h-16">
@@ -181,7 +188,7 @@ export default function Navbar() {
             href="/appointments"
             className="absolute left-1/2 -translate-x-1/2 -top-5 z-10 active:scale-95 transition-transform"
           >
-            <div className="bg-black rounded-full w-14 h-14 flex items-center justify-center shadow-xl border-4 border-[#F5F3EE]">
+            <div className="bg-black rounded-full w-14 h-14 flex items-center justify-center shadow-xl border-4 border-[#F5F3EE] dark:border-[#0f0f0f]">
               <Plus
                 size={24}
                 className="text-white"
