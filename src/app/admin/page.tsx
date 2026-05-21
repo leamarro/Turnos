@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Pencil, Trash2, Phone, User, CalendarDays, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/Toast";
 
 /* ========================= */
 /* TYPES */
@@ -43,13 +44,13 @@ function getTimeInfo(date: string) {
 function getCardStyle(state: string) {
   switch (state) {
     case "very-soon":
-      return "bg-green-200 border-l-4 border-green-600";
+      return "bg-green-200 dark:bg-green-900 border-l-4 border-green-600";
     case "soon":
-      return "bg-green-100 border-l-4 border-green-400";
+      return "bg-green-100 dark:bg-green-800 border-l-4 border-green-400";
     case "past":
-      return "bg-gray-50 opacity-50";
+      return "bg-gray-50 dark:bg-gray-800 opacity-50";
     default:
-      return "bg-white";
+      return "bg-white dark:bg-[#1a1a1a]";
   }
 }
 
@@ -67,22 +68,29 @@ export default function AdminPanel() {
   const [filterOption, setFilterOption] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [showPast, setShowPast] = useState(false);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [swipingId, setSwipingId] = useState<string | null>(null);
+  const [swipeX, setSwipeX] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const { toast } = useToast();
   const router = useRouter();
   const today = new Date();
 
-  async function fetchAppointments() {
-    const res = await axios.get("/api/appointments");
-    const ordered = Array.isArray(res.data)
-      ? res.data.sort((a: Appointment, b: Appointment) =>
+  async function fetchAppointments(p: number = page) {
+    const res = await axios.get(`/api/appointments?page=${p}&limit=50`);
+    const d = res.data;
+    const ordered = Array.isArray(d.data)
+      ? d.data.sort((a: Appointment, b: Appointment) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
         )
       : [];
     setAllAppointments(ordered);
+    setTotalPages(d.totalPages || 1);
   }
 
   useEffect(() => {
     fetchAppointments();
-  }, []);
+  }, [page]);
 
   const appointments = useMemo(() => {
     let list = [...allAppointments];
@@ -136,9 +144,37 @@ export default function AdminPanel() {
   }, [allAppointments, filterDate, filterOption, showPast, showPendingOnly]);
 
   async function deleteAppointment(id: string) {
-    if (!confirm("¿Eliminar este turno?")) return;
-    await axios.delete(`/api/appointments/${id}`);
-    fetchAppointments();
+    try {
+      await axios.delete(`/api/appointments/${id}`);
+      toast("Turno eliminado", "success");
+      fetchAppointments();
+    } catch {
+      toast("Error al eliminar turno", "error");
+    }
+  }
+
+  function handleTouchStart() {
+    setSwipingId(null);
+    setSwipeX(0);
+  }
+
+  function handleTouchMove(e: React.TouchEvent, id: string) {
+    const start = Number((e.currentTarget as HTMLElement).dataset.touchStart) || 0;
+    const x = e.touches[0].clientX;
+    const diff = x - start;
+    if (diff < 0) {
+      setSwipingId(id);
+      setSwipeX(Math.max(diff, -120));
+    }
+  }
+
+  function handleTouchEnd() {
+    if (swipeX < -80) {
+      setSwipeX(-120);
+    } else {
+      setSwipingId(null);
+      setSwipeX(0);
+    }
   }
 
 
@@ -147,18 +183,18 @@ export default function AdminPanel() {
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
 
       {/* FILTROS */}
-      <div className="bg-white rounded-2xl px-3 py-3 mb-4 overflow-x-auto scrollbar-hide">
+      <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl px-3 py-3 mb-4 overflow-x-auto scrollbar-hide">
         <div className="flex items-center gap-2 w-max sm:w-auto sm:flex-wrap">
-          <button onClick={() => setFilterOption("all")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "all" ? "bg-black text-white border-black" : "text-gray-600"}`}>
+          <button onClick={() => setFilterOption("all")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "all" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Todos
           </button>
-          <button onClick={() => setFilterOption("today")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "today" ? "bg-black text-white border-black" : "text-gray-600"}`}>
+          <button onClick={() => setFilterOption("today")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "today" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Hoy
           </button>
-          <button onClick={() => setFilterOption("tomorrow")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "tomorrow" ? "bg-black text-white border-black" : "text-gray-600"}`}>
+          <button onClick={() => setFilterOption("tomorrow")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "tomorrow" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Mañana
           </button>
-          <button onClick={() => setFilterOption("week")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "week" ? "bg-black text-white border-black" : "text-gray-600"}`}>
+          <button onClick={() => setFilterOption("week")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "week" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Semana
           </button>
 
@@ -224,90 +260,136 @@ export default function AdminPanel() {
           const remaining = total - paid;
           const hasDebt = remaining > 0;
           const info = getTimeInfo(a.date);
+          const isSwiping = swipingId === a.id;
 
           return (
             <div
               key={a.id}
-              className={`rounded-2xl p-4 shadow ${getCardStyle(
-                info.state
-              )} ${
-                hasDebt ? "border border-red-400" : "border border-green-400"
-              }`}
+              className="relative overflow-hidden rounded-2xl"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold flex items-center gap-2">
-                    <User size={16} /> {a.name} {a.lastName}
-                  </p>
+              <div
+                onTouchStart={(e) => {
+                  (e.currentTarget as HTMLElement).dataset.touchStart = String(e.touches[0].clientX);
+                  handleTouchStart();
+                }}
+                onTouchMove={(e) => handleTouchMove(e, a.id)}
+                onTouchEnd={handleTouchEnd}
+                style={{ transform: isSwiping ? `translateX(${swipeX}px)` : undefined }}
+                className={`relative z-10 p-4 shadow dark:shadow-none transition-transform duration-200 ${getCardStyle(
+                  info.state
+                )} ${
+                  hasDebt ? "border border-red-400" : "border border-green-400"
+                } dark:border-gray-700`}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold flex items-center gap-2">
+                      <User size={16} /> {a.name} {a.lastName}
+                    </p>
 
-                  <p className="text-sm text-gray-600 flex items-center gap-2">
-                    <Phone size={14} /> {a.telefono}
-                  </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                      <Phone size={14} /> {a.telefono}
+                    </p>
 
-                  <p className="text-sm mt-2">{a.service?.name}</p>
+                    <p className="text-sm mt-2">{a.service?.name}</p>
 
-                  <p className="text-xs text-gray-500 mt-2">
-                    {format(new Date(a.date), "dd/MM/yyyy HH:mm", {
-                      locale: es,
-                    })} hs
-                  </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      {format(new Date(a.date), "dd/MM/yyyy HH:mm", {
+                        locale: es,
+                      })} hs
+                    </p>
+                  </div>
+
+                  {total > 0 && (
+                    <div className="text-right text-sm">
+                      <p>Total: ${total}</p>
+
+                      {paid === 0 && (
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Sin pagos registrados
+                        </p>
+                      )}
+
+                      {paid > 0 && paid < total && (
+                        <>
+                          <p>Pagado: ${paid}</p>
+                          <p className="text-red-600 font-semibold">
+                            Debe: ${remaining}
+                          </p>
+                        </>
+                      )}
+
+                      {paid >= total && (
+                        <p className="text-green-600 font-semibold">
+                          Pago completo
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {total > 0 && (
-                  <div className="text-right text-sm">
-                    <p>Total: ${total}</p>
+                <div className="flex justify-end gap-3 mt-4">
+                  <button
+                    onClick={() =>
+                      router.push(`/admin/edit/${a.id}`)
+                    }
+                    className="text-green-600 dark:text-green-500"
+                  >
+                    <Pencil size={18} />
+                  </button>
 
-                    {paid === 0 && (
-                      <p className="text-gray-500">
-                        Sin pagos registrados
-                      </p>
-                    )}
-
-                    {paid > 0 && paid < total && (
-                      <>
-                        <p>Pagado: ${paid}</p>
-                        <p className="text-red-600 font-semibold">
-                          Debe: ${remaining}
-                        </p>
-                      </>
-                    )}
-
-                    {paid >= total && (
-                      <p className="text-green-600 font-semibold">
-                        Pago completo
-                      </p>
-                    )}
-                  </div>
-                )}
+                  <button
+                    onClick={() => deleteAppointment(a.id)}
+                    className="text-red-600 dark:text-red-500"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-4">
+              {/* Swipe reveal: delete button */}
+              {isSwiping && (
                 <button
-                  onClick={() =>
-                    router.push(`/admin/edit/${a.id}`)
-                  }
-                  className="text-green-600"
+                  onClick={() => { setSwipingId(null); setSwipeX(0); deleteAppointment(a.id); }}
+                  className="absolute right-0 top-0 bottom-0 w-24 bg-red-600 text-white flex items-center justify-center gap-1.5 text-sm font-medium rounded-r-2xl"
                 >
-                  <Pencil size={18} />
+                  <Trash2 size={16} />
+                  Eliminar
                 </button>
-
-                <button
-                  onClick={() => deleteAppointment(a.id)}
-                  className="text-red-600"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
+              )}
             </div>
           );
         })}
 
         {appointments.length === 0 && (
-          <p className="text-center text-gray-500">
+          <p className="text-center text-gray-500 dark:text-gray-400">
             No hay turnos para este filtro
           </p>
         )}
       </div>
+
+      {/* PAGINACIÓN */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 mt-6 pb-4">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-sm disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-400"
+          >
+            Anterior
+          </button>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-sm disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-400"
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
     </div>
   );
 }
