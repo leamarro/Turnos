@@ -77,15 +77,12 @@ export default function AdminPanel() {
   async function fetchAppointments() {
     try {
       const res = await axios.get("/api/appointments");
-      console.log("API response data:", JSON.stringify(res.data, null, 2));
-      console.log("Is array:", Array.isArray(res.data));
       const list = Array.isArray(res.data) ? res.data : [];
       list.sort((a: Appointment, b: Appointment) =>
         new Date(a.date).getTime() - new Date(b.date).getTime()
       );
       setAllAppointments(list);
-    } catch (e) {
-      console.error("Fetch error:", e);
+    } catch {
       setAllAppointments([]);
     }
   }
@@ -126,7 +123,8 @@ export default function AdminPanel() {
       list = list.filter((a) => sameDay(new Date(a.date), selected));
     }
 
-    if (!showPast) {
+    const hasDateFilter = filterOption !== "all" || filterDate;
+    if (!showPast && hasDateFilter) {
       list = list.filter((a) => new Date(a.date) >= todayStart);
     }
 
