@@ -26,6 +26,13 @@ export async function DELETE(
   }
 
   if (appointments.length === 0) {
+    appointments = await prisma.appointment.findMany({
+      where: { name: identifier },
+      select: { id: true },
+    });
+  }
+
+  if (appointments.length === 0) {
     const single = await prisma.appointment.findUnique({
       where: { id: identifier },
       select: { id: true },
@@ -69,6 +76,14 @@ export async function GET(
 
     appointments = await prisma.appointment.findMany({
       where: { name, lastName: lastName || null },
+      orderBy: { date: "desc" },
+      include: { service: true },
+    });
+  }
+
+  if (appointments.length === 0) {
+    appointments = await prisma.appointment.findMany({
+      where: { name: identifier },
       orderBy: { date: "desc" },
       include: { service: true },
     });
