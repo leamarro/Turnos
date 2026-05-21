@@ -111,6 +111,7 @@ export default function EditAppointmentPage({
   const precioCambio = precioOriginal > 0 && precioOriginal !== totalServicio;
   const totalPagado = appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
   const restante = totalServicio - totalPagado;
+  const pagoCompleto = restante <= 0;
 
   async function handleSave() {
     if (!name.trim()) { alert("El nombre es obligatorio"); return; }
@@ -127,7 +128,7 @@ export default function EditAppointmentPage({
   }
 
   async function handleAddDeposit() {
-    if (!depositAmount || Number(depositAmount) <= 0) return;
+    if (!depositAmount || Number(depositAmount) <= 0 || pagoCompleto) return;
     try {
       await axios.post(`/api/appointments/${id}/add-deposit`, { amount: Number(depositAmount) });
       router.refresh();
@@ -316,12 +317,17 @@ export default function EditAppointmentPage({
               type="number"
               value={depositAmount}
               onChange={(e) => setDepositAmount(e.target.value)}
-              className="input"
+              disabled={pagoCompleto}
+              className="input disabled:bg-gray-200 disabled:cursor-not-allowed"
               placeholder="Monto"
             />
           </Field>
 
-          <button onClick={handleAddDeposit} className="w-full bg-gray-100 text-gray-800 py-2.5 rounded-xl text-sm font-medium">
+          <button
+            onClick={handleAddDeposit}
+            disabled={pagoCompleto}
+            className="w-full bg-gray-100 text-gray-800 py-2.5 rounded-xl text-sm font-medium disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+          >
             Registrar seña
           </button>
 
