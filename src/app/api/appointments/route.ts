@@ -48,6 +48,17 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
+    const hasPage = url.searchParams.has("page");
+
+    // Backward compatible: without ?page, return plain array
+    if (!hasPage) {
+      const appointments = await prisma.appointment.findMany({
+        include: { service: true, payments: true },
+        orderBy: { date: "desc" },
+      });
+      return NextResponse.json(appointments);
+    }
+
     const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
     const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit")) || 50));
     const skip = (page - 1) * limit;
