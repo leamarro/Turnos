@@ -45,13 +45,29 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const appointments = await prisma.appointment.findMany({
-      include: { service: true, payments: true },
-      orderBy: { date: "desc" },
+    const url = new URL(req.url);
+    const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit")) || 50));
+    const skip = (page - 1) * limit;
+
+    const [appointments, total] = await Promise.all([
+      prisma.appointment.findMany({
+        skip,
+        take: limit,
+        include: { service: true, payments: true },
+        orderBy: { date: "desc" },
+      }),
+      prisma.appointment.count(),
+    ]);
+
+    return NextResponse.json({
+      data: appointments,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
     });
-    return NextResponse.json(appointments);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
