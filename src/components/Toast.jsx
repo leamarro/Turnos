@@ -3,9 +3,7 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import { X, CheckCircle2, AlertCircle, Info } from "lucide-react";
 
-function noop() {}
-
-const ToastContext = createContext({ toast: noop });
+const ToastContext = createContext({ toast: function (_msg, _type) {} });
 
 export function useToast() {
   return useContext(ToastContext);
