@@ -77,21 +77,15 @@ export default function AdminPanel() {
   async function fetchAppointments() {
     try {
       const res = await axios.get("/api/appointments");
-      const data = res.data;
-      if (data && data.data && Array.isArray(data.data)) {
-        const ordered = data.data.sort((a: Appointment, b: Appointment) =>
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-        setAllAppointments(ordered);
-      } else if (Array.isArray(data)) {
-        const ordered = data.sort((a: Appointment, b: Appointment) =>
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-        setAllAppointments(ordered);
-      } else {
-        setAllAppointments([]);
-      }
-    } catch {
+      console.log("API response data:", JSON.stringify(res.data, null, 2));
+      console.log("Is array:", Array.isArray(res.data));
+      const list = Array.isArray(res.data) ? res.data : [];
+      list.sort((a: Appointment, b: Appointment) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      setAllAppointments(list);
+    } catch (e) {
+      console.error("Fetch error:", e);
       setAllAppointments([]);
     }
   }
@@ -255,11 +249,14 @@ export default function AdminPanel() {
         </div>
       </div>
 
+      {loading ? (
+        <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">Cargando turnos…</p>
+      ) : (
+        <>
       <p className="text-sm text-gray-500 dark:text-gray-400">
         {appointments.length} turno{appointments.length !== 1 && "s"}
       </p>
 
-      {/* LISTADO */}
       <div className="space-y-4">
         {appointments.map((a) => {
           const total = a.servicePrice ?? 0;
@@ -375,7 +372,8 @@ export default function AdminPanel() {
           </p>
         )}
       </div>
-
+      </>
+      )}
     </div>
   );
 }
