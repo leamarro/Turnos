@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/Toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -52,6 +53,7 @@ export default function EditAppointmentPage({
   params: { id: string };
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const id = params.id;
 
   const [appointment, setAppointment] = useState<Appointment | null>(null);
@@ -92,7 +94,7 @@ export default function EditAppointmentPage({
         }
       } catch (err) {
         console.error(err);
-        alert("Error al cargar el turno");
+        toast("Error al cargar el turno", "error");
       }
     }
     loadData();
@@ -114,7 +116,7 @@ export default function EditAppointmentPage({
   const pagoCompleto = restante <= 0;
 
   async function handleSave() {
-    if (!name.trim()) { alert("El nombre es obligatorio"); return; }
+    if (!name.trim()) { toast("El nombre es obligatorio", "error"); return; }
     try {
       const payload: any = {
         name: name.trim(), lastName: lastName.trim(),
@@ -124,7 +126,7 @@ export default function EditAppointmentPage({
       if (date && time) payload.date = new Date(`${date}T${time}`);
       await axios.put(`/api/appointments/${id}`, payload);
       router.push("/admin");
-    } catch { alert("Error al guardar"); }
+    } catch { toast("Error al guardar", "error"); }
   }
 
   async function handleAddDeposit() {
@@ -132,14 +134,14 @@ export default function EditAppointmentPage({
     try {
       await axios.post(`/api/appointments/${id}/add-deposit`, { amount: Number(depositAmount) });
       router.refresh();
-    } catch { alert("Error al agregar seña"); }
+    } catch { toast("Error al agregar seña", "error"); }
   }
 
   async function handleCompletePayment() {
     try {
       await axios.post(`/api/appointments/${id}/complete-payment`);
       router.refresh();
-    } catch { alert("Error al completar pago"); }
+    } catch { toast("Error al completar pago", "error"); }
   }
 
   async function handleDelete() {
@@ -147,7 +149,7 @@ export default function EditAppointmentPage({
     try {
       await axios.delete(`/api/appointments/${id}`);
       router.push("/admin");
-    } catch { alert("No se pudo eliminar"); }
+    } catch { toast("No se pudo eliminar", "error"); }
   }
 
   async function handleQuickStatus(newStatus: string) {
@@ -160,7 +162,7 @@ export default function EditAppointmentPage({
       if (date && time) payload.date = new Date(`${date}T${time}`);
       await axios.put(`/api/appointments/${id}`, payload);
       setStatus(newStatus);
-    } catch { alert("Error al actualizar estado"); }
+    } catch { toast("Error al actualizar estado", "error"); }
   }
 
   function handleSendWhatsapp() {
@@ -197,7 +199,7 @@ export default function EditAppointmentPage({
 
       <div className="space-y-4">
         {/* DATOS PERSONALES */}
-        <section className="bg-white rounded-2xl p-4 space-y-4 shadow-sm">
+        <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 space-y-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Cliente</p>
           <Field icon={<User size={15} />} label="Nombre">
             <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
@@ -217,7 +219,7 @@ export default function EditAppointmentPage({
         </section>
 
         {/* TURNO */}
-        <section className="bg-white rounded-2xl p-4 space-y-4 shadow-sm">
+        <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 space-y-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Turno</p>
           <Field icon={<Sparkles size={15} />} label="Servicio">
             <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input">
@@ -236,7 +238,7 @@ export default function EditAppointmentPage({
         </section>
 
         {/* ESTADO */}
-        <section className="bg-white rounded-2xl p-4 shadow-sm">
+        <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Estado</p>
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
@@ -262,7 +264,7 @@ export default function EditAppointmentPage({
 
         {/* CONFIRMAR */}
         {(telefono || instagram) && (
-          <section className="bg-white rounded-2xl p-4 space-y-2.5 shadow-sm">
+          <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 space-y-2.5 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Enviar confirmación</p>
             {telefono && (
               <button
@@ -286,7 +288,7 @@ export default function EditAppointmentPage({
         )}
 
         {/* PAGOS */}
-        <section className="bg-white rounded-2xl p-4 space-y-3 shadow-sm">
+        <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 space-y-3 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Pagos</p>
 
           <div className="flex justify-between text-sm">
