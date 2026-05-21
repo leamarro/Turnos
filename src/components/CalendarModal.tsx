@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useToast } from "@/components/Toast";
 
 export default function CalendarModal({
   selectedDate,
@@ -21,6 +22,7 @@ export default function CalendarModal({
   const [time, setTime] = useState("");
   const [status, setStatus] = useState("pendiente");
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     axios.get("/api/services").then((res) => setServices(Array.isArray(res.data) ? res.data : [])).catch(() => {});
@@ -64,7 +66,7 @@ export default function CalendarModal({
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Error al guardar el turno");
+      toast("Error al guardar el turno", "error");
     } finally {
       setLoading(false);
     }
