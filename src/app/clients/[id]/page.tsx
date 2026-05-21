@@ -104,17 +104,17 @@ export default function ClientDetail({
 
       {/* STATS CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-[#252525] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800">
           <DollarSign size={16} className="text-green-500 mb-1" />
           <p className="text-lg font-bold">${client.totalSpent.toLocaleString()}</p>
           <p className="text-xs text-gray-400">Gastado</p>
         </div>
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-[#252525] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800">
           <Calendar size={16} className="text-blue-500 mb-1" />
           <p className="text-lg font-bold">{client.totalAppointments}</p>
           <p className="text-xs text-gray-400">Turnos</p>
         </div>
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800 col-span-2">
+        <div className="bg-white dark:bg-[#252525] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800 col-span-2">
           <Sparkles size={16} className="text-purple-500 mb-1" />
           <p className="text-sm font-medium truncate">
             {client.topServices[0]?.name || "—"}
@@ -137,7 +137,7 @@ export default function ClientDetail({
             {client.topServices.map((s, i) => (
               <div
                 key={s.name}
-                className="flex items-center justify-between text-sm bg-white dark:bg-[#1a1a1a] rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-800"
+                className="flex items-center justify-between text-sm bg-white dark:bg-[#252525] rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-800"
               >
                 <span>
                   {i + 1}. {s.name}
@@ -170,7 +170,7 @@ export default function ClientDetail({
           {client.appointments.map((a) => (
             <div
               key={a.id}
-              className="border border-gray-100 dark:border-gray-800 rounded-xl p-4 bg-white dark:bg-[#1a1a1a] shadow-sm"
+              className="border border-gray-100 dark:border-gray-800 rounded-xl p-4 bg-white dark:bg-[#252525] shadow-sm"
             >
               <p className="font-medium">
                 {a.service?.name || "Sin servicio"}
