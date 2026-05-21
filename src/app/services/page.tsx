@@ -93,7 +93,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#252525]">
       <div className="max-w-lg mx-auto px-4 pt-6 pb-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold">Servicios</h1>
@@ -108,7 +108,7 @@ export default function ServicesPage() {
 
         {/* Nuevo servicio */}
           {showNew && (
-          <form onSubmit={createService} className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow dark:shadow-none dark:border dark:border-gray-800 p-5 mb-6 space-y-4">
+          <form onSubmit={createService} className="bg-white dark:bg-[#252525] rounded-2xl shadow dark:shadow-none dark:border dark:border-gray-800 p-5 mb-6 space-y-4">
             <h2 className="font-medium text-sm text-gray-500">Nuevo servicio</h2>
             <input
               placeholder="Nombre"
@@ -154,7 +154,7 @@ export default function ServicesPage() {
         {/* Lista de servicios */}
         <div className="space-y-3">
           {services.map((s) => (
-            <div key={s.id} className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none dark:border dark:border-gray-800 p-4">
+            <div key={s.id} className="bg-white dark:bg-[#252525] rounded-2xl shadow-sm dark:shadow-none dark:border dark:border-gray-800 p-4">
               {editingId === s.id ? (
                 <div className="space-y-3">
                   <input
