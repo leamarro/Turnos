@@ -1,9 +1,17 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { CheckCircle2, Loader2 } from "lucide-react";
+
+type ClientSuggestion = {
+  id: string;
+  name: string;
+  lastName: string;
+  telefono: string | null;
+  instagram: string | null;
+};
 
 type Service = {
   id: string;
@@ -68,6 +76,54 @@ export default function AppointmentForm() {
   const [message, setMessage] = useState("");
   const [createdDates, setCreatedDates] = useState<string[]>([]);
   const [takenTimes, setTakenTimes] = useState<string[]>([]);
+  const [clients, setClients] = useState<ClientSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/clients", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => { if (Array.isArray(data)) setClients(data); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(e.target as Node) &&
+        nameRef.current &&
+        !nameRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const suggestedClients = useMemo(() => {
+    const q = form.name.trim().toLowerCase();
+    if (!q) return [];
+    return clients
+      .filter((c) => {
+        const full = `${c.name} ${c.lastName}`.toLowerCase();
+        return full.includes(q) || c.name.toLowerCase().includes(q);
+      })
+      .slice(0, 6);
+  }, [form.name, clients]);
+
+  function handleSelectClient(c: ClientSuggestion) {
+    setForm((cur) => ({
+      ...cur,
+      name: c.name,
+      lastName: c.lastName,
+      telefono: c.telefono ? c.telefono.replace(/^\+?54?/, "") : "",
+      instagram: c.instagram ? `@${c.instagram.replace(/^@+/, "")}` : "",
+    }));
+    setShowSuggestions(false);
+  }
 
   useEffect(() => {
     let active = true;
@@ -199,10 +255,40 @@ export default function AppointmentForm() {
       {/* DATOS */}
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <div>
+          <div className="relative">
             <label className="label">Nombre *</label>
-            <input value={form.name} onChange={(e) => updateField("name", e.target.value)}
-              placeholder="Nombre" className="booking-input" autoComplete="given-name" />
+            <input
+              ref={nameRef}
+              value={form.name}
+              onChange={(e) => { updateField("name", e.target.value); setShowSuggestions(true); }}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder="Nombre"
+              className="booking-input"
+              autoComplete="off"
+            />
+            {showSuggestions && suggestedClients.length > 0 && (
+              <div
+                ref={suggestionsRef}
+                className="absolute z-50 top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+              >
+                {suggestedClients.map((c) => (
+                  <button
+                    type="button"
+                    key={c.id}
+                    onClick={() => handleSelectClient(c)}
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-0 transition"
+                  >
+                    <span className="font-medium">{c.name} {c.lastName}</span>
+                    {c.telefono && (
+                      <span className="text-gray-400 ml-2">{c.telefono}</span>
+                    )}
+                    {c.instagram && !c.telefono && (
+                      <span className="text-gray-400 ml-2">{c.instagram}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className="label">Apellido</label>
