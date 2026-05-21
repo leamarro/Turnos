@@ -70,27 +70,23 @@ export default function AdminPanel() {
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [swipingId, setSwipingId] = useState<string | null>(null);
   const [swipeX, setSwipeX] = useState(0);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
   const router = useRouter();
   const today = new Date();
 
-  async function fetchAppointments(p: number = page) {
-    const res = await axios.get(`/api/appointments?page=${p}&limit=50`);
-    const d = res.data;
-    const ordered = Array.isArray(d.data)
-      ? d.data.sort((a: Appointment, b: Appointment) =>
+  async function fetchAppointments() {
+    const res = await axios.get("/api/appointments");
+    const ordered = Array.isArray(res.data)
+      ? res.data.sort((a: Appointment, b: Appointment) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
         )
       : [];
     setAllAppointments(ordered);
-    setTotalPages(d.totalPages || 1);
   }
 
   useEffect(() => {
     fetchAppointments();
-  }, [page]);
+  }, []);
 
   const appointments = useMemo(() => {
     let list = [...allAppointments];
@@ -368,28 +364,6 @@ export default function AdminPanel() {
         )}
       </div>
 
-      {/* PAGINACIÓN */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-6 pb-4">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-sm disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-400"
-          >
-            Anterior
-          </button>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {page} / {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-sm disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 dark:text-gray-400"
-          >
-            Siguiente
-          </button>
-        </div>
-      )}
     </div>
   );
 }
