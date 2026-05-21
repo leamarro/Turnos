@@ -68,8 +68,7 @@ export default function AdminPanel() {
   const [filterOption, setFilterOption] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [showPast, setShowPast] = useState(false);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
-  const [swipingId, setSwipingId] = useState<string | null>(null);
-  const [swipeX, setSwipeX] = useState(0);
+
   const { toast } = useToast();
   const router = useRouter();
   const today = new Date();
@@ -150,30 +149,6 @@ export default function AdminPanel() {
       fetchAppointments();
     } catch {
       toast("Error al eliminar turno", "error");
-    }
-  }
-
-  function handleTouchStart() {
-    setSwipingId(null);
-    setSwipeX(0);
-  }
-
-  function handleTouchMove(e: React.TouchEvent, id: string) {
-    const start = Number((e.currentTarget as HTMLElement).dataset.touchStart) || 0;
-    const x = e.touches[0].clientX;
-    const diff = x - start;
-    if (diff < 0) {
-      setSwipingId(id);
-      setSwipeX(Math.max(diff, -120));
-    }
-  }
-
-  function handleTouchEnd() {
-    if (swipeX < -80) {
-      setSwipeX(-120);
-    } else {
-      setSwipingId(null);
-      setSwipeX(0);
     }
   }
 
@@ -259,22 +234,13 @@ export default function AdminPanel() {
           const remaining = total - paid;
           const hasDebt = remaining > 0;
           const info = getTimeInfo(a.date);
-          const isSwiping = swipingId === a.id;
-
           return (
             <div
               key={a.id}
-              className="relative overflow-hidden rounded-2xl"
+              className="relative rounded-2xl"
             >
               <div
-                onTouchStart={(e) => {
-                  (e.currentTarget as HTMLElement).dataset.touchStart = String(e.touches[0].clientX);
-                  handleTouchStart();
-                }}
-                onTouchMove={(e) => handleTouchMove(e, a.id)}
-                onTouchEnd={handleTouchEnd}
-                style={{ transform: isSwiping ? `translateX(${swipeX}px)` : undefined }}
-                className={`relative z-10 p-4 shadow dark:shadow-none transition-transform duration-200 ${getCardStyle(
+                className={`relative z-10 p-4 shadow dark:shadow-none ${getCardStyle(
                   info.state
                 )} ${
                   hasDebt ? "border border-red-400" : "border border-green-400"
@@ -346,16 +312,6 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* Swipe reveal: delete button */}
-              {isSwiping && (
-                <button
-                  onClick={() => { setSwipingId(null); setSwipeX(0); deleteAppointment(a.id); }}
-                  className="absolute right-0 top-0 bottom-0 w-24 bg-red-600 text-white flex items-center justify-center gap-1.5 text-sm font-medium rounded-r-2xl"
-                >
-                  <Trash2 size={16} />
-                  Eliminar
-                </button>
-              )}
             </div>
           );
         })}
