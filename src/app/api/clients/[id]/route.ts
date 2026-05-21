@@ -106,6 +106,40 @@ export async function GET(
     );
   }
 
+  // Fetch payments for all appointments
+  const appointmentIds = appointments.map((a) => a.id);
+  const allPayments = await prisma.payment.findMany({
+    where: { appointmentId: { in: appointmentIds } },
+  });
+
+  const paymentMap = new Map<string, typeof allPayments>();
+  for (const p of allPayments) {
+    if (!paymentMap.has(p.appointmentId)) paymentMap.set(p.appointmentId, []);
+    paymentMap.get(p.appointmentId)!.push(p);
+  }
+
+  // Calculate aggregated stats
+  const serviceCount = new Map<string, { name: string; count: number }>();
+  let totalSpent = 0;
+
+  for (const a of appointments) {
+    const appPayments = paymentMap.get(a.id) || [];
+    const paid = appPayments.reduce((acc, p) => acc + p.amount, 0);
+    totalSpent += paid;
+
+    const svcName = a.service?.name || "Sin servicio";
+    const existing = serviceCount.get(svcName);
+    if (existing) {
+      existing.count++;
+    } else {
+      serviceCount.set(svcName, { name: svcName, count: 1 });
+    }
+  }
+
+  const topServices = Array.from(serviceCount.values()).sort(
+    (a, b) => b.count - a.count
+  );
+
   const first = appointments[0];
 
   return NextResponse.json({
@@ -113,6 +147,10 @@ export async function GET(
     lastName: first.lastName ?? "",
     telefono: first.telefono ?? null,
     instagram: first.instagram ?? null,
+    totalSpent,
+    totalAppointments: appointments.length,
+    topServices: topServices.slice(0, 3),
+    lastAppointment: appointments[0]?.date ?? null,
     appointments: appointments.map((a) => ({
       id: a.id,
       date: a.date,
