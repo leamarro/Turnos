@@ -12,11 +12,11 @@
 }
 
 .dark {
-  --bg-primary: #0f0f0f;
-  --bg-card: #1a1a1a;
-  --text-primary: #f5f5f5;
-  --text-secondary: #9ca3af;
-  --border-color: #2a2a2a;
+  --bg-primary: #1a1a1a;
+  --bg-card: #252525;
+  --text-primary: #e5e5e5;
+  --text-secondary: #a3a3a3;
+  --border-color: #333333;
 }
 
 body {
@@ -30,7 +30,7 @@ h1, h2, h3 {
 }
 
 a {
-  color: #111111;
+  color: var(--text-primary);
   text-decoration: none;
   transition: opacity 0.2s ease;
 }
@@ -62,19 +62,24 @@ a:hover {
 
 /* ==== CALENDARIO (REACT-DAY-PICKER) ==== */
 .rdp {
-  --rdp-accent-color: #111 !important; /* color principal (flechas, selección) */
+  --rdp-accent-color: #111 !important;
   --rdp-accent-background-color: #111 !important;
-  --rdp-background-color: #fff;
+  --rdp-background-color: var(--bg-card);
   --rdp-outline: none;
   font-family: 'Inter', sans-serif;
 }
 
+.dark .rdp {
+  --rdp-accent-color: #e5e5e5 !important;
+  --rdp-accent-background-color: #444 !important;
+}
+
 .rdp-button_reset {
-  color: #111 !important; /* flechas del mes */
+  color: var(--text-primary) !important;
 }
 
 .rdp-nav_button {
-  color: #111 !important;
+  color: var(--text-primary) !important;
   opacity: 0.8;
   transition: opacity 0.2s ease;
 }
@@ -84,14 +89,13 @@ a:hover {
 }
 
 .rdp-caption_label {
-  text-transform: capitalize; /* Mes con mayúscula inicial */
-  color: #111;
+  text-transform: capitalize;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
-/* Día actual */
 .rdp-day_today {
-  border: 1px solid #111;
+  border: 1px solid var(--text-primary);
 }
 
 /* Día seleccionado */
@@ -101,6 +105,11 @@ a:hover {
   border-radius: 6px;
 }
 
+.dark .rdp-day_selected {
+  background-color: #444 !important;
+  color: #e5e5e5 !important;
+}
+
 /* Día ocupado */
 .rdp-day[data-ocupado="true"],
 .rdp-day_occupied {
@@ -108,9 +117,19 @@ a:hover {
   color: #555 !important;
 }
 
+.dark .rdp-day[data-ocupado="true"],
+.dark .rdp-day_occupied {
+  background-color: #333 !important;
+  color: #aaa !important;
+}
+
 /* Hover de días */
 .rdp-day:hover {
   background-color: #eee;
+}
+
+.dark .rdp-day:hover {
+  background-color: #333;
 }
 
 /* ==== BOTONES GLOBALES ==== */
@@ -144,15 +163,20 @@ input, select, textarea {
 }
 
 .dark input, .dark select, .dark textarea {
-  border-color: #333;
-  background: #1a1a1a;
-  color: #f5f5f5;
+  border-color: #3a3a3a;
+  background: #252525;
+  color: #e5e5e5;
 }
 
 input:focus, select:focus, textarea:focus {
   border-color: #111;
   outline: none;
   box-shadow: 0 0 0 1px #111;
+}
+
+.dark input:focus, .dark select:focus, .dark textarea:focus {
+  border-color: #666;
+  box-shadow: 0 0 0 1px #666;
 }
 
 
@@ -240,6 +264,21 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.12);
 }
 
+.dark .booking-input {
+  border-color: #3a3a3a;
+  background: #252525;
+  color: #e5e5e5;
+}
+
+.dark .booking-input::placeholder {
+  color: #666;
+}
+
+.dark .booking-input:focus {
+  border-color: #666;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
 /* 🔥 MATA PICKER DE HORA EN CHROME MOBILE */
 .no-time-picker::-webkit-calendar-picker-indicator {
   display: none;
@@ -263,7 +302,7 @@ input:focus, select:focus, textarea:focus {
 .label {
   display: block;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-bottom: 0.35rem;
 }
 
