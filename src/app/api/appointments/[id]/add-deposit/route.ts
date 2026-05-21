@@ -20,13 +20,29 @@ export async function POST(
 
     const appointment = await prisma.appointment.findUnique({
       where: { id: params.id },
-      select: { id: true },
+      select: {
+        id: true,
+        servicePrice: true,
+        payments: { select: { amount: true } },
+      },
     });
 
     if (!appointment) {
       return NextResponse.json(
         { error: "Turno no encontrado" },
         { status: 404 }
+      );
+    }
+
+    const totalPagado = appointment.payments.reduce(
+      (acc, p) => acc + p.amount,
+      0
+    );
+
+    if (totalPagado >= appointment.servicePrice) {
+      return NextResponse.json(
+        { error: "El turno ya está completamente pagado" },
+        { status: 400 }
       );
     }
 
