@@ -44,13 +44,13 @@ function getTimeInfo(date: string) {
 function getCardStyle(state: string) {
   switch (state) {
     case "very-soon":
-      return "bg-green-200 dark:bg-green-900 border-l-4 border-green-600";
+      return "bg-green-200 dark:bg-green-900/60 border-l-4 border-green-600";
     case "soon":
-      return "bg-green-100 dark:bg-green-800 border-l-4 border-green-400";
+      return "bg-green-100 dark:bg-green-800/60 border-l-4 border-green-400";
     case "past":
-      return "bg-gray-50 dark:bg-gray-800 opacity-50";
+      return "bg-gray-50 dark:bg-[#1f1f1f] opacity-50";
     default:
-      return "bg-white dark:bg-[#1a1a1a]";
+      return "bg-white dark:bg-[#252525]";
   }
 }
 
@@ -75,13 +75,25 @@ export default function AdminPanel() {
   const today = new Date();
 
   async function fetchAppointments() {
-    const res = await axios.get("/api/appointments");
-    const ordered = Array.isArray(res.data)
-      ? res.data.sort((a: Appointment, b: Appointment) =>
+    try {
+      const res = await axios.get("/api/appointments");
+      const data = res.data;
+      if (data && data.data && Array.isArray(data.data)) {
+        const ordered = data.data.sort((a: Appointment, b: Appointment) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
-        )
-      : [];
-    setAllAppointments(ordered);
+        );
+        setAllAppointments(ordered);
+      } else if (Array.isArray(data)) {
+        const ordered = data.sort((a: Appointment, b: Appointment) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        setAllAppointments(ordered);
+      } else {
+        setAllAppointments([]);
+      }
+    } catch {
+      setAllAppointments([]);
+    }
   }
 
   useEffect(() => {
@@ -179,7 +191,7 @@ export default function AdminPanel() {
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
 
       {/* FILTROS */}
-      <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl px-3 py-3 mb-4 overflow-x-auto scrollbar-hide">
+      <div className="bg-white dark:bg-[#252525] rounded-2xl px-3 py-3 mb-4 overflow-x-auto scrollbar-hide">
         <div className="flex items-center gap-2 w-max sm:w-auto sm:flex-wrap">
           <button onClick={() => setFilterOption("all")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "all" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Todos
@@ -243,7 +255,7 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-500 dark:text-gray-400">
         {appointments.length} turno{appointments.length !== 1 && "s"}
       </p>
 
