@@ -199,7 +199,7 @@ export default function EditAppointmentPage({
 
       <div className="space-y-4">
         {/* DATOS PERSONALES */}
-        <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 space-y-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
+        <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Cliente</p>
           <Field icon={<User size={15} />} label="Nombre">
             <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
@@ -219,7 +219,7 @@ export default function EditAppointmentPage({
         </section>
 
         {/* TURNO */}
-        <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 space-y-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
+        <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Turno</p>
           <Field icon={<Sparkles size={15} />} label="Servicio">
             <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input">
@@ -238,7 +238,7 @@ export default function EditAppointmentPage({
         </section>
 
         {/* ESTADO */}
-        <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
+        <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Estado</p>
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
@@ -264,7 +264,7 @@ export default function EditAppointmentPage({
 
         {/* CONFIRMAR */}
         {(telefono || instagram) && (
-          <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 space-y-2.5 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
+          <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-2.5 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Enviar confirmación</p>
             {telefono && (
               <button
@@ -288,7 +288,7 @@ export default function EditAppointmentPage({
         )}
 
         {/* PAGOS */}
-        <section className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 space-y-3 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
+        <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-3 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Pagos</p>
 
           <div className="flex justify-between text-sm">
