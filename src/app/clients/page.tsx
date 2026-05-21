@@ -63,7 +63,7 @@ export default function ClientsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar por nombre, teléfono o Instagram…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm focus:outline-none focus:border-gray-400 transition"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#252525] text-sm focus:outline-none focus:border-gray-400 transition"
           />
       </div>
 
@@ -73,7 +73,7 @@ export default function ClientsPage() {
           <Link
             key={c.id}
             href={`/clients/${c.id}`}
-            className="flex items-center justify-between bg-white dark:bg-[#1a1a1a] rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-[#222] transition"
+            className="flex items-center justify-between bg-white dark:bg-[#252525] rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-[#2a2a2a] transition"
           >
             <div className="min-w-0">
               <p className="font-medium text-sm truncate">
@@ -121,9 +121,9 @@ export default function ClientsPage() {
       </div>
 
       {/* Desktop: tabla */}
-      <div className="hidden sm:block bg-white dark:bg-[#1a1a1a] rounded-xl shadow overflow-hidden border border-gray-100 dark:border-gray-800">
+      <div className="hidden sm:block bg-white dark:bg-[#252525] rounded-xl shadow overflow-hidden border border-gray-100 dark:border-gray-800">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-[#222] border-b border-gray-100 dark:border-gray-800">
+          <thead className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-100 dark:border-gray-800">
             <tr>
               <th className="p-3 text-left font-medium text-gray-600">Nombre</th>
               <th className="p-3 text-left font-medium text-gray-600">Contacto</th>
