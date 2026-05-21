@@ -249,10 +249,6 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {loading ? (
-        <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">Cargando turnos…</p>
-      ) : (
-        <>
       <p className="text-sm text-gray-500 dark:text-gray-400">
         {appointments.length} turno{appointments.length !== 1 && "s"}
       </p>
@@ -372,8 +368,6 @@ export default function AdminPanel() {
           </p>
         )}
       </div>
-      </>
-      )}
     </div>
   );
 }
