@@ -39,7 +39,7 @@ export async function POST(
       0
     );
 
-    if (totalPagado >= appointment.servicePrice) {
+    if (appointment.servicePrice != null && totalPagado >= appointment.servicePrice) {
       return NextResponse.json(
         { error: "El turno ya está completamente pagado" },
         { status: 400 }
