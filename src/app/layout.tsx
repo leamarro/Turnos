@@ -1,5 +1,6 @@
 import { DM_Sans } from "next/font/google";
 import ClientLayout from "@/components/ClientLayout";
+import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,9 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <ClientLayout>{children}</ClientLayout>
+        <ToastProvider>
+          <ClientLayout>{children}</ClientLayout>
+        </ToastProvider>
       </body>
     </html>
   );
