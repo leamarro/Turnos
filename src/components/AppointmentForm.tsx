@@ -167,13 +167,6 @@ export default function AppointmentForm() {
   function validate() {
     if (!form.name.trim() || !form.serviceId || !form.date || form.times.length === 0)
       return "Completá los datos obligatorios.";
-    const today = getTodayInputValue();
-    if (form.date === today) {
-      for (const t of form.times) {
-        const dt = new Date(`${form.date}T${t}:00`);
-        if (dt.getTime() < Date.now()) return "Elegí una fecha y hora futuras.";
-      }
-    }
     return "";
   }
 
@@ -349,7 +342,6 @@ export default function AppointmentForm() {
         <input
           type="date"
           value={form.date}
-          min={getTodayInputValue()}
           onChange={(e) => handleDateChange(e.target.value)}
           className="booking-input"
         />
