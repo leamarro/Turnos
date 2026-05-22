@@ -103,6 +103,12 @@ export default function AppointmentForm() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (createdDates.length === 0) return;
+    const t = setTimeout(() => router.push("/home"), 1500);
+    return () => clearTimeout(t);
+  }, [createdDates]);
+
   const suggestedClients = useMemo(() => {
     const q = form.name.trim().toLowerCase();
     if (!q) return [];
@@ -215,11 +221,6 @@ export default function AppointmentForm() {
 
   /* ===== ÉXITO ===== */
   if (createdDates.length > 0) {
-    useEffect(() => {
-      const t = setTimeout(() => router.push("/home"), 1500);
-      return () => clearTimeout(t);
-    }, [createdDates]);
-
     return (
       <div className="max-w-sm mx-auto text-center space-y-4 py-8">
         <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
