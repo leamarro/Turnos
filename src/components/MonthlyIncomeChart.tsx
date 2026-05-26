@@ -16,8 +16,8 @@ export default function MonthlyIncomeChart() {
   }, []);
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow border w-full">
-      <h2 className="text-xl font-semibold mb-4">Ingresos por mes</h2>
+    <div className="bg-white dark:bg-[#252525] p-6 rounded-2xl shadow dark:shadow-none border dark:border-gray-800 w-full">
+      <h2 className="text-xl font-semibold mb-4 dark:text-white">Ingresos por mes</h2>
 
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
