@@ -140,6 +140,7 @@ export default function EditAppointmentPage({
   async function handleCompletePayment() {
     try {
       await axios.post(`/api/appointments/${id}/complete-payment`);
+      toast("Pago completo ✓", "success");
       router.refresh();
     } catch { toast("Error al completar pago", "error"); }
   }
@@ -314,24 +315,26 @@ export default function EditAppointmentPage({
             <p className="text-sm text-green-600 font-medium text-center">Pago completo ✓</p>
           )}
 
-          <Field icon={<BadgeCheck size={15} />} label="Agregar seña">
-            <input
-              type="number"
-              value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
-              disabled={pagoCompleto}
-              className="input disabled:bg-gray-200 disabled:cursor-not-allowed"
-              placeholder="Monto"
-            />
-          </Field>
+          {!pagoCompleto && (
+            <>
+              <Field icon={<BadgeCheck size={15} />} label="Agregar seña">
+                <input
+                  type="number"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  className="input"
+                  placeholder="Monto"
+                />
+              </Field>
 
-          <button
-            onClick={handleAddDeposit}
-            disabled={pagoCompleto}
-            className="w-full bg-gray-100 text-gray-800 py-2.5 rounded-xl text-sm font-medium disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-          >
-            Registrar seña
-          </button>
+              <button
+                onClick={handleAddDeposit}
+                className="w-full bg-gray-100 text-gray-800 py-2.5 rounded-xl text-sm font-medium"
+              >
+                Registrar seña
+              </button>
+            </>
+          )}
 
           {restante > 0 && (
             <button onClick={handleCompletePayment} className="w-full bg-green-600 text-white py-2.5 rounded-xl text-sm font-medium">
