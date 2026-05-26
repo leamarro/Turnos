@@ -1,10 +1,6 @@
-const CACHE = "turnos-v1";
-const urlsToCache = ["/home", "/admin", "/clients", "/dashboard", "/services"];
+const CACHE = "turnos-v2";
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(urlsToCache)));
-  self.skipWaiting();
-});
+self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(clients.claim());
@@ -12,6 +8,12 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   e.respondWith(
-    caches.match(e.request).then((r) => r || fetch(e.request).catch(() => new Response("Sin conexión", { status: 503 })))
+    fetch(e.request)
+      .then((r) => {
+        const copy = r.clone();
+        caches.open(CACHE).then((c) => c.put(e.request, copy));
+        return r;
+      })
+      .catch(() => caches.match(e.request).then((r) => r || new Response("Sin conexión", { status: 503 })))
   );
 });
