@@ -82,11 +82,11 @@ export default function CalendarMonthGrid({
                 {format(day, "d")}
               </span>
               {/* Barras de turnos */}
-              <div className="flex gap-0.5 mt-0.5 h-1.5">
+              <div className="flex gap-1 mt-1 h-2">
                 {appts.slice(0, 3).map((a, i) => (
                   <div
                     key={i}
-                    className="w-2 h-1 rounded-sm"
+                    className="w-3 h-2"
                     style={{ backgroundColor: a.service.color || "#000000" }}
                   />
                 ))}
