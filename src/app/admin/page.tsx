@@ -68,8 +68,6 @@ export default function AdminPanel() {
   const [filterOption, setFilterOption] = useState<"all" | "today" | "tomorrow" | "week">("all");
   const [showPast, setShowPast] = useState(false);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
-  const [swipingId, setSwipingId] = useState<string | null>(null);
-  const [swipeX, setSwipeX] = useState(0);
   const { toast } = useToast();
   const router = useRouter();
   const today = new Date();
@@ -153,31 +151,6 @@ export default function AdminPanel() {
     }
   }
 
-  function handleTouchStart() {
-    setSwipingId(null);
-    setSwipeX(0);
-  }
-
-  function handleTouchMove(e: React.TouchEvent, id: string) {
-    const start = Number((e.currentTarget as HTMLElement).dataset.touchStart) || 0;
-    const x = e.touches[0].clientX;
-    const diff = x - start;
-    if (diff < 0) {
-      setSwipingId(id);
-      setSwipeX(Math.max(diff, -120));
-    }
-  }
-
-  function handleTouchEnd() {
-    if (swipeX < -80) {
-      setSwipeX(-120);
-    } else {
-      setSwipingId(null);
-      setSwipeX(0);
-    }
-  }
-
-
   return (
     <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
       <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
@@ -259,103 +232,80 @@ export default function AdminPanel() {
           const remaining = total - paid;
           const hasDebt = remaining > 0;
           const info = getTimeInfo(a.date);
-          const isSwiping = swipingId === a.id;
 
           return (
             <div
               key={a.id}
-              className="relative overflow-hidden rounded-2xl"
+              className={`p-4 shadow dark:shadow-none rounded-2xl ${getCardStyle(
+                info.state
+              )} ${
+                hasDebt ? "border border-red-400" : "border border-green-400"
+              } dark:border-gray-700`}
             >
-              <div
-                onTouchStart={(e) => {
-                  (e.currentTarget as HTMLElement).dataset.touchStart = String(e.touches[0].clientX);
-                  handleTouchStart();
-                }}
-                onTouchMove={(e) => handleTouchMove(e, a.id)}
-                onTouchEnd={handleTouchEnd}
-                style={{ transform: isSwiping ? `translateX(${swipeX}px)` : undefined }}
-                className={`relative z-10 p-4 shadow dark:shadow-none transition-transform duration-200 ${getCardStyle(
-                  info.state
-                )} ${
-                  hasDebt ? "border border-red-400" : "border border-green-400"
-                } dark:border-gray-700`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold flex items-center gap-2">
-                      <User size={16} /> {a.name} {a.lastName}
-                    </p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-semibold flex items-center gap-2">
+                    <User size={16} /> {a.name} {a.lastName}
+                  </p>
 
-                    <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                      <Phone size={14} /> {a.telefono}
-                    </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                    <Phone size={14} /> {a.telefono}
+                  </p>
 
-                    <p className="text-sm mt-2">{a.service?.name}</p>
+                  <p className="text-sm mt-2">{a.service?.name}</p>
 
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      {format(new Date(a.date), "dd/MM/yyyy HH:mm", {
-                        locale: es,
-                      })} hs
-                    </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    {format(new Date(a.date), "dd/MM/yyyy HH:mm", {
+                      locale: es,
+                    })} hs
+                  </p>
+                </div>
+
+                {total > 0 && (
+                  <div className="text-right text-sm">
+                    <p>Total: ${total}</p>
+
+                    {paid === 0 && (
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Sin pagos registrados
+                      </p>
+                    )}
+
+                    {paid > 0 && paid < total && (
+                      <>
+                        <p>Pagado: ${paid}</p>
+                        <p className="text-red-600 font-semibold">
+                          Debe: ${remaining}
+                        </p>
+                      </>
+                    )}
+
+                    {paid >= total && (
+                      <p className="text-green-600 font-semibold">
+                        Pago completo
+                      </p>
+                    )}
                   </div>
-
-                  {total > 0 && (
-                    <div className="text-right text-sm">
-                      <p>Total: ${total}</p>
-
-                      {paid === 0 && (
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Sin pagos registrados
-                        </p>
-                      )}
-
-                      {paid > 0 && paid < total && (
-                        <>
-                          <p>Pagado: ${paid}</p>
-                          <p className="text-red-600 font-semibold">
-                            Debe: ${remaining}
-                          </p>
-                        </>
-                      )}
-
-                      {paid >= total && (
-                        <p className="text-green-600 font-semibold">
-                          Pago completo
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-3 mt-4">
-                  <button
-                    onClick={() =>
-                      router.push(`/admin/edit/${a.id}`)
-                    }
-                    className="text-green-600 dark:text-green-500"
-                  >
-                    <Pencil size={18} />
-                  </button>
-
-                  <button
-                    onClick={() => deleteAppointment(a.id)}
-                    className="text-red-600 dark:text-red-500"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
+                )}
               </div>
 
-              {/* Swipe reveal: delete button */}
-              {isSwiping && (
+              <div className="flex justify-end gap-3 mt-4">
                 <button
-                  onClick={() => { setSwipingId(null); setSwipeX(0); deleteAppointment(a.id); }}
-                  className="absolute right-0 top-0 bottom-0 w-24 bg-red-600 text-white flex items-center justify-center gap-1.5 text-sm font-medium rounded-r-2xl"
+                  onClick={() =>
+                    router.push(`/admin/edit/${a.id}`)
+                  }
+                  className="text-green-600 dark:text-green-500"
                 >
-                  <Trash2 size={16} />
-                  Eliminar
+                  <Pencil size={18} />
                 </button>
-              )}
+
+                <button
+                  onClick={() => deleteAppointment(a.id)}
+                  className="text-red-600 dark:text-red-500"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
           );
         })}
