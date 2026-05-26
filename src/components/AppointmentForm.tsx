@@ -246,6 +246,17 @@ export default function AppointmentForm() {
     <form onSubmit={handleSubmit} className="max-w-sm mx-auto space-y-6">
       <h1 className="text-2xl font-semibold">Nuevo turno</h1>
 
+      {/* FECHA */}
+      <div className="space-y-2">
+        <label className="label">Fecha *</label>
+        <input
+          type="date"
+          value={form.date}
+          onChange={(e) => handleDateChange(e.target.value)}
+          className="booking-input"
+        />
+      </div>
+
       {/* DATOS */}
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
@@ -334,17 +345,6 @@ export default function AppointmentForm() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* FECHA */}
-      <div className="space-y-2">
-        <label className="label">Fecha *</label>
-        <input
-          type="date"
-          value={form.date}
-          onChange={(e) => handleDateChange(e.target.value)}
-          className="booking-input"
-        />
       </div>
 
       {/* HORARIOS */}
