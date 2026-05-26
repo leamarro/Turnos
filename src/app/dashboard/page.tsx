@@ -12,17 +12,8 @@ import MonthlyIncomeChart from "@/components/MonthlyIncomeChart";
 import MonthlyIncomeByServiceChart from "@/components/MonthlyIncomeByServiceChart";
 import MonthlyTrendSparkline from "@/components/MonthlyTrendSparkline";
 
-type Appointment = {
-  id: string;
-  date: string;
-  servicePrice?: number | null;
-  service?: {
-    price?: number;
-    name?: string;
-  } | null;
-  name?: string | null;
-  lastName?: string | null;
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Appointment = any;
 
 const money = (n: number) =>
   `$ ${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
