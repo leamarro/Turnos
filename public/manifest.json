@@ -1,0 +1,14 @@
+{
+  "name": "Beat Makeup - Turnos",
+  "short_name": "Turnos",
+  "description": "Gestión de turnos para Beat Makeup Studio",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/icons/icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
