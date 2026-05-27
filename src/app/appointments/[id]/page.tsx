@@ -166,7 +166,13 @@ export default function EditAppointmentPage({
     } catch { toast("Error al actualizar estado", "error"); }
   }
 
-  function handleSendWhatsapp() {
+  function handleConsultWhatsapp() {
+    if (!telefono) return;
+    const phone = telefono.replace(/\D/g, "");
+    window.open(`https://wa.me/${phone}`, "_blank", "noopener,noreferrer");
+  }
+
+  function handleConfirmWhatsapp() {
     if (!appointment || !telefono) return;
     const d = appointment.date ? new Date(appointment.date) : null;
     const fechaHora = d ? format(d, "dd/MM/yyyy HH:mm", { locale: es }) : "—";
@@ -182,7 +188,7 @@ export default function EditAppointmentPage({
     const fechaHora = d ? format(d, "dd/MM/yyyy HH:mm", { locale: es }) : "—";
     const msg = `Hola ${name}! 💕✨\n\nTu turno está confirmado 💄\n\n🧾 Servicio: ${appointment.service?.name ?? "—"}\n📅 Fecha y hora: ${fechaHora}\n\n¡Te esperamos! 💖`;
     try { await navigator.clipboard.writeText(msg); } catch { /* clipboard no disponible */ }
-    window.open(`https://www.instagram.com/${username}/`, "_blank", "noopener,noreferrer");
+    window.open(`https://ig.me/m/${username}`, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -263,18 +269,27 @@ export default function EditAppointmentPage({
           )}
         </section>
 
-        {/* CONFIRMAR */}
+        {/* CONTACTAR */}
         {(telefono || instagram) && (
-          <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-2.5 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Enviar confirmación</p>
+          <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-3 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Contactar</p>
             {telefono && (
-              <button
-                onClick={handleSendWhatsapp}
-                className="w-full flex items-center justify-center gap-2 bg-green-500 text-white py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
-              >
-                <MessageCircle size={15} />
-                Confirmar por WhatsApp
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleConsultWhatsapp}
+                  className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 dark:text-gray-300 dark:border-gray-600 py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
+                >
+                  <MessageCircle size={15} />
+                  Consultar
+                </button>
+                <button
+                  onClick={handleConfirmWhatsapp}
+                  className="flex-1 flex items-center justify-center gap-2 bg-black text-white py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
+                >
+                  <MessageCircle size={15} />
+                  Confirmar
+                </button>
+              </div>
             )}
             {instagram && (
               <button
@@ -282,7 +297,7 @@ export default function EditAppointmentPage({
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
               >
                 <Instagram size={15} />
-                Copiar mensaje · Instagram
+                Instagram DM
               </button>
             )}
           </section>
