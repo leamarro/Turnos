@@ -5,6 +5,7 @@ import {
   startOfMonth, endOfMonth, subMonths, isWithinInterval,
   startOfWeek, endOfWeek, subWeeks,
 } from "date-fns";
+import { Download } from "lucide-react";
 import TodaySummaryCard from "@/components/TodaySummaryCard";
 import TodayNextAppointments from "@/components/TodayNextAppointments";
 import TodayAlertCard from "@/components/TodayAlertCard";
@@ -65,6 +66,32 @@ export default function DashboardPage() {
     return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
   }, [appointments]);
 
+  function exportCSV() {
+    const rows = [["Fecha", "Hora", "Cliente", "Servicio", "Precio", "Pagado", "Restante"]];
+    appointments.forEach((a: any) => {
+      const d = new Date(a.date);
+      const total = a.servicePrice ?? a.service?.price ?? 0;
+      const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
+      rows.push([
+        d.toLocaleDateString("es-AR"),
+        d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
+        `${a.name ?? ""} ${a.lastName ?? ""}`.trim(),
+        a.service?.name ?? "",
+        String(total),
+        String(paid),
+        String(total - paid),
+      ]);
+    });
+    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `turnos_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (loading) {
     return <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Cargando dashboard…</p>;
   }
@@ -76,7 +103,16 @@ export default function DashboardPage() {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{appointments.length} turnos totales</p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportCSV}
+            className="flex items-center gap-1.5 text-xs border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#252525] transition"
+          >
+            <Download size={13} />
+            Exportar CSV
+          </button>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{appointments.length} turnos</p>
+        </div>
       </div>
 
       {/* HOY */}
