@@ -29,6 +29,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body>
+        <script dangerouslySetInnerHTML={{
+          __html: `"serviceWorker"in navigator&&navigator.serviceWorker.getRegistrations().then(r=>r.forEach(s=>s.unregister()))`,
+        }} />
         <ToastProvider>
           <ClientLayout>{children}</ClientLayout>
         </ToastProvider>
