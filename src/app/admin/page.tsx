@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2, Phone, User, CalendarDays, X } from "lucide-react";
+import { Pencil, Trash2, Phone, User, CalendarDays, X, MessageCircle, Instagram } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/Toast";
 
@@ -21,6 +21,7 @@ type Appointment = {
   name?: string;
   lastName?: string;
   telefono?: string;
+  instagram?: string;
   date: string;
   servicePrice?: number | null;
   service?: { name?: string };
@@ -250,6 +251,28 @@ export default function AdminPanel() {
 
                   <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                     <Phone size={14} /> {a.telefono}
+                    {a.telefono && (
+                      <a
+                        href={`https://wa.me/${a.telefono.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-500 hover:text-green-600 transition"
+                        title="Enviar WhatsApp"
+                      >
+                        <MessageCircle size={14} />
+                      </a>
+                    )}
+                    {a.instagram && (
+                      <a
+                        href={`https://ig.me/m/${a.instagram.replace("@", "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-pink-500 hover:text-pink-600 transition"
+                        title="Enviar Instagram DM"
+                      >
+                        <Instagram size={14} />
+                      </a>
+                    )}
                   </p>
 
                   <p className="text-sm mt-2">{a.service?.name}</p>
