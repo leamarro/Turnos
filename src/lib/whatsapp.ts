@@ -6,6 +6,7 @@ const client = new Twilio(accountSid, authToken);
 
 const ADMIN_NUMBERS = [
   "whatsapp:+5492932415221",
+  "whatsapp:+5492932478730"
 ];
 
 export async function sendWhatsApp(message: string) {
