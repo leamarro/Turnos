@@ -36,6 +36,12 @@ export async function GET(req: Request) {
     const title = type === "manana" ? "Turnos de manana" : "Turnos de hoy";
     const { start, end } = getDateRange(offset);
 
+    if (start.getDay() === 0) {
+      await sendWhatsApp(`${title}\n\nHoy no se trabaja 😴`);
+      await sendEmail(ADMINS_EMAIL, title, `Hoy no se trabaja 😴`);
+      return NextResponse.json({ ok: true, sunday: true });
+    }
+
     const turnos = await prisma.appointment.findMany({
       where: {
         date: {
