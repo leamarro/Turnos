@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendWhatsApp } from "@/lib/whatsapp";
+import { sendEmail } from "@/lib/email";
+
+const SECRET = process.env.CRON_SECRET;
+const ADMINS_EMAIL = ["leaa.marrocchi@gmail.com", "eugeardissone@gmail.com"];
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +21,10 @@ function getDateRange(offsetDays: number) {
 
 export async function GET(req: Request) {
   try {
+    if (SECRET && req.headers.get("x-cron-secret") !== SECRET) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
 
@@ -45,6 +53,7 @@ export async function GET(req: Request) {
 
     if (turnos.length === 0) {
       await sendWhatsApp(`${title}\n\nNo tenes turnos`);
+      await sendEmail(ADMINS_EMAIL, title, `No tenes turnos`);
       return NextResponse.json({ ok: true, empty: true });
     }
 
@@ -74,6 +83,7 @@ Total: ${turnos.length} turnos
 `.trim();
 
     await sendWhatsApp(message);
+    await sendEmail(ADMINS_EMAIL, title, message);
 
     return NextResponse.json({ ok: true });
   } catch (error) {
