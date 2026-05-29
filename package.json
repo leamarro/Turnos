@@ -25,7 +25,8 @@
     "react-time-picker": "^8.0.2",
     "recharts": "^3.5.0",
     "zod": "^4.1.12",
-    "twilio": "^4.20.0"
+    "twilio": "^4.20.0",
+    "resend": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
