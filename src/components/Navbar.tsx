@@ -12,6 +12,7 @@ import {
   BarChart2,
   Plus,
   Sparkles,
+  Settings,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -97,6 +98,13 @@ export default function Navbar() {
           )}
 
           <div className="flex items-center gap-1">
+            <Link
+              href="/admin/notificaciones"
+              className="p-2 text-gray-400 active:text-black dark:text-gray-400 transition"
+              aria-label="Configurar notificaciones"
+            >
+              <Settings size={18} />
+            </Link>
             <ThemeToggle />
             <button
               onClick={handleLogout}
@@ -148,6 +156,13 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <Link
+              href="/admin/notificaciones"
+              className="text-gray-400 hover:text-black dark:hover:text-white transition"
+              aria-label="Configurar notificaciones"
+            >
+              <Settings size={18} />
+            </Link>
             <ThemeToggle />
             <button
               onClick={handleLogout}
