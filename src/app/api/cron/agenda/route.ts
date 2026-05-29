@@ -22,12 +22,15 @@ function getDateRange(offsetDays: number) {
 async function getConfig(type: string) {
   let config = await prisma.notificationConfig.findUnique({ where: { type } });
   if (!config) {
-    const template =
-      type === "manana"
-        ? "\ud83d\udccb {titulo}\n\n{listado}"
-        : "\ud83d\udccb {titulo}\n\n{listado}";
+    const template = "\ud83d\udccb {titulo}\n\n{listado}";
     config = await prisma.notificationConfig.create({
-      data: { type, template, enabled: true, workDays: "1,2,3,4,5,6" },
+      data: {
+        type,
+        template,
+        enabled: true,
+        workDays: "1,2,3,4,5,6",
+        sendTime: type === "manana" ? "21:00" : "08:00",
+      },
     });
   }
   return config;
@@ -49,6 +52,20 @@ export async function GET(req: Request) {
     const config = await getConfig(type);
     if (!config.enabled) {
       return NextResponse.json({ ok: true, disabled: true });
+    }
+
+    const nowART = new Date().toLocaleString("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const targetTime = config.sendTime;
+    const [th, tm] = targetTime.split(":").map(Number);
+    const [nh, nm] = nowART.split(":").map(Number);
+    const diff = Math.abs(nh * 60 + nm - (th * 60 + tm));
+    if (diff > 7) {
+      return NextResponse.json({ ok: true, skipped: true, reason: `Hora ${nowART} lejos de ${targetTime}` });
     }
 
     const offset = type === "manana" ? 1 : 0;
