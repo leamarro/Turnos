@@ -9,6 +9,7 @@ const PUBLIC_PATHS = new Set([
   "/api/login",
   "/api/logout",
   "/api/auth/logout",
+  "/api/keep-alive",
 ]);
 
 function isPublicPath(req: NextRequest) {
@@ -22,6 +23,7 @@ function isPublicPath(req: NextRequest) {
   return (
     isPublicBookingApi ||
     PUBLIC_PATHS.has(pathname) ||
+    pathname.startsWith("/api/cron/") ||
     pathname.startsWith("/_next") ||
     pathname.includes(".")
   );
