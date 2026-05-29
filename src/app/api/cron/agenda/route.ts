@@ -19,6 +19,20 @@ function getDateRange(offsetDays: number) {
   return { start, end };
 }
 
+async function getConfig(type: string) {
+  let config = await prisma.notificationConfig.findUnique({ where: { type } });
+  if (!config) {
+    const template =
+      type === "manana"
+        ? "\ud83d\udccb {titulo}\n\n{listado}"
+        : "\ud83d\udccb {titulo}\n\n{listado}";
+    config = await prisma.notificationConfig.create({
+      data: { type, template, enabled: true, workDays: "1,2,3,4,5,6" },
+    });
+  }
+  return config;
+}
+
 export async function GET(req: Request) {
   try {
     if (SECRET && req.headers.get("x-cron-secret") !== SECRET) {
@@ -32,14 +46,19 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Tipo invalido" }, { status: 400 });
     }
 
+    const config = await getConfig(type);
+    if (!config.enabled) {
+      return NextResponse.json({ ok: true, disabled: true });
+    }
+
     const offset = type === "manana" ? 1 : 0;
-    const title = type === "manana" ? "Turnos de manana" : "Turnos de hoy";
+    const title = type === "manana" ? "Turnos de mañana" : "Turnos de hoy";
     const { start, end } = getDateRange(offset);
 
-    if (start.getDay() === 0) {
-      await sendWhatsApp(`${title}\n\nHoy no se trabaja 😴`);
-      await sendEmail(ADMINS_EMAIL, title, `Hoy no se trabaja 😴`);
-      return NextResponse.json({ ok: true, sunday: true });
+    const todayDay = start.getDay().toString();
+    const workDays = config.workDays.split(",").filter(Boolean);
+    if (!workDays.includes(todayDay)) {
+      return NextResponse.json({ ok: true, skipped: true, reason: "Fuera de días laborables" });
     }
 
     const turnos = await prisma.appointment.findMany({
@@ -57,12 +76,6 @@ export async function GET(req: Request) {
         date: "asc",
       },
     });
-
-    if (turnos.length === 0) {
-      await sendWhatsApp(`${title}\n\nNo tenes turnos`);
-      await sendEmail(ADMINS_EMAIL, title, `No tenes turnos`);
-      return NextResponse.json({ ok: true, empty: true });
-    }
 
     const listado = turnos
       .map((turno) => {
@@ -84,10 +97,14 @@ export async function GET(req: Request) {
       })
       .join("\n");
 
-    const message = `${title}\n\n${listado}`.trim();
+    let body = config.template
+      .replace(/\{titulo\}/g, title)
+      .replace(/\{listado\}/g, listado || "No tenes turnos")
+      .replace(/\{total\}/g, String(turnos.length))
+      .trim();
 
-    await sendWhatsApp(message);
-    await sendEmail(ADMINS_EMAIL, title, message);
+    await sendWhatsApp(body);
+    await sendEmail(ADMINS_EMAIL, title, body);
 
     return NextResponse.json({ ok: true });
   } catch (error) {
