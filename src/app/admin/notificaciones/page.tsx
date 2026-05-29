@@ -14,7 +14,7 @@ type Config = {
   workDays: string;
 };
 
-const PLACEHOLDERS = {
+const PLACEHOLDERS: Record<string, string[]> = {
   hoy: ["{titulo}", "{listado}", "{total}"],
   manana: ["{titulo}", "{listado}", "{total}"],
   reminder: ["{titulo}", "{nombre}", "{hora}", "{servicio}"],
