@@ -64,6 +64,7 @@ export async function GET(req: Request) {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
+          timeZone: "America/Argentina/Buenos_Aires",
         });
 
         const nombre =
