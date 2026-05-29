@@ -15,7 +15,7 @@ export async function GET() {
 
   const turnos = await prisma.appointment.findMany({
     where: { date: { gte: start, lte: end } },
-    include: { User: true },
+    include: { User: true, service: true },
     orderBy: { date: "asc" },
   });
 
@@ -29,15 +29,16 @@ export async function GET() {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
+          timeZone: "America/Argentina/Buenos_Aires",
         });
         const nombre =
           [t.name, t.lastName].filter(Boolean).join(" ") ||
           t.User?.name ||
           "Sin nombre";
-        return `- ${hora} - ${nombre}`;
+        const servicio = t.service?.name || "";
+        return `🕐 ${hora}  ${nombre}${servicio ? ` (${servicio})` : ""}`;
       })
       .join("\n");
-    message += `\n\nTotal: ${turnos.length} turnos`;
   }
 
   try {
