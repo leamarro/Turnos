@@ -1,6 +1,16 @@
 name: Notificaciones diarias
 on:
   workflow_dispatch:
+    inputs:
+      type:
+        description: "Tipo de notificación"
+        required: true
+        default: "hoy"
+        type: choice
+        options:
+          - hoy
+          - manana
+          - reminders
   schedule:
     - cron: "0 11 * * *"
     - cron: "0 0 * * *"
@@ -9,16 +19,19 @@ jobs:
   cron:
     runs-on: ubuntu-latest
     steps:
-      - name: Llamar cron según schedule
+      - name: Llamar cron
         run: |
-          case "${{ github.event.schedule }}" in
-            "0 11 * * *")
-              curl -s -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" "https://${{ secrets.DEPLOY_URL }}/api/cron/agenda?type=hoy"
+          URL="https://${{ secrets.DEPLOY_URL }}"
+          SECRET="${{ secrets.CRON_SECRET }}"
+
+          case "${{ github.event.inputs.type || github.event.schedule }}" in
+            "hoy"|"0 11 * * *")
+              curl -sf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=hoy"
               ;;
-            "0 0 * * *")
-              curl -s -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" "https://${{ secrets.DEPLOY_URL }}/api/cron/agenda?type=manana"
+            "manana"|"0 0 * * *")
+              curl -sf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=manana"
               ;;
-            "*/15 * * * *")
-              curl -s -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" "https://${{ secrets.DEPLOY_URL }}/api/cron/reminders"
+            "reminders"|"*/15 * * * *")
+              curl -sf -H "x-cron-secret: $SECRET" "$URL/api/cron/reminders"
               ;;
           esac
