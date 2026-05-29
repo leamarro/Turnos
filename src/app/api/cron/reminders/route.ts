@@ -51,7 +51,8 @@ export async function GET(req: Request) {
         [t.name, t.lastName].filter(Boolean).join(" ") ||
         t.User?.name ||
         "Sin nombre";
-      const msg = `⏰ Recordatorio\n\nTenés turno con ${nombre} a las ${hora} hs\n\nServicio: ${t.service?.name ?? "—"}`;
+      const servicio = t.service?.name ?? "";
+      const msg = `⏰ Recordatorio\n\n${nombre} a las ${hora} hs${servicio ? ` · ${servicio}` : ""}`;
 
       await sendWhatsApp(msg);
       await sendEmail(ADMINS_EMAIL, `Recordatorio: ${nombre} ${hora}`, msg);
