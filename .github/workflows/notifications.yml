@@ -12,8 +12,6 @@ on:
           - manana
           - reminders
   schedule:
-    - cron: "0 11 * * *"
-    - cron: "0 0 * * *"
     - cron: "*/15 * * * *"
 jobs:
   cron:
@@ -24,12 +22,15 @@ jobs:
           URL: "https://${{ secrets.DEPLOY_URL }}"
           SECRET: "${{ secrets.CRON_SECRET }}"
           INPUT: "${{ github.event.inputs.type }}"
-          SCHEDULE: "${{ github.event.schedule }}"
         run: |
-          if [ "$INPUT" = "manana" ] || [ "$SCHEDULE" = "0 0 * * *" ]; then
-            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=manana"
-          elif [ "$INPUT" = "reminders" ] || [ "$SCHEDULE" = "*/15 * * * *" ]; then
+          if [ "$INPUT" = "reminders" ]; then
             curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/reminders"
-          else
+          elif [ "$INPUT" = "manana" ]; then
+            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=manana"
+          elif [ "$INPUT" = "hoy" ]; then
             curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=hoy"
+          else
+            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/reminders"
+            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=hoy"
+            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=manana"
           fi
