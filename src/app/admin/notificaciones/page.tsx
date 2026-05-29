@@ -212,11 +212,11 @@ export default function NotificacionesPage() {
                   <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs whitespace-pre-wrap dark:text-gray-300">
                     {config.template
                       .replace(/\{titulo\}/g, config.type === "reminder" ? "Recordatorio" : config.type === "manana" ? "Turnos de mañana" : "Turnos de hoy")
-                      .replace(/\{listado\}/g, "🕐 09:30  Lucía Mendoza (Corte)\n🕐 11:00  Carla Ruiz (Brushing)\n🕐 15:30  Marina Torres (Corte + Brushing)")
+                      .replace(/\{listado\}/g, "🕐 09:30  Lucía Mendoza (Perfilado)\n🕐 11:00  Carla Ruiz (Maquillaje)\n🕐 15:30  Marina Torres (Perfilado + Maquillaje)")
                       .replace(/\{total\}/g, "3")
                       .replace(/\{nombre\}/g, "Marina Torres")
                       .replace(/\{hora\}/g, "15:30")
-                      .replace(/\{servicio\}/g, "Corte + Brushing")
+                      .replace(/\{servicio\}/g, "Perfilado + Maquillaje")
                       .trim()}
                   </div>
                 </div>
