@@ -1,0 +1,23 @@
+name: Notificaciones diarias
+on:
+  schedule:
+    - cron: "0 11 * * *"
+    - cron: "0 0 * * *"
+    - cron: "*/15 * * * *"
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar cron según schedule
+        run: |
+          case "${{ github.event.schedule }}" in
+            "0 11 * * *")
+              curl -s -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" "https://${{ secrets.DEPLOY_URL }}/api/cron/agenda?type=hoy"
+              ;;
+            "0 0 * * *")
+              curl -s -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" "https://${{ secrets.DEPLOY_URL }}/api/cron/agenda?type=manana"
+              ;;
+            "*/15 * * * *")
+              curl -s -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" "https://${{ secrets.DEPLOY_URL }}/api/cron/reminders"
+              ;;
+          esac
