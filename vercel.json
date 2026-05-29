@@ -1,16 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/agenda?type=hoy",
-      "schedule": "0 11 * * *"
-    },
-    {
-      "path": "/api/cron/agenda?type=manana",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/reminders",
-      "schedule": "*/15 * * * *"
-    }
-  ]
-}
+{}
