@@ -1,35 +1,61 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { sendEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const result: any = {};
+  const errors: string[] = [];
 
-  result.env = {
-    twilioSid: !!process.env.TWILIO_ACCOUNT_SID,
-    twilioToken: !!process.env.TWILIO_AUTH_TOKEN,
-    resendKey: !!process.env.RESEND_API_KEY,
-  };
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setHours(23, 59, 59, 999);
 
-  try {
-    await sendWhatsApp("🧪 Prueba con Twilio");
-    result.whatsapp = { ok: true };
-  } catch (e: any) {
-    result.whatsapp = { error: e?.message || "error" };
+  const turnos = await prisma.appointment.findMany({
+    where: { date: { gte: start, lte: end } },
+    include: { User: true },
+    orderBy: { date: "asc" },
+  });
+
+  let message = "📋 Turnos de hoy\n\n";
+  if (turnos.length === 0) {
+    message += "No tenés turnos";
+  } else {
+    message += turnos
+      .map((t) => {
+        const hora = new Date(t.date).toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+        const nombre =
+          [t.name, t.lastName].filter(Boolean).join(" ") ||
+          t.User?.name ||
+          "Sin nombre";
+        return `- ${hora} - ${nombre}`;
+      })
+      .join("\n");
+    message += `\n\nTotal: ${turnos.length} turnos`;
   }
 
   try {
-    await sendEmail(
-      ["leaa.marrocchi@gmail.com"],
-      "Prueba con Twilio",
-      "🧪 Prueba con Twilio WhatsApp",
-    );
-    result.email = { ok: true };
+    await sendWhatsApp(message);
   } catch (e: any) {
-    result.email = { error: e?.message || "error" };
+    errors.push("WhatsApp: " + (e?.message || "error"));
   }
 
-  return NextResponse.json(result);
+  try {
+    await sendEmail(["leaa.marrocchi@gmail.com"], "Turnos de hoy", message);
+  } catch (e: any) {
+    errors.push("Email: " + (e?.message || "error"));
+  }
+
+  return NextResponse.json({
+    ok: errors.length === 0,
+    turnos: turnos.length,
+    message: message.slice(0, 200),
+    errors: errors.length ? errors : undefined,
+  });
 }
