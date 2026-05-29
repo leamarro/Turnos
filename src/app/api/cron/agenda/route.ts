@@ -45,6 +45,7 @@ export async function GET(req: Request) {
       },
       include: {
         User: true,
+        service: true,
       },
       orderBy: {
         date: "asc",
@@ -70,17 +71,13 @@ export async function GET(req: Request) {
           [turno.User?.name, turno.User?.lastName].filter(Boolean).join(" ") ||
           "Sin nombre";
 
-        return `- ${hora} - ${nombre}`;
+        const servicio = turno.service?.name || "";
+
+        return `🕐 ${hora}  ${nombre}${servicio ? ` (${servicio})` : ""}`;
       })
       .join("\n");
 
-    const message = `
-${title}
-
-${listado}
-
-Total: ${turnos.length} turnos
-`.trim();
+    const message = `${title}\n\n${listado}`.trim();
 
     await sendWhatsApp(message);
     await sendEmail(ADMINS_EMAIL, title, message);
