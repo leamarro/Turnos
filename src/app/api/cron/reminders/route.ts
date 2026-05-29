@@ -19,6 +19,7 @@ async function getConfig() {
         template: "\u23f0 {titulo}\n\n{nombre} a las {hora} hs \u00b7 {servicio}",
         enabled: true,
         workDays: "1,2,3,4,5,6",
+        hoursBefore: 2,
       },
     });
   }
@@ -36,8 +37,11 @@ export async function GET(req: Request) {
   }
 
   const now = new Date();
+  const h = config.hoursBefore;
+  const windowMin = h * 60 - 10;
+  const windowMax = h * 60 + 10;
   const reminders = [
-    { label: "reminder_2h", min: 110, max: 130 },
+    { label: `reminder_${h}h`, min: windowMin, max: windowMax },
   ];
 
   for (const r of reminders) {
