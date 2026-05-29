@@ -31,6 +31,8 @@ export async function GET(req: Request) {
     });
 
     for (const t of turnos) {
+      if (new Date(t.date).getDay() === 0) continue;
+
       const alreadySent = await prisma.notificationLog.findUnique({
         where: {
           appointmentId_type_channel: {
