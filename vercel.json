@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/agenda?type=manana",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/reminders",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
