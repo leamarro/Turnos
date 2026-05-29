@@ -8,9 +8,31 @@ const ADMINS_EMAIL = ["leaa.marrocchi@gmail.com", "eugeardissone@gmail.com"];
 
 export const dynamic = "force-dynamic";
 
+async function getConfig() {
+  let config = await prisma.notificationConfig.findUnique({
+    where: { type: "reminder" },
+  });
+  if (!config) {
+    config = await prisma.notificationConfig.create({
+      data: {
+        type: "reminder",
+        template: "\u23f0 {titulo}\n\n{nombre} a las {hora} hs \u00b7 {servicio}",
+        enabled: true,
+        workDays: "1,2,3,4,5,6",
+      },
+    });
+  }
+  return config;
+}
+
 export async function GET(req: Request) {
   if (SECRET && req.headers.get("x-cron-secret") !== SECRET) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const config = await getConfig();
+  if (!config.enabled) {
+    return NextResponse.json({ ok: true, disabled: true });
   }
 
   const now = new Date();
@@ -31,7 +53,9 @@ export async function GET(req: Request) {
     });
 
     for (const t of turnos) {
-      if (new Date(t.date).getDay() === 0) continue;
+      const todayDay = new Date(t.date).getDay().toString();
+      const workDays = config.workDays.split(",").filter(Boolean);
+      if (!workDays.includes(todayDay)) continue;
 
       const alreadySent = await prisma.notificationLog.findUnique({
         where: {
@@ -55,7 +79,13 @@ export async function GET(req: Request) {
         t.User?.name ||
         "Sin nombre";
       const servicio = t.service?.name ?? "";
-      const msg = `⏰ Recordatorio\n\n${nombre} a las ${hora} hs${servicio ? ` · ${servicio}` : ""}`;
+
+      const msg = config.template
+        .replace(/\{titulo\}/g, "Recordatorio")
+        .replace(/\{nombre\}/g, nombre)
+        .replace(/\{hora\}/g, hora)
+        .replace(/\{servicio\}/g, servicio)
+        .trim();
 
       await sendWhatsApp(msg);
       await sendEmail(ADMINS_EMAIL, `Recordatorio: ${nombre} ${hora}`, msg);
