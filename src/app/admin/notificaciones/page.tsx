@@ -12,6 +12,8 @@ type Config = {
   enabled: boolean;
   template: string;
   workDays: string;
+  hoursBefore: number;
+  sendTime: string;
 };
 
 const PLACEHOLDERS: Record<string, string[]> = {
@@ -60,6 +62,8 @@ export default function NotificacionesPage() {
         enabled: config?.enabled,
         template: config?.template,
         workDays: config?.workDays,
+        hoursBefore: config?.hoursBefore,
+        sendTime: config?.sendTime,
       });
       toast("Guardado ✅");
     } catch {
@@ -138,6 +142,45 @@ export default function NotificacionesPage() {
                 </div>
               </div>
 
+              {config.type === "reminder" && (
+                <div>
+                  <label className="text-xs text-gray-500 dark:text-gray-400">
+                    Enviar antes del turno
+                  </label>
+                  <div className="flex gap-1 mt-1">
+                    {[1, 2, 3].map((h) => (
+                      <button
+                        key={h}
+                        onClick={() => update(config.type, "hoursBefore", h)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                          config.hoursBefore === h
+                            ? "bg-black text-white dark:bg-white dark:text-black"
+                            : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                        }`}
+                      >
+                        {h} {h === 1 ? "hora" : "horas"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {config.type !== "reminder" && (
+                <div>
+                  <label className="text-xs text-gray-500 dark:text-gray-400">
+                    Hora de envío
+                  </label>
+                  <input
+                    type="time"
+                    value={config.sendTime}
+                    onChange={(e) =>
+                      update(config.type, "sendTime", e.target.value)
+                    }
+                    className="mt-1 px-3 py-1.5 text-sm bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400 w-32"
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="text-xs text-gray-500 dark:text-gray-400">
                   Plantilla del mensaje
@@ -169,11 +212,11 @@ export default function NotificacionesPage() {
                   <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs whitespace-pre-wrap dark:text-gray-300">
                     {config.template
                       .replace(/\{titulo\}/g, config.type === "reminder" ? "Recordatorio" : config.type === "manana" ? "Turnos de mañana" : "Turnos de hoy")
-                      .replace(/\{listado\}/g, "🕐 09:30  Lucía Mendoza (Perfilado)\n🕐 11:00  Carla Ruiz (Maquillaje)\n🕐 15:30  Marina Torres (Perfilado + Maquillaje)")
+                      .replace(/\{listado\}/g, "🕐 09:30  Lucía Mendoza (Corte)\n🕐 11:00  Carla Ruiz (Brushing)\n🕐 15:30  Marina Torres (Corte + Brushing)")
                       .replace(/\{total\}/g, "3")
                       .replace(/\{nombre\}/g, "Marina Torres")
                       .replace(/\{hora\}/g, "15:30")
-                      .replace(/\{servicio\}/g, "Perfilado + Maquillaje")
+                      .replace(/\{servicio\}/g, "Corte + Brushing")
                       .trim()}
                   </div>
                 </div>
