@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Pencil, Trash2, Phone, User, CalendarDays, X, MessageCircle, Instagram } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useToast } from "@/components/Toast";
 
 /* ========================= */
@@ -154,7 +155,15 @@ export default function AdminPanel() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
-      <h1 className="text-2xl font-semibold text-center mb-6">Turnos</h1>
+      <div className="flex items-center justify-center gap-3 mb-6">
+        <h1 className="text-2xl font-semibold">Turnos</h1>
+        <Link
+          href="/admin/notificaciones"
+          className="text-xs text-gray-400 hover:text-black dark:hover:text-white underline underline-offset-2"
+        >
+          Mensajes
+        </Link>
+      </div>
 
       {/* FILTROS */}
       <div className="bg-white dark:bg-[#252525] rounded-2xl px-3 py-3 mb-4 overflow-x-auto scrollbar-hide">
