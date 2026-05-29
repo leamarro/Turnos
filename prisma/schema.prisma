@@ -72,6 +72,15 @@ model NotificationLog {
   @@index([type])
 }
 
+model NotificationConfig {
+  id        String   @id @default(cuid())
+  type      String   @unique
+  enabled   Boolean  @default(true)
+  template  String
+  workDays  String   @default("1,2,3,4,5,6")
+  updatedAt DateTime @updatedAt
+}
+
 enum AppointmentStatus {
   pending
   confirmed
