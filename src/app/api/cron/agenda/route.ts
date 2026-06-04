@@ -120,8 +120,12 @@ export async function GET(req: Request) {
       .replace(/\{total\}/g, String(turnos.length))
       .trim();
 
-    await sendWhatsApp(body);
-    await sendEmail(ADMINS_EMAIL, title, body);
+    try {
+      await sendWhatsApp(body);
+      await sendEmail(ADMINS_EMAIL, title, body);
+    } catch (sendError) {
+      console.error("Error enviando agenda:", sendError);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
