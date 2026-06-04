@@ -11,10 +11,14 @@ const ADMIN_NUMBERS = [
 
 export async function sendWhatsApp(message: string) {
   for (const to of ADMIN_NUMBERS) {
-    await client.messages.create({
-      body: message,
-      from: "whatsapp:+14155238886",
-      to,
-    });
+    try {
+      await client.messages.create({
+        body: message,
+        from: "whatsapp:+14155238886",
+        to,
+      });
+    } catch (error) {
+      console.error(`Error sending WhatsApp to ${to}:`, error);
+    }
   }
 }
