@@ -27,82 +27,87 @@ async function getConfig() {
 }
 
 export async function GET(req: Request) {
-  if (SECRET && req.headers.get("x-cron-secret") !== SECRET) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
+  try {
+    if (SECRET && req.headers.get("x-cron-secret") !== SECRET) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
 
-  const config = await getConfig();
-  if (!config.enabled) {
-    return NextResponse.json({ ok: true, disabled: true });
-  }
+    const config = await getConfig();
+    if (!config.enabled) {
+      return NextResponse.json({ ok: true, disabled: true });
+    }
 
-  const now = new Date();
-  const h = config.hoursBefore;
-  const windowMin = h * 60 - 10;
-  const windowMax = h * 60 + 10;
-  const reminders = [
-    { label: `reminder_${h}h`, min: windowMin, max: windowMax },
-  ];
+    const now = new Date();
+    const h = config.hoursBefore;
+    const windowMin = h * 60 - 10;
+    const windowMax = h * 60 + 10;
+    const reminders = [
+      { label: `reminder_${h}h`, min: windowMin, max: windowMax },
+    ];
 
-  for (const r of reminders) {
-    const minDate = new Date(now.getTime() + r.min * 60000);
-    const maxDate = new Date(now.getTime() + r.max * 60000);
+    for (const r of reminders) {
+      const minDate = new Date(now.getTime() + r.min * 60000);
+      const maxDate = new Date(now.getTime() + r.max * 60000);
 
-    const turnos = await prisma.appointment.findMany({
-      where: {
-        date: { gte: minDate, lte: maxDate },
-        status: { not: "cancelled" },
-      },
-      include: { service: true, User: true },
-    });
-
-    for (const t of turnos) {
-      const todayDay = new Date(t.date).getDay().toString();
-      const workDays = config.workDays.split(",").filter(Boolean);
-      if (!workDays.includes(todayDay)) continue;
-
-      const alreadySent = await prisma.notificationLog.findUnique({
+      const turnos = await prisma.appointment.findMany({
         where: {
-          appointmentId_type_channel: {
+          date: { gte: minDate, lte: maxDate },
+          status: { not: "cancelled" },
+        },
+        include: { service: true, User: true },
+      });
+
+      for (const t of turnos) {
+        const todayDay = new Date(t.date).getDay().toString();
+        const workDays = config.workDays.split(",").filter(Boolean);
+        if (!workDays.includes(todayDay)) continue;
+
+        const alreadySent = await prisma.notificationLog.findUnique({
+          where: {
+            appointmentId_type_channel: {
+              appointmentId: t.id,
+              type: r.label,
+              channel: "whatsapp",
+            },
+          },
+        });
+        if (alreadySent) continue;
+
+        const hora = new Date(t.date).toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: "America/Argentina/Buenos_Aires",
+        });
+        const nombre =
+          [t.name, t.lastName].filter(Boolean).join(" ") ||
+          t.User?.name ||
+          "Sin nombre";
+        const servicio = t.service?.name ?? "";
+
+        const msg = config.template
+          .replace(/\{titulo\}/g, "Recordatorio")
+          .replace(/\{nombre\}/g, nombre)
+          .replace(/\{hora\}/g, hora)
+          .replace(/\{servicio\}/g, servicio)
+          .trim();
+
+        await sendWhatsApp(msg);
+        await sendEmail(ADMINS_EMAIL, `Recordatorio: ${nombre} ${hora}`, msg);
+
+        await prisma.notificationLog.create({
+          data: {
             appointmentId: t.id,
             type: r.label,
             channel: "whatsapp",
           },
-        },
-      });
-      if (alreadySent) continue;
-
-      const hora = new Date(t.date).toLocaleTimeString("es-AR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "America/Argentina/Buenos_Aires",
-      });
-      const nombre =
-        [t.name, t.lastName].filter(Boolean).join(" ") ||
-        t.User?.name ||
-        "Sin nombre";
-      const servicio = t.service?.name ?? "";
-
-      const msg = config.template
-        .replace(/\{titulo\}/g, "Recordatorio")
-        .replace(/\{nombre\}/g, nombre)
-        .replace(/\{hora\}/g, hora)
-        .replace(/\{servicio\}/g, servicio)
-        .trim();
-
-      await sendWhatsApp(msg);
-      await sendEmail(ADMINS_EMAIL, `Recordatorio: ${nombre} ${hora}`, msg);
-
-      await prisma.notificationLog.create({
-        data: {
-          appointmentId: t.id,
-          type: r.label,
-          channel: "whatsapp",
-        },
-      });
+        });
+      }
     }
-  }
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error en reminders:", error);
+    return NextResponse.json({ ok: true, error: String(error) });
+  }
 }
