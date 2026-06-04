@@ -125,10 +125,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Error sending agenda" },
-      { status: 500 }
-    );
+    console.error("Error en agenda:", error);
+    return NextResponse.json({ ok: true, error: String(error) });
   }
 }
