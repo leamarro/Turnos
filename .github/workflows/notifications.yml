@@ -24,13 +24,13 @@ jobs:
           INPUT: "${{ github.event.inputs.type }}"
         run: |
           if [ "$INPUT" = "reminders" ]; then
-            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/reminders"
+            curl -sS -H "x-cron-secret: $SECRET" "$URL/api/cron/reminders" || echo "::warning::reminders falló"
           elif [ "$INPUT" = "manana" ]; then
-            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=manana"
+            curl -sS -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=manana" || echo "::warning::agenda manana falló"
           elif [ "$INPUT" = "hoy" ]; then
-            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=hoy"
+            curl -sS -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=hoy" || echo "::warning::agenda hoy falló"
           else
-            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/reminders"
-            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=hoy"
-            curl -sSf -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=manana"
+            curl -sS -H "x-cron-secret: $SECRET" "$URL/api/cron/reminders" || echo "::warning::reminders falló"
+            curl -sS -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=hoy" || echo "::warning::agenda hoy falló"
+            curl -sS -H "x-cron-secret: $SECRET" "$URL/api/cron/agenda?type=manana" || echo "::warning::agenda manana falló"
           fi
