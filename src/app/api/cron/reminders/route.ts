@@ -92,8 +92,12 @@ export async function GET(req: Request) {
           .replace(/\{servicio\}/g, servicio)
           .trim();
 
-        await sendWhatsApp(msg);
-        await sendEmail(ADMINS_EMAIL, `Recordatorio: ${nombre} ${hora}`, msg);
+        try {
+          await sendWhatsApp(msg);
+          await sendEmail(ADMINS_EMAIL, `Recordatorio: ${nombre} ${hora}`, msg);
+        } catch (sendError) {
+          console.error(`Error enviando recordatorio para ${t.id}:`, sendError);
+        }
 
         await prisma.notificationLog.create({
           data: {
