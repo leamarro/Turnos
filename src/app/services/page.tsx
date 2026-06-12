@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Plus, Trash2, Save } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import EmptyState from "@/components/EmptyState";
 
 type Service = {
   id: string;
@@ -197,10 +198,13 @@ export default function ServicesPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 relative overflow-hidden">
                   <div
-                    className="w-8 h-8 rounded-full shrink-0 border border-gray-200 cursor-pointer"
+                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
                     style={{ backgroundColor: s.color }}
+                  />
+                  <div className="w-8 h-8 rounded-full shrink-0 border-2 cursor-pointer ml-3"
+                    style={{ backgroundColor: s.color, borderColor: s.color }}
                     onClick={() => startEdit(s)}
                   />
                   <div className="flex-1 min-w-0" onClick={() => startEdit(s)}>
@@ -221,7 +225,7 @@ export default function ServicesPage() {
           ))}
 
           {services.length === 0 && (
-            <p className="text-center text-gray-400 text-sm py-8">No hay servicios creados</p>
+            <EmptyState variant="search" title="Sin servicios" subtitle="Todavía no creaste ningún servicio" />
           )}
         </div>
       </div>
