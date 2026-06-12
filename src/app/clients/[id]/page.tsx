@@ -8,7 +8,7 @@ import axios from "axios";
 import { useToast } from "@/components/Toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { DollarSign, Calendar, Sparkles, Trash2, Phone, Instagram } from "lucide-react";
+import { DollarSign, Calendar, Sparkles, Trash2, Phone, Instagram, ChevronLeft } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 
 type Appointment = {
@@ -91,6 +91,13 @@ export default function ClientDetail({
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
+      <button
+        onClick={() => router.push("/clients")}
+        className="flex items-center gap-1 text-sm text-gray-500 mb-3 -ml-1"
+      >
+        <ChevronLeft size={16} />
+        Clientes
+      </button>
       <h1 className="text-2xl font-bold mb-1">
         {client.name} {client.lastName ?? ""}
       </h1>
