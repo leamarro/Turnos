@@ -5,7 +5,7 @@ import {
   startOfMonth, endOfMonth, subMonths, isWithinInterval,
   startOfWeek, endOfWeek, subWeeks,
 } from "date-fns";
-import { Download } from "lucide-react";
+import { Download, Calendar, DollarSign, Users, BarChart2, TrendingUp } from "lucide-react";
 import TodaySummaryCard from "@/components/TodaySummaryCard";
 import TodayNextAppointments from "@/components/TodayNextAppointments";
 import TodayAlertCard from "@/components/TodayAlertCard";
@@ -55,6 +55,12 @@ export default function DashboardPage() {
 
   const monthVariation = incomePrev === 0 ? null : ((incomeCurrent - incomePrev) / incomePrev) * 100;
   const weekVariation = lastWeekData.length === 0 ? null : ((thisWeekData.length - lastWeekData.length) / lastWeekData.length) * 100;
+
+  const daysInMonth = endOfMonth(now).getDate();
+  const daysElapsed = now.getDate();
+  const monthProgress = (daysElapsed / daysInMonth) * 100;
+  const dailyAvg = daysElapsed > 0 ? incomeCurrent / daysElapsed : 0;
+  const projected = dailyAvg > 0 ? Math.round(dailyAvg * daysInMonth) : 0;
 
   const topClients = useMemo(() => {
     const map = new Map<string, number>();
@@ -148,21 +154,46 @@ export default function DashboardPage() {
       </div>
 
       {/* CARD PRINCIPAL — ingresos */}
-      <div className="bg-black text-white rounded-2xl p-5">
-        <p className="text-xs text-white/60 uppercase tracking-wide">Ingresos del mes</p>
-        <p className="text-4xl font-bold mt-1">{money(incomeCurrent)}</p>
-        <p className="text-xs mt-2 text-white/50">
-          {monthVariation === null
-            ? "Sin datos del mes anterior"
-            : `${monthVariation > 0 ? "↑" : "↓"} ${Math.abs(monthVariation).toFixed(1)}% vs mes anterior`}
-        </p>
+      <div className="bg-black text-white rounded-2xl p-5 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-white/60 uppercase tracking-wide">Ingresos del mes</p>
+            <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full">
+              día {daysElapsed}/{daysInMonth}
+            </span>
+          </div>
+          <p className="text-4xl font-bold tracking-tight">{money(incomeCurrent)}</p>
+          <div className="flex items-center gap-3 mt-3 text-xs text-white/50">
+            {monthVariation !== null && (
+              <span className={monthVariation > 0 ? "text-emerald-400" : "text-red-400"}>
+                {monthVariation > 0 ? "↑" : "↓"} {Math.abs(monthVariation).toFixed(1)}% vs mes ant.
+              </span>
+            )}
+            <span>~{money(Math.round(dailyAvg))} / día</span>
+          </div>
+          {projected > 0 && (
+            <p className="text-[11px] text-white/40 mt-2">
+              Proyección → {money(projected)}
+            </p>
+          )}
+          <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-white rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(monthProgress, 100)}%` }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
+          <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
+            <Calendar size={15} className="text-black dark:text-white" />
+          </div>
           <p className="text-xs text-gray-400">Turnos este mes</p>
-          <p className="text-3xl font-bold mt-1 dark:text-white">{currentMonthData.length}</p>
+          <p className="text-3xl font-bold mt-0.5 dark:text-white">{currentMonthData.length}</p>
           <p className="text-xs mt-1 text-gray-400">
             {prevMonthData.length === 0 ? "Sin mes previo"
               : `${currentMonthData.length > prevMonthData.length ? "↑" : "↓"} ${Math.abs(
@@ -171,39 +202,61 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
+          <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
+            <BarChart2 size={15} className="text-black dark:text-white" />
+          </div>
           <p className="text-xs text-gray-400">Esta semana</p>
-          <p className="text-3xl font-bold mt-1 dark:text-white">{thisWeekData.length}</p>
+          <p className="text-3xl font-bold mt-0.5 dark:text-white">{thisWeekData.length}</p>
           <p className="text-xs mt-1 text-gray-400">
             {weekVariation === null ? "Sin semana previa"
               : `${weekVariation > 0 ? "↑" : "↓"} ${Math.abs(weekVariation).toFixed(0)}% vs semana ant.`}
           </p>
         </div>
         <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
+          <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
+            <TrendingUp size={15} className="text-black dark:text-white" />
+          </div>
           <p className="text-xs text-gray-400">Semana anterior</p>
-          <p className="text-3xl font-bold mt-1 dark:text-white">{lastWeekData.length}</p>
+          <p className="text-3xl font-bold mt-0.5 dark:text-white">{lastWeekData.length}</p>
           <p className="text-xs mt-1 text-gray-400">{(lastWeekData.length / 7).toFixed(1)} turnos / día</p>
         </div>
         <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
+          <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
+            <DollarSign size={15} className="text-black dark:text-white" />
+          </div>
           <p className="text-xs text-gray-400">Total histórico</p>
-          <p className="text-3xl font-bold mt-1 dark:text-white">{appointments.length}</p>
+          <p className="text-3xl font-bold mt-0.5 dark:text-white">{appointments.length}</p>
           <p className="text-xs mt-1 text-gray-400">turnos registrados</p>
         </div>
       </div>
 
       {/* CLIENTES FRECUENTES */}
       <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
-        <p className="text-sm font-semibold mb-3 dark:text-white">Clientes frecuentes</p>
+        <div className="flex items-center gap-2 mb-3">
+          <Users size={15} className="text-gray-400" />
+          <p className="text-sm font-semibold dark:text-white">Clientes frecuentes</p>
+        </div>
         {topClients.length === 0 ? (
           <p className="text-sm text-gray-400">Sin datos</p>
         ) : (
           <div className="space-y-3">
             {topClients.map(([clientName, count], i) => (
               <div key={clientName} className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-4">{i + 1}</span>
+                <div className="flex items-center gap-2.5">
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                    i === 0 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400" :
+                    i === 1 ? "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300" :
+                    i === 2 ? "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400" :
+                    "bg-gray-50 text-gray-400"
+                  }`}>
+                    {i + 1}
+                  </span>
                   <span className="text-sm dark:text-gray-200">{clientName}</span>
                 </div>
-                <span className="text-sm font-semibold dark:text-white">{count} turnos</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold dark:text-white">{count}</span>
+                  <span className="text-[10px] text-gray-400">turnos</span>
+                </div>
               </div>
             ))}
           </div>
