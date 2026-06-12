@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { format, addDays, startOfDay, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -35,11 +35,6 @@ export default function DayView({
   const today = startOfDay(new Date());
   const isToday = isSameDay(day, today);
 
-  const nowMinutes = useMemo(() => {
-    const d = new Date();
-    return d.getHours() * 60 + d.getMinutes();
-  }, []);
-
   const apptMap = new Map<string, Appointment>();
   for (const a of appointments) {
     const d = new Date(a.date);
@@ -49,18 +44,14 @@ export default function DayView({
     }
   }
 
-  const firstSlot = ALL_SLOTS.find((s) => apptMap.has(s)) || "09:00";
-  const lastSlot = [...ALL_SLOTS].reverse().find((s) => apptMap.has(s)) || "21:00";
+  const firstSlot = ALL_SLOTS.find((s) => apptMap.has(s));
+  const lastSlot = firstSlot ? [...ALL_SLOTS].reverse().find((s) => apptMap.has(s)) : undefined;
 
-  const visibleSlots = isToday
-    ? ALL_SLOTS.filter((s) => slotToMinutes(s) >= Math.min(nowMinutes - 60, slotToMinutes(firstSlot)))
-    : ALL_SLOTS;
-
-  const currentSlotIndex = ALL_SLOTS.findIndex((s) => {
-    const next = ALL_SLOTS[ALL_SLOTS.indexOf(s) + 1];
-    if (!next) return false;
-    return slotToMinutes(s) <= nowMinutes && slotToMinutes(next) > nowMinutes;
-  });
+  const visibleSlots = firstSlot && lastSlot
+    ? ALL_SLOTS.filter(
+        (s) => slotToMinutes(s) >= slotToMinutes(firstSlot) && slotToMinutes(s) <= slotToMinutes(lastSlot)
+      )
+    : [];
 
   return (
     <div className="mt-2">
