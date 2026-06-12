@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Pencil, Trash2, Phone, User, CalendarDays, X, MessageCircle, Instagram } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 import { haptic } from "@/lib/haptics";
@@ -158,14 +157,8 @@ export default function AdminPanel() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
-      <div className="flex items-center justify-center gap-3 mb-6">
+      <div className="flex items-center justify-center mb-6">
         <h1 className="text-2xl font-semibold">Turnos</h1>
-        <Link
-          href="/admin/notificaciones"
-          className="text-xs text-gray-400 hover:text-black dark:hover:text-white underline underline-offset-2"
-        >
-          Mensajes
-        </Link>
       </div>
 
       {/* FILTROS */}
