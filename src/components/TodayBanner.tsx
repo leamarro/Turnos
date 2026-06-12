@@ -13,7 +13,7 @@ type Appointment = {
   servicePrice?: number | null;
 };
 
-export default function TodayBanner({ appointments }: { appointments: Appointment[] }) {
+export default function TodayBanner({ appointments, onClick }: { appointments: Appointment[]; onClick?: () => void }) {
   const data = useMemo(() => {
     const now = new Date();
     const todayStart = new Date(now);
@@ -37,7 +37,11 @@ export default function TodayBanner({ appointments }: { appointments: Appointmen
   if (data.count === 0) return null;
 
   return (
-    <div className="bg-black text-white rounded-2xl p-4 mb-4 flex items-center justify-between overflow-hidden relative">
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full bg-black text-white rounded-2xl p-4 mb-4 flex items-center justify-between overflow-hidden relative active:opacity-90 transition text-left"
+    >
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
       <div className="relative z-10 space-y-0.5">
         <p className="text-xs text-white/60">Hoy</p>
@@ -61,6 +65,6 @@ export default function TodayBanner({ appointments }: { appointments: Appointmen
           </p>
         </div>
       )}
-    </div>
+    </button>
   );
 }
