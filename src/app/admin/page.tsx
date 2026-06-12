@@ -245,8 +245,8 @@ export default function AdminPanel() {
               className={`p-4 shadow dark:shadow-none rounded-2xl ${getCardStyle(
                 info.state
               )} ${
-                hasDebt ? "border border-red-400" : "border border-green-400"
-              } dark:border-gray-700`}
+                hasDebt ? "border border-red-400" : "border border-transparent"
+              } ${info.state === "past" ? "" : "dark:border-gray-800"}`}
             >
               <div className="flex justify-between items-start">
                 <div>
