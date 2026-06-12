@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { haptic } from "@/lib/haptics";
 
 type ClientSuggestion = {
   id: string;
@@ -177,6 +178,7 @@ export default function AppointmentForm() {
 
     setMessage("");
     setSubmitting(true);
+    haptic();
 
     const telefonoFinal = form.telefono
       ? form.telefono.startsWith("54")
