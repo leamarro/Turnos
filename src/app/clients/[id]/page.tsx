@@ -8,7 +8,7 @@ import axios from "axios";
 import { useToast } from "@/components/Toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { DollarSign, Calendar, Sparkles, Trash2 } from "lucide-react";
+import { DollarSign, Calendar, Sparkles, Trash2, Phone, Instagram } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 
 type Appointment = {
@@ -95,12 +95,14 @@ export default function ClientDetail({
         {client.name} {client.lastName ?? ""}
       </h1>
 
-      <p className="text-gray-500 dark:text-gray-400 mb-6">
-        {client.telefono
-          ? `📞 ${client.telefono}`
-          : client.instagram
-          ? `📸 ${client.instagram}`
-          : "Sin contacto"}
+      <p className="text-gray-500 dark:text-gray-400 mb-6 flex items-center gap-1.5">
+        {client.telefono ? (
+          <><Phone size={14} /> {client.telefono}</>
+        ) : client.instagram ? (
+          <><Instagram size={14} /> {client.instagram}</>
+        ) : (
+          "Sin contacto"
+        )}
       </p>
 
       {/* STATS CARDS */}
