@@ -8,6 +8,7 @@ import { Pencil, Trash2, Phone, User, CalendarDays, X, MessageCircle, Instagram 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/components/Toast";
+import EmptyState from "@/components/EmptyState";
 import { haptic } from "@/lib/haptics";
 
 /* ========================= */
@@ -345,9 +346,7 @@ export default function AdminPanel() {
         })}
 
         {appointments.length === 0 && (
-          <p className="text-center text-gray-500 dark:text-gray-400">
-            No hay turnos para este filtro
-          </p>
+          <EmptyState variant="appointments" title="No hay turnos" subtitle="Cambiá los filtros o creá un turno nuevo" />
         )}
       </div>
     </div>
