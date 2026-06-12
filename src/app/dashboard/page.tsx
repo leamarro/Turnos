@@ -93,7 +93,32 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Cargando dashboard…</p>;
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#1a1a1a] px-4 pt-4 pb-6 animate-pulse">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="h-8 w-36 bg-gray-200 dark:bg-[#333] rounded-lg" />
+            <div className="h-7 w-28 bg-gray-200 dark:bg-[#333] rounded-full" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-24 shadow-sm dark:border dark:border-gray-800" />
+            ))}
+          </div>
+          <div className="bg-gray-200 dark:bg-[#333] rounded-2xl h-32" />
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-28 shadow-sm dark:border dark:border-gray-800" />
+            ))}
+          </div>
+          <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-32 shadow-sm dark:border dark:border-gray-800" />
+          <div className="h-6 w-40 bg-gray-200 dark:bg-[#333] rounded-lg" />
+          <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-48 shadow-sm dark:border dark:border-gray-800" />
+          <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-48 shadow-sm dark:border dark:border-gray-800" />
+          <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-48 shadow-sm dark:border dark:border-gray-800" />
+        </div>
+      </div>
+    );
   }
 
   return (
