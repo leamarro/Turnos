@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
@@ -11,10 +12,12 @@ import {
   Users,
   BarChart2,
   Plus,
+  X,
   Sparkles,
   Settings,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { haptic } from "@/lib/haptics";
 
 const tabs = [
   { href: "/home", icon: Home, label: "Inicio" },
@@ -69,6 +72,7 @@ function NavTab({
 export default function Navbar() {
   const pathname = usePathname();
   const title = getPageTitle(pathname);
+  const [fabOpen, setFabOpen] = useState(false);
 
   async function handleLogout() {
     await axios.post("/api/logout");
@@ -198,19 +202,55 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* FAB central */}
-          <Link
-            href="/appointments"
-            className="absolute left-1/2 -translate-x-1/2 -top-5 z-10 active:scale-95 transition-transform"
-          >
-            <div className="bg-black rounded-full w-14 h-14 flex items-center justify-center shadow-xl border-4 border-[#F5F3EE] dark:border-[#1a1a1a]">
-              <Plus
-                size={24}
-                className="text-white"
-                strokeWidth={2.7}
-              />
+          {/* FAB central + menú */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-5 z-50">
+            <div className="relative">
+              {fabOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setFabOpen(false)}
+                  />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 flex flex-col items-stretch gap-2 w-max">
+                    <Link
+                      href="/appointments"
+                      onClick={() => { setFabOpen(false); haptic(); }}
+                      className="animate-fade-up flex items-center gap-2.5 bg-white dark:bg-[#252525] text-black dark:text-white px-5 py-3 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 text-sm font-medium active:scale-95 transition whitespace-nowrap"
+                      style={{ animationDelay: "50ms" }}
+                    >
+                      <Calendar size={17} />
+                      Nuevo turno
+                    </Link>
+                    <Link
+                      href="/home"
+                      onClick={() => { setFabOpen(false); haptic(); }}
+                      className="animate-fade-up flex items-center gap-2.5 bg-white dark:bg-[#252525] text-black dark:text-white px-5 py-3 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 text-sm font-medium active:scale-95 transition whitespace-nowrap"
+                      style={{ animationDelay: "100ms" }}
+                    >
+                      <Home size={17} />
+                      Ir a agenda
+                    </Link>
+                  </div>
+                </>
+              )}
+              <button
+                onClick={() => { setFabOpen((v) => !v); haptic(); }}
+                className="relative z-50 active:scale-95 transition-transform"
+                aria-label={fabOpen ? "Cerrar menú" : "Nuevo turno"}
+              >
+                <div
+                  className="bg-black rounded-full w-14 h-14 flex items-center justify-center shadow-xl border-4 border-[#F5F3EE] dark:border-[#1a1a1a] transition-transform duration-200"
+                  style={{ transform: fabOpen ? "rotate(45deg)" : "rotate(0deg)" }}
+                >
+                  <Plus
+                    size={24}
+                    className="text-white"
+                    strokeWidth={2.7}
+                  />
+                </div>
+              </button>
             </div>
-          </Link>
+          </div>
         </div>
       </nav>
     </>
