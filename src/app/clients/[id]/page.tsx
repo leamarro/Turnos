@@ -159,17 +159,7 @@ export default function ClientDetail({
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold">Historial de turnos</h2>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="flex items-center gap-1 text-xs text-red-500 border border-red-200 px-3 py-1.5 rounded-full disabled:opacity-50"
-        >
-          <Trash2 size={12} />
-          {deleting ? "Borrando..." : "Borrar cliente"}
-        </button>
-      </div>
+      <h2 className="font-semibold mb-3">Historial de turnos</h2>
 
       {client.appointments.length === 0 ? (
         <EmptyState variant="client-history" />
@@ -195,6 +185,15 @@ export default function ClientDetail({
           ))}
         </div>
       )}
+
+      <button
+        onClick={handleDelete}
+        disabled={deleting}
+        className="w-full mt-6 flex items-center justify-center gap-1.5 text-sm text-red-500 border border-red-200 dark:border-red-900/50 px-4 py-3 rounded-xl disabled:opacity-50 active:bg-red-50 dark:active:bg-red-900/20 transition"
+      >
+        <Trash2 size={14} />
+        {deleting ? "Borrando..." : "Borrar cliente y todos sus turnos"}
+      </button>
     </div>
   );
 }
