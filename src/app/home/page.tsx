@@ -8,6 +8,7 @@ import AvailabilityView from "@/components/AvailabilityView";
 import WeekGridView from "@/components/WeekGridView";
 import CalendarMonthGrid from "@/components/CalendarMonthGrid";
 import TodayBanner from "@/components/TodayBanner";
+import TodayModal from "@/components/TodayModal";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutList, CalendarDays, Loader2 } from "lucide-react";
@@ -36,6 +37,7 @@ export default function HomePage() {
   const [gridMode, setGridMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showTodayModal, setShowTodayModal] = useState(false);
   const router = useRouter();
 
   const touchStartX = useRef(0);
@@ -167,7 +169,7 @@ export default function HomePage() {
       {!loading && (
         <TodayBanner
           appointments={appointments}
-          onClick={() => { setView("day"); setGridMode(false); haptic(); }}
+          onClick={() => { setShowTodayModal(true); haptic(); }}
         />
       )}
 
@@ -237,6 +239,13 @@ export default function HomePage() {
           onSelectAppointment={handleSelect}
         />
       )}
+
+      <TodayModal
+        appointments={appointments}
+        open={showTodayModal}
+        onClose={() => setShowTodayModal(false)}
+        onSelect={handleSelect}
+      />
     </div>
   );
 }
