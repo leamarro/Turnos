@@ -6,6 +6,7 @@ import CalendarGrid from "@/components/CalendarGrid";
 import DayView from "@/components/DayView";
 import AvailabilityView from "@/components/AvailabilityView";
 import CalendarMonthGrid from "@/components/CalendarMonthGrid";
+import WeekView from "@/components/WeekView";
 import TodayBanner from "@/components/TodayBanner";
 import TodayModal from "@/components/TodayModal";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -22,11 +23,12 @@ type Appointment = {
   timeStatus: "past" | "today" | "future";
 };
 
-type View = "month" | "day" | "available";
+type View = "day" | "month" | "week" | "available";
 
 const VIEWS: { key: View; label: string }[] = [
   { key: "day", label: "Día" },
   { key: "month", label: "Mes" },
+  { key: "week", label: "Semana" },
   { key: "available", label: "Disponibles" },
 ];
 
@@ -227,6 +229,13 @@ export default function HomePage() {
 
       {!loading && view === "day" && (
         <DayView
+          appointments={appointments}
+          onSelectAppointment={handleSelect}
+        />
+      )}
+
+      {!loading && view === "week" && (
+        <WeekView
           appointments={appointments}
           onSelectAppointment={handleSelect}
         />
