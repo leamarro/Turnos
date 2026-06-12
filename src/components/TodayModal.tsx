@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import { format, isSameDay } from "date-fns";
+import { useState, useMemo, useRef } from "react";
+import { format, isSameDay, addDays } from "date-fns";
 import { es } from "date-fns/locale";
-import { X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { haptic } from "@/lib/haptics";
 
 type Appointment = {
   id: string;
@@ -13,6 +14,14 @@ type Appointment = {
   service: { name: string; color?: string; price?: number };
   servicePrice?: number | null;
 };
+
+function dayLabel(date: Date) {
+  const today = new Date();
+  if (isSameDay(date, today)) return "hoy";
+  if (isSameDay(date, addDays(today, 1))) return "mañana";
+  if (isSameDay(date, addDays(today, -1))) return "ayer";
+  return format(date, "EEEE", { locale: es });
+}
 
 export default function TodayModal({
   appointments,
@@ -25,51 +34,91 @@ export default function TodayModal({
   onClose: () => void;
   onSelect?: (id: string) => void;
 }) {
-  const todayApps = useMemo(() => {
-    const now = new Date();
+  const today = useMemo(() => new Date(), []);
+  const [selectedDay, setSelectedDay] = useState(today);
+
+  const touchStartX = useRef(0);
+
+  const dayApps = useMemo(() => {
     return appointments
-      .filter((a) => isSameDay(new Date(a.date), now))
+      .filter((a) => isSameDay(new Date(a.date), selectedDay))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [appointments]);
+  }, [appointments, selectedDay]);
+
+  const canGoPrev = selectedDay > today;
+
+  function goTo(direction: "prev" | "next") {
+    if (direction === "prev" && !canGoPrev) return;
+    setSelectedDay((d) => addDays(d, direction === "next" ? 1 : -1));
+    haptic();
+  }
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    const dist = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dist) > 40) {
+      const direction = dist < 0 ? "next" : "prev";
+      if (direction === "prev" && !canGoPrev) return;
+      goTo(direction);
+    }
+  }
 
   if (!open) return null;
 
-  const income = todayApps.reduce(
-    (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
-    0
-  );
+  const now = new Date();
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
       />
-      <div className="relative w-full sm:max-w-md max-h-[85vh] bg-[#f5f3ef] dark:bg-[#1a1a1a] rounded-t-3xl sm:rounded-3xl p-5 overflow-y-auto shadow-xl animate-fade-up">
+      <div
+        className="relative w-full sm:max-w-md max-h-[80vh] bg-[#f5f3ef] dark:bg-[#1a1a1a] rounded-3xl p-5 overflow-y-auto shadow-xl animate-fade-up"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-semibold">Turnos de hoy</h2>
-            <p className="text-xs text-gray-400">
-              {todayApps.length} {todayApps.length === 1 ? "turno" : "turnos"} · ${income.toLocaleString("es-AR")}
+          <button
+            onClick={() => goTo("prev")}
+            disabled={!canGoPrev}
+            className={`p-2 rounded-full active:scale-95 transition ${canGoPrev ? "hover:bg-gray-200 dark:hover:bg-gray-800" : "opacity-20"}`}
+          >
+            <ChevronLeft size={18} className="text-gray-500" />
+          </button>
+
+          <div className="text-center">
+            <h2 className="text-lg font-semibold capitalize">
+              Turnos de {dayLabel(selectedDay)}
+            </h2>
+            <p className="text-xs text-gray-400 capitalize">
+              {format(selectedDay, "d MMMM yyyy", { locale: es })}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {dayApps.length} {dayApps.length === 1 ? "turno" : "turnos"}
             </p>
           </div>
+
           <button
-            onClick={onClose}
-            className="p-2 bg-gray-200 dark:bg-gray-800 rounded-full active:scale-95 transition"
+            onClick={() => goTo("next")}
+            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full active:scale-95 transition"
           >
-            <X size={16} />
+            <ChevronRight size={18} className="text-gray-500" />
           </button>
         </div>
 
         {/* Lista */}
-        {todayApps.length === 0 ? (
-          <p className="text-center text-gray-400 py-8 text-sm">No hay turnos para hoy</p>
+        {dayApps.length === 0 ? (
+          <p className="text-center text-gray-400 py-8 text-sm">Sin turnos este día</p>
         ) : (
           <div className="space-y-2">
-            {todayApps.map((a) => {
+            {dayApps.map((a) => {
               const date = new Date(a.date);
-              const isPast = date < new Date();
+              const isPast = isSameDay(selectedDay, today) && date < now;
               return (
                 <button
                   key={a.id}
@@ -105,6 +154,14 @@ export default function TodayModal({
             })}
           </div>
         )}
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="w-full mt-4 py-2.5 text-sm text-gray-400 border border-gray-200 dark:border-gray-700 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition"
+        >
+          Cerrar
+        </button>
       </div>
     </div>
   );
