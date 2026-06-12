@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Phone, Instagram, ChevronRight, Search } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -114,9 +115,11 @@ export default function ClientsPage() {
         ))}
 
         {filtered.length === 0 && (
-          <p className="text-center text-gray-400 text-sm py-8">
-            {query ? "Sin resultados" : "Sin clientes aún"}
-          </p>
+          query ? (
+            <EmptyState variant="search" />
+          ) : (
+            <EmptyState variant="clients" />
+          )
         )}
       </div>
 
