@@ -24,12 +24,6 @@ function slotToMinutes(slot: string) {
   return h * 60 + m;
 }
 
-function minutesToSlot(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
 export default function DayView({
   appointments,
   onSelectAppointment,
@@ -114,8 +108,6 @@ export default function DayView({
           const appt = apptMap.get(slot);
           const isHour = slot.endsWith(":00");
           const isLunch = slotToMinutes(slot) >= slotToMinutes("12:30") && slotToMinutes(slot) < slotToMinutes("15:00");
-          const slotMinutes = slotToMinutes(slot);
-          const isPast = isToday && slotMinutes < nowMinutes;
           const isCurrentSlot = isToday && currentSlotIndex >= 0 && slot === ALL_SLOTS[currentSlotIndex];
 
           return (
@@ -127,20 +119,8 @@ export default function DayView({
                 isCurrentSlot && !appt ? "bg-amber-50/50 dark:bg-amber-900/5" : ""
               }`}
             >
-              {/* Indicador de hora actual */}
-              {isCurrentSlot && (
-                <div className="absolute left-14 right-0 pointer-events-none">
-                  <div className="h-0.5 bg-red-500 relative">
-                    <div className="absolute -left-1 -top-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
-                  </div>
-                </div>
-              )}
-
               {/* Hora */}
               <div className="w-14 shrink-0 flex items-center justify-end pr-3 relative">
-                {isCurrentSlot && (
-                  <div className="absolute right-0 w-1.5 h-1.5 bg-red-500 rounded-full" />
-                )}
                 <span className={`text-xs tabular-nums ${isHour ? "text-gray-500 dark:text-gray-400 font-medium" : "text-gray-300 dark:text-gray-600"}`}>
                   {isHour ? slot : "·"}
                 </span>
@@ -151,11 +131,7 @@ export default function DayView({
                 {appt ? (
                   <button
                     onClick={() => onSelectAppointment?.(appt.id)}
-                    className={`w-full text-left rounded-xl px-3 py-2.5 transition active:opacity-80 relative overflow-hidden ${
-                      isPast
-                        ? "bg-gray-100 dark:bg-gray-800 text-gray-500"
-                        : "bg-black text-white"
-                    }`}
+                    className="w-full text-left rounded-xl px-3 py-2.5 transition active:opacity-80 relative overflow-hidden bg-white border border-gray-200 shadow-sm"
                   >
                     <div
                       className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
@@ -165,7 +141,7 @@ export default function DayView({
                       <p className="text-sm font-medium leading-tight">
                         {appt.name} {appt.lastName}
                       </p>
-                      <p className={`text-xs mt-0.5 ${isPast ? "text-gray-400" : "text-gray-400"}`}>
+                      <p className="text-xs mt-0.5 text-gray-400">
                         {appt.service.name}
                       </p>
                     </div>
