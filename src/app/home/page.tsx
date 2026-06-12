@@ -146,25 +146,23 @@ export default function HomePage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Agenda</h1>
 
-        {/* Toggle lista / grilla — solo para Mes */}
-        {view === "month" && (
-          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
-            <button
-              onClick={() => setGridMode(false)}
-              className={`p-1.5 rounded-lg transition ${!gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
-              title="Vista lista"
-            >
-              <LayoutList size={16} />
-            </button>
-            <button
-              onClick={() => setGridMode(true)}
-              className={`p-1.5 rounded-lg transition ${gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
-              title="Vista calendario"
-            >
-              <CalendarDays size={16} />
-            </button>
-          </div>
-        )}
+        {/* Toggle lista / grilla */}
+        <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+          <button
+            onClick={() => setGridMode(false)}
+            className={`p-1.5 rounded-lg transition ${!gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
+            title="Vista lista"
+          >
+            <LayoutList size={16} />
+          </button>
+          <button
+            onClick={() => setGridMode(true)}
+            className={`p-1.5 rounded-lg transition ${gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
+            title="Vista calendario"
+          >
+            <CalendarDays size={16} />
+          </button>
+        </div>
       </div>
 
       {!loading && (
