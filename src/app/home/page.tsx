@@ -164,7 +164,12 @@ export default function HomePage() {
         )}
       </div>
 
-      {!loading && <TodayBanner appointments={appointments} />}
+      {!loading && (
+        <TodayBanner
+          appointments={appointments}
+          onClick={() => { setView("day"); setGridMode(false); haptic(); }}
+        />
+      )}
 
       {/* TOGGLE VIEWS — scroll horizontal en mobile */}
       <div className="overflow-x-auto scrollbar-hide mb-5">
