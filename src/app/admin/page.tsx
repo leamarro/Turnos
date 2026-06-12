@@ -8,6 +8,7 @@ import { Pencil, Trash2, Phone, User, CalendarDays, X, MessageCircle, Instagram 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/components/Toast";
+import { haptic } from "@/lib/haptics";
 
 /* ========================= */
 /* TYPES */
@@ -145,6 +146,7 @@ export default function AdminPanel() {
 
   async function deleteAppointment(id: string) {
     try {
+      haptic(20);
       await axios.delete(`/api/appointments/${id}`);
       toast("Turno eliminado", "success");
       fetchAppointments();
