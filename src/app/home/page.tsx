@@ -26,14 +26,15 @@ type Appointment = {
 type View = "month" | "week" | "day" | "available";
 
 const VIEWS: { key: View; label: string }[] = [
-  { key: "month", label: "Mes" },
+  { key: "week", label: "Semana" },
   { key: "day", label: "Día" },
+  { key: "month", label: "Mes" },
   { key: "available", label: "Disponibles" },
 ];
 
 export default function HomePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [view, setView] = useState<View>("month");
+  const [view, setView] = useState<View>("week");
   const [gridMode, setGridMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -228,6 +229,13 @@ export default function HomePage() {
 
       {!loading && view === "day" && (
         <DayView
+          appointments={appointments}
+          onSelectAppointment={handleSelect}
+        />
+      )}
+
+      {!loading && view === "week" && (
+        <WeekGridView
           appointments={appointments}
           onSelectAppointment={handleSelect}
         />
