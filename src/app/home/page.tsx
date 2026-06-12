@@ -7,6 +7,7 @@ import DayView from "@/components/DayView";
 import AvailabilityView from "@/components/AvailabilityView";
 import WeekGridView from "@/components/WeekGridView";
 import CalendarMonthGrid from "@/components/CalendarMonthGrid";
+import TodayBanner from "@/components/TodayBanner";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutList, CalendarDays, Loader2 } from "lucide-react";
@@ -140,20 +141,7 @@ export default function HomePage() {
 
       {/* HEADER */}
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-semibold">Agenda</h1>
-          <p className="text-sm mt-0.5 font-medium">
-            {loading ? (
-              <span className="inline-block h-3 w-24 bg-gray-100 rounded-full animate-pulse" />
-            ) : todayCount > 0 ? (
-              <span className="text-black">
-                Hoy · {todayCount} {todayCount === 1 ? "turno" : "turnos"}
-              </span>
-            ) : (
-              <span className="text-gray-400">Hoy · sin turnos</span>
-            )}
-          </p>
-        </div>
+        <h1 className="text-xl font-semibold">Agenda</h1>
 
         {/* Toggle lista / grilla — solo para Mes */}
         {view === "month" && (
@@ -175,6 +163,8 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {!loading && <TodayBanner appointments={appointments} />}
 
       {/* TOGGLE VIEWS — scroll horizontal en mobile */}
       <div className="overflow-x-auto scrollbar-hide mb-5">
