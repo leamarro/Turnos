@@ -5,7 +5,6 @@ export const dynamic = "force-dynamic";
 import CalendarGrid from "@/components/CalendarGrid";
 import DayView from "@/components/DayView";
 import AvailabilityView from "@/components/AvailabilityView";
-import WeekGridView from "@/components/WeekGridView";
 import CalendarMonthGrid from "@/components/CalendarMonthGrid";
 import TodayBanner from "@/components/TodayBanner";
 import TodayModal from "@/components/TodayModal";
@@ -23,10 +22,9 @@ type Appointment = {
   timeStatus: "past" | "today" | "future";
 };
 
-type View = "month" | "week" | "day" | "available";
+type View = "month" | "day" | "available";
 
 const VIEWS: { key: View; label: string }[] = [
-  { key: "week", label: "Semana" },
   { key: "day", label: "Día" },
   { key: "month", label: "Mes" },
   { key: "available", label: "Disponibles" },
@@ -34,7 +32,7 @@ const VIEWS: { key: View; label: string }[] = [
 
 export default function HomePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [view, setView] = useState<View>("week");
+  const [view, setView] = useState<View>("day");
   const [gridMode, setGridMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -229,13 +227,6 @@ export default function HomePage() {
 
       {!loading && view === "day" && (
         <DayView
-          appointments={appointments}
-          onSelectAppointment={handleSelect}
-        />
-      )}
-
-      {!loading && view === "week" && (
-        <WeekGridView
           appointments={appointments}
           onSelectAppointment={handleSelect}
         />
