@@ -70,9 +70,17 @@ export default function CalendarGrid({
           <button onClick={prev} className="p-2 active:bg-gray-100 rounded-full transition">
             <ChevronLeft size={20} className="text-gray-500" />
           </button>
-          <h2 className="font-semibold capitalize">
-            {format(currentDate, "MMMM yyyy", { locale: es })}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold capitalize">
+              {format(currentDate, "MMMM yyyy", { locale: es })}
+            </h2>
+            <button
+              onClick={goToday}
+              className="text-xs px-2.5 py-1 rounded-full bg-black text-white font-medium active:scale-95 transition"
+            >
+              Hoy
+            </button>
+          </div>
           <button onClick={next} className="p-2 active:bg-gray-100 rounded-full transition">
             <ChevronRight size={20} className="text-gray-500" />
           </button>
@@ -142,13 +150,6 @@ export default function CalendarGrid({
           );
         })}
 
-        {/* Botón Hoy */}
-        <button
-          onClick={goToday}
-          className="fixed bottom-24 right-4 sm:bottom-6 z-50 bg-black text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium active:scale-95 transition"
-        >
-          Hoy
-        </button>
       </div>
     );
   }
