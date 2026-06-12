@@ -146,13 +146,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* HOY */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <TodaySummaryCard appointments={appointments} />
-        <TodayNextAppointments appointments={appointments} />
-        <TodayAlertCard appointments={appointments} />
-      </div>
-
       {/* CARD PRINCIPAL — ingresos */}
       <div className="bg-black text-white rounded-2xl p-5 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
@@ -185,6 +178,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* HOY */}
+      <TodaySummaryCard appointments={appointments} />
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-2 gap-3">
@@ -272,6 +268,12 @@ export default function DashboardPage() {
           <p className="text-sm font-semibold mb-3 dark:text-white">Ingresos por servicio</p>
           <MonthlyIncomeByServiceChart data={appointments} />
         </div>
+      </div>
+
+      {/* PRÓXIMOS TURNOS HOY */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <TodayNextAppointments appointments={appointments} />
+        <TodayAlertCard appointments={appointments} />
       </div>
 
       </div>
