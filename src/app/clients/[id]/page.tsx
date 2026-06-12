@@ -9,6 +9,7 @@ import { useToast } from "@/components/Toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { DollarSign, Calendar, Sparkles, Trash2 } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 type Appointment = {
   id: string;
@@ -162,9 +163,7 @@ export default function ClientDetail({
       </div>
 
       {client.appointments.length === 0 ? (
-        <p className="text-gray-500">
-          Este cliente no tiene turnos.
-        </p>
+        <EmptyState variant="client-history" />
       ) : (
         <div className="space-y-3">
           {client.appointments.map((a) => (
