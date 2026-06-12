@@ -10,6 +10,7 @@ import CalendarMonthGrid from "@/components/CalendarMonthGrid";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutList, CalendarDays, Loader2 } from "lucide-react";
+import { haptic } from "@/lib/haptics";
 
 type Appointment = {
   id: string;
@@ -36,8 +37,10 @@ export default function HomePage() {
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
+  const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const PULL_THRESHOLD = 72;
+  const SWIPE_THRESHOLD = 50;
 
   const fetchAppointments = useCallback(async () => {
     try {
@@ -81,14 +84,31 @@ export default function HomePage() {
   useEffect(() => { fetchAppointments(); }, [fetchAppointments]);
 
   const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   };
 
   const onTouchEnd = (e: React.TouchEvent) => {
-    const dist = e.changedTouches[0].clientY - touchStartY.current;
-    if (dist > PULL_THRESHOLD && window.scrollY === 0 && !refreshing) {
+    const distY = e.changedTouches[0].clientY - touchStartY.current;
+    const distX = e.changedTouches[0].clientX - touchStartX.current;
+
+    if (distY > PULL_THRESHOLD && window.scrollY === 0 && !refreshing) {
       setRefreshing(true);
       fetchAppointments();
+      return;
+    }
+
+    if (Math.abs(distX) > SWIPE_THRESHOLD && Math.abs(distX) > Math.abs(distY) * 1.5) {
+      const currentIndex = VIEWS.findIndex((v) => v.key === view);
+      if (distX < 0 && currentIndex < VIEWS.length - 1) {
+        setView(VIEWS[currentIndex + 1].key);
+        if (VIEWS[currentIndex + 1].key !== "month") setGridMode(false);
+        haptic();
+      } else if (distX > 0 && currentIndex > 0) {
+        setView(VIEWS[currentIndex - 1].key);
+        if (VIEWS[currentIndex - 1].key !== "month") setGridMode(false);
+        haptic();
+      }
     }
   };
 
