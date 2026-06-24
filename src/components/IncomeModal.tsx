@@ -46,11 +46,11 @@ export default function IncomeModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center"
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-[#252525] rounded-t-2xl sm:rounded-2xl w-full max-w-sm p-5 pb-8 max-h-[70vh] overflow-y-auto"
+        className="bg-white dark:bg-[#252525] rounded-2xl w-full max-w-sm p-5 pb-8 max-h-[70vh] overflow-y-auto mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
