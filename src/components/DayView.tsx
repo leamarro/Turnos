@@ -99,16 +99,13 @@ export default function DayView({
           const appt = apptMap.get(slot);
           const isHour = slot.endsWith(":00");
           const isLunch = slotToMinutes(slot) >= slotToMinutes("12:30") && slotToMinutes(slot) < slotToMinutes("15:00");
-          const isCurrentSlot = isToday && currentSlotIndex >= 0 && slot === ALL_SLOTS[currentSlotIndex];
 
           return (
             <div
               key={slot}
               className={`flex items-stretch min-h-[48px] ${
                 i > 0 ? "border-t border-gray-100 dark:border-gray-800" : ""
-              } ${isLunch && !appt ? "bg-gray-50/60 dark:bg-black/10" : ""} ${
-                isCurrentSlot && !appt ? "bg-amber-50/50 dark:bg-amber-900/5" : ""
-              }`}
+              } ${isLunch && !appt ? "bg-gray-50/60 dark:bg-black/10" : ""}`}
             >
               {/* Hora */}
               <div className="w-14 shrink-0 flex items-center justify-end pr-3 relative">
