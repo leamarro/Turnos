@@ -12,6 +12,7 @@ import TodayAlertCard from "@/components/TodayAlertCard";
 import MonthlyIncomeChart from "@/components/MonthlyIncomeChart";
 import MonthlyIncomeByServiceChart from "@/components/MonthlyIncomeByServiceChart";
 import MonthlyTrendSparkline from "@/components/MonthlyTrendSparkline";
+import IncomeModal from "@/components/IncomeModal";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Appointment = any;
@@ -22,12 +23,28 @@ const money = (n: number) =>
 export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showIncome, setShowIncome] = useState(false);
+  const [clientMap, setClientMap] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch("/api/appointments", { cache: "no-store" });
-      const data = await res.json();
-      setAppointments(Array.isArray(data) ? data : []);
+      const [apptRes, clientRes] = await Promise.all([
+        fetch("/api/appointments", { cache: "no-store" }),
+        fetch("/api/clients", { cache: "no-store" }),
+      ]);
+      const apptData = await apptRes.json();
+      setAppointments(Array.isArray(apptData) ? apptData : []);
+
+      const clientData = await clientRes.json();
+      if (Array.isArray(clientData)) {
+        const map = new Map<string, string>();
+        clientData.forEach((c: any) => {
+          const key = `${c.name} ${c.lastName ?? ""}`.trim().toLowerCase();
+          if (key) map.set(key, c.id);
+        });
+        setClientMap(map);
+      }
+
       setLoading(false);
     };
     load();
@@ -147,7 +164,10 @@ export default function DashboardPage() {
       </div>
 
       {/* CARD PRINCIPAL — ingresos */}
-      <div className="bg-black text-white rounded-2xl p-5 overflow-hidden relative">
+      <button
+        onClick={() => setShowIncome(true)}
+        className="w-full text-left bg-black text-white rounded-2xl p-5 overflow-hidden relative active:opacity-90 transition"
+      >
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-3">
@@ -177,14 +197,17 @@ export default function DashboardPage() {
             />
           </div>
         </div>
-      </div>
+      </button>
 
       {/* HOY */}
       <TodaySummaryCard appointments={appointments} />
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
+        <button
+          onClick={() => router.push("/admin")}
+          className="text-left bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800 active:scale-[0.98] transition"
+        >
           <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
             <Calendar size={15} className="text-black dark:text-white" />
           </div>
@@ -196,8 +219,11 @@ export default function DashboardPage() {
                   ((currentMonthData.length - prevMonthData.length) / prevMonthData.length) * 100
                 ).toFixed(0)}% vs mes anterior`}
           </p>
-        </div>
-        <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
+        </button>
+        <button
+          onClick={() => router.push("/admin")}
+          className="text-left bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800 active:scale-[0.98] transition"
+        >
           <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
             <BarChart2 size={15} className="text-black dark:text-white" />
           </div>
@@ -207,7 +233,7 @@ export default function DashboardPage() {
             {weekVariation === null ? "Sin semana previa"
               : `${weekVariation > 0 ? "↑" : "↓"} ${Math.abs(weekVariation).toFixed(0)}% vs semana ant.`}
           </p>
-        </div>
+        </button>
         <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
           <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
             <TrendingUp size={15} className="text-black dark:text-white" />
@@ -236,25 +262,33 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-400">Sin datos</p>
         ) : (
           <div className="space-y-3">
-            {topClients.map(([clientName, count], i) => (
-              <div key={clientName} className="flex justify-between items-center">
-                <div className="flex items-center gap-2.5">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                    i === 0 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400" :
-                    i === 1 ? "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300" :
-                    i === 2 ? "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400" :
-                    "bg-gray-50 text-gray-400"
-                  }`}>
-                    {i + 1}
-                  </span>
-                  <span className="text-sm dark:text-gray-200">{clientName}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-semibold dark:text-white">{count}</span>
-                  <span className="text-[10px] text-gray-400">turnos</span>
-                </div>
-              </div>
-            ))}
+            {topClients.map(([clientName, count], i) => {
+              const clientId = clientMap.get(clientName.toLowerCase());
+              return (
+                <button
+                  key={clientName}
+                  onClick={() => clientId && router.push(`/clients/${clientId}`)}
+                  disabled={!clientId}
+                  className="w-full flex justify-between items-center active:bg-gray-50 dark:active:bg-[#2a2a2a] rounded-xl px-1 py-1.5 transition disabled:opacity-100"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                      i === 0 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400" :
+                      i === 1 ? "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300" :
+                      i === 2 ? "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400" :
+                      "bg-gray-50 text-gray-400"
+                    }`}>
+                      {i + 1}
+                    </span>
+                    <span className="text-sm dark:text-gray-200">{clientName}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold dark:text-white">{count}</span>
+                    <span className="text-[10px] text-gray-400">turnos</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -277,6 +311,12 @@ export default function DashboardPage() {
       </div>
 
       </div>
+
+      <IncomeModal
+        appointments={currentMonthData}
+        open={showIncome}
+        onClose={() => setShowIncome(false)}
+      />
     </div>
   );
 }
