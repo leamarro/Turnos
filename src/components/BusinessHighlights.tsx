@@ -53,7 +53,7 @@ export default function BusinessHighlights({
 
     monthAppointments.forEach((a) => {
       const day = getDay(new Date(a.date));
-      const price = a.servicePrice ?? a.service?.price ?? 0;
+      const price = a.service?.price ?? a.servicePrice ?? 0;
       map.set(day, (map.get(day) ?? 0) + price);
     });
 
@@ -84,7 +84,7 @@ export default function BusinessHighlights({
       const range =
         h < 12 ? "Mañana" : h < 16 ? "Mediodía" : h < 20 ? "Tarde" : "Noche";
 
-      const price = a.servicePrice ?? a.service?.price ?? 0;
+      const price = a.service?.price ?? a.servicePrice ?? 0;
       buckets.set(range, (buckets.get(range) ?? 0) + price);
     });
 
