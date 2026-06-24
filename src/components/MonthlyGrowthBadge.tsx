@@ -27,7 +27,7 @@ export default function MonthlyGrowthBadge({
         isWithinInterval(new Date(a.date), { start, end })
       )
       .reduce(
-        (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
+        (sum, a) => sum + (a.service?.price ?? a.servicePrice ?? 0),
         0
       );
 
