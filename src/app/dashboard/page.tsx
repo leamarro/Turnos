@@ -43,7 +43,7 @@ export default function DashboardPage() {
   const lastWeek = { start: startOfWeek(lastWeekDate, { weekStartsOn: 1 }), end: endOfWeek(lastWeekDate, { weekStartsOn: 1 }) };
 
   const income = (list: Appointment[]) =>
-    list.reduce((sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0), 0);
+    list.reduce((sum, a) => sum + (a.service?.price ?? a.servicePrice ?? 0), 0);
 
   const currentMonthData = appointments.filter((a) => isWithinInterval(new Date(a.date), currentMonth));
   const prevMonthData = appointments.filter((a) => isWithinInterval(new Date(a.date), prevMonth));
@@ -76,7 +76,7 @@ export default function DashboardPage() {
     const rows = [["Fecha", "Hora", "Cliente", "Servicio", "Precio", "Pagado", "Restante"]];
     appointments.forEach((a: any) => {
       const d = new Date(a.date);
-      const total = a.servicePrice ?? a.service?.price ?? 0;
+      const total = a.service?.price ?? a.servicePrice ?? 0;
       const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
       rows.push([
         d.toLocaleDateString("es-AR"),
