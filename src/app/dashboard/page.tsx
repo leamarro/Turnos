@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   startOfMonth, endOfMonth, subMonths, isWithinInterval,
   startOfWeek, endOfWeek, subWeeks,
@@ -25,6 +26,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showIncome, setShowIncome] = useState(false);
   const [clientMap, setClientMap] = useState<Map<string, string>>(new Map());
+  const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
