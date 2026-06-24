@@ -28,7 +28,7 @@ export default function TodaySummaryCard({
     });
 
     const totalIncome = todays.reduce(
-      (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
+      (sum, a) => sum + (a.service?.price ?? a.servicePrice ?? 0),
       0
     );
 
