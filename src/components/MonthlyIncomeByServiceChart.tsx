@@ -51,7 +51,7 @@ export default function MonthlyIncomeByServiceChart({
 
     filteredByMonth.forEach((a) => {
       const name = a.service?.name ?? "Sin servicio";
-      const price = a.servicePrice ?? a.service?.price ?? 0;
+      const price = a.service?.price ?? a.servicePrice ?? 0;
       map.set(name, (map.get(name) ?? 0) + price);
     });
 
