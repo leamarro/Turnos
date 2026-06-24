@@ -26,7 +26,7 @@ export default function MonthlyTrendSparkline({
     data.forEach((a) => {
       const d = new Date(a.date);
       const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-      const price = a.servicePrice ?? a.service?.price ?? 0;
+      const price = a.service?.price ?? a.servicePrice ?? 0;
       map.set(key, (map.get(key) ?? 0) + price);
     });
 
