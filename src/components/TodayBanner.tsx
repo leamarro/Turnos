@@ -25,7 +25,7 @@ export default function TodayBanner({ appointments, onClick }: { appointments: A
 
     const count = todayApps.length;
     const income = todayApps.reduce(
-      (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
+      (sum, a) => sum + (a.service?.price ?? a.servicePrice ?? 0),
       0
     );
 
