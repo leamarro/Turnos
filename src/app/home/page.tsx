@@ -34,7 +34,7 @@ const VIEWS: { key: View; label: string }[] = [
 
 export default function HomePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [view, setView] = useState<View>("day");
+  const [view, setView] = useState<View>("month");
   const [gridMode, setGridMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
