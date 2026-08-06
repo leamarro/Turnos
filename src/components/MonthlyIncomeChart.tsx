@@ -2,33 +2,49 @@
 
 import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import ChartTooltip, { formatMonthLabel } from "@/components/ChartTooltip";
+import useIsDark from "@/lib/useIsDark";
 
-export default function MonthlyIncomeChart() {
-  const [data, setData] = useState([]);
+export default function MonthlyIncomeChart({
+  sinceLabel,
+}: {
+  sinceLabel?: string | null;
+}) {
+  const [data, setData] = useState<{ month: string; total: number }[]>([]);
+  const isDark = useIsDark();
 
   useEffect(() => {
     const loadStats = async () => {
       const res = await fetch("/api/stats/monthly-income");
       const json = await res.json();
-      setData(json);
+      setData(Array.isArray(json) ? json : []);
     };
     loadStats();
   }, []);
 
   return (
     <div className="bg-white dark:bg-[#252525] p-5 rounded-2xl shadow-sm dark:border dark:border-gray-800 w-full">
-      <h2 className="text-sm font-semibold mb-4 dark:text-white">Ingresos por mes</h2>
+      <h2 className="text-sm font-semibold mb-1 dark:text-white">Ingresos por mes</h2>
+      {sinceLabel && (
+        <p className="text-xs text-gray-400 mb-4">desde {sinceLabel}</p>
+      )}
 
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
-            <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" />
-            <Tooltip
-              contentStyle={{ borderRadius: 12, border: "1px solid #e5e5e5", fontSize: 13 }}
-              formatter={(value) => typeof value === "number" ? [`$${value.toLocaleString("es-AR")}`, "Ingresos"] : value}
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 11 }}
+              stroke="#9ca3af"
+              interval="preserveStartEnd"
+              tickFormatter={formatMonthLabel}
             />
-            <Bar dataKey="total" fill="#111827" radius={[6, 6, 0, 0]} maxBarSize={40} />
+            <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" width={56} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
+            <Tooltip
+              content={<ChartTooltip labelFormatter={formatMonthLabel} />}
+              cursor={false}
+            />
+            <Bar dataKey="total" fill={isDark ? "#e5e7eb" : "#111827"} radius={[6, 6, 0, 0]} maxBarSize={40} />
           </BarChart>
         </ResponsiveContainer>
       </div>
