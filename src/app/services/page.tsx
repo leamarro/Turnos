@@ -21,12 +21,20 @@ const DEFAULT_COLORS = [
   "#C7B8EA", "#F0A1A1", "#7EC8E3", "#E2B4BD", "#B8D4E3",
 ];
 
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 export default function ServicesPage() {
   const { toast } = useToast();
   const [services, setServices] = useState<Service[]>([]);
   const DEFAULT_DURATION = 30;
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", price: "", color: "" });
+  const [editForm, setEditForm] = useState({ name: "", price: "", duration: "", color: "" });
   const [showNew, setShowNew] = useState(false);
   const [newForm, setNewForm] = useState({ name: "", price: "", color: "#000000" });
 
@@ -43,7 +51,7 @@ export default function ServicesPage() {
 
   const startEdit = (s: Service) => {
     setEditingId(s.id);
-    setEditForm({ name: s.name, price: String(s.price), color: s.color });
+    setEditForm({ name: s.name, price: String(s.price), duration: String(s.duration), color: s.color });
   };
 
   const cancelEdit = () => {
@@ -55,7 +63,7 @@ export default function ServicesPage() {
       await axios.put(`/api/services/${id}`, {
         name: editForm.name,
         price: Number(editForm.price),
-        duration: DEFAULT_DURATION,
+        duration: Number(editForm.duration) || DEFAULT_DURATION,
         color: editForm.color,
       });
       setEditingId(null);
@@ -171,6 +179,14 @@ export default function ServicesPage() {
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
                     placeholder="Precio"
                   />
+                  <input
+                    value={editForm.duration}
+                    type="number"
+                    min="1"
+                    onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
+                    placeholder="Duración (minutos)"
+                  />
                   <div className="flex gap-2 flex-wrap">
                     {DEFAULT_COLORS.map((c) => (
                       <button
@@ -210,7 +226,7 @@ export default function ServicesPage() {
                   <div className="flex-1 min-w-0" onClick={() => startEdit(s)}>
                     <p className="font-medium text-sm">{s.name}</p>
                     <p className="text-xs text-gray-400">
-                      ${s.price.toLocaleString()}
+                      {formatMoney(s.price)} · {s.duration} min
                     </p>
                   </div>
                   <button
