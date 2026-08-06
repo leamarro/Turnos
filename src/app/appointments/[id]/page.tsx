@@ -134,15 +134,25 @@ export default function EditAppointmentPage({
     if (!depositAmount || Number(depositAmount) <= 0 || pagoCompleto) return;
     try {
       await axios.post(`/api/appointments/${id}/add-deposit`, { amount: Number(depositAmount) });
-      router.refresh();
+      setDepositAmount("");
+      await reloadAppointment();
+      toast("Seña registrada ✓", "success");
     } catch { toast("Error al agregar seña", "error"); }
+  }
+
+  async function reloadAppointment() {
+    try {
+      const ap = await axios.get(`/api/appointments/${id}`);
+      setAppointment(ap.data);
+    } catch { /* error silencioso */ }
   }
 
   async function handleCompletePayment() {
     try {
       await axios.post(`/api/appointments/${id}/complete-payment`);
+      setStatus("completed");
+      await reloadAppointment();
       toast("Pago completo ✓", "success");
-      router.refresh();
     } catch { toast("Error al completar pago", "error"); }
   }
 
@@ -175,6 +185,11 @@ export default function EditAppointmentPage({
       await axios.put(`/api/appointments/${id}`, payload);
       setStatus(newStatus);
     } catch { toast("Error al actualizar estado", "error"); }
+  }
+
+  function handleCall() {
+    if (!telefono) return;
+    window.location.href = `tel:${telefono.replace(/\D/g, "")}`;
   }
 
   function handleConsultWhatsapp() {
@@ -287,6 +302,13 @@ export default function EditAppointmentPage({
             {telefono && (
               <div className="flex gap-2">
                 <button
+                  onClick={handleCall}
+                  className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 dark:text-gray-300 dark:border-gray-600 py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
+                >
+                  <Phone size={15} />
+                  Llamar
+                </button>
+                <button
                   onClick={handleConsultWhatsapp}
                   className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 dark:text-gray-300 dark:border-gray-600 py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
                 >
@@ -364,7 +386,7 @@ export default function EditAppointmentPage({
 
           {restante > 0 && (
             <button onClick={handleCompletePayment} className="w-full bg-green-600 text-white py-2.5 rounded-xl text-sm font-medium">
-              Marcar pago completo
+              Cobrar el resto (${restante})
             </button>
           )}
 
