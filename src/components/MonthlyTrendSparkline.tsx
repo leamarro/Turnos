@@ -6,6 +6,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { incomeByMonth } from "@/lib/income";
 
 type SparklineAppointment = {
   date: string;
@@ -13,6 +14,7 @@ type SparklineAppointment = {
   service?: {
     price?: number;
   } | null;
+  payments?: { amount: number; createdAt?: string | Date }[];
 };
 
 export default function MonthlyTrendSparkline({
@@ -21,14 +23,7 @@ export default function MonthlyTrendSparkline({
   data: SparklineAppointment[];
 }) {
   const chartData = useMemo(() => {
-    const map = new Map<string, number>();
-
-    data.forEach((a) => {
-      const d = new Date(a.date);
-      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-      const price = a.service?.price ?? a.servicePrice ?? 0;
-      map.set(key, (map.get(key) ?? 0) + price);
-    });
+    const map = incomeByMonth(data);
 
     return Array.from(map.entries())
       .sort((a, b) => {
