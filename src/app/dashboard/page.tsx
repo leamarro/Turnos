@@ -196,6 +196,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          <div className="mt-2.5 flex items-center justify-between bg-white/10 rounded-xl px-3 py-2">
+            <span className="text-xs text-white/60">Total del mes</span>
+            <span className="text-base font-bold">{money(incomeCurrent + agendado)}</span>
+          </div>
+
           <div className="flex items-center gap-3 mt-3 text-xs text-white/50">
             {monthVariation !== null && (
               <span className={monthVariation > 0 ? "text-emerald-400" : "text-red-400"}>
