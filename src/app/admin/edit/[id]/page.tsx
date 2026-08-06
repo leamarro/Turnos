@@ -99,6 +99,8 @@ export default function EditAppointmentPage({
 
   const payments = appointment.payments ?? [];
 
+  const visiblePayments = payments.filter((p) => p.method !== "pendiente");
+
   const totalServicio = appointment.servicePrice ?? 0;
 
   const totalPagado = payments.reduce((acc, p) => acc + p.amount, 0);
@@ -135,6 +137,12 @@ export default function EditAppointmentPage({
 
   async function handleCompletePayment() {
     await axios.post(`/api/appointments/${id}/complete-payment`);
+    await fetchAppointment();
+  }
+
+  async function handleMarkUnpaid() {
+    if (!confirm("¿Marcar el turno como no pagado?")) return;
+    await axios.post(`/api/appointments/${id}/mark-unpaid`);
     await fetchAppointment();
   }
 
@@ -237,11 +245,11 @@ export default function EditAppointmentPage({
         </div>
 
         {/* HISTORIAL */}
-        {payments.length > 0 && (
+        {visiblePayments.length > 0 && (
           <div className="border rounded-xl p-4 space-y-3 text-sm">
             <p className="font-semibold">Historial de pagos</p>
 
-            {payments.map((p) => {
+            {visiblePayments.map((p) => {
               const fecha = new Date(p.createdAt).toLocaleDateString(
                 "es-AR",
                 {
@@ -308,8 +316,17 @@ export default function EditAppointmentPage({
             Completar pago
           </button>
         ) : (
-          <div className="bg-green-100 text-green-700 text-center py-2 rounded-xl">
-            Pago completado
+          <div className="space-y-2">
+            <div className="bg-green-100 text-green-700 text-center py-2 rounded-xl">
+              Pago completado
+            </div>
+
+            <button
+              onClick={handleMarkUnpaid}
+              className="w-full border border-red-300 text-red-600 py-2 rounded-xl"
+            >
+              Marcar como no pagado
+            </button>
           </div>
         )}
 
