@@ -35,6 +35,13 @@ export async function POST(
       });
     }
 
+    await prisma.payment.deleteMany({
+      where: {
+        appointmentId: params.id,
+        method: "pendiente",
+      },
+    });
+
     await prisma.appointment.update({
       where: { id: params.id },
       data: { status: "completed" },
