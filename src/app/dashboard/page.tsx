@@ -21,7 +21,7 @@ import IncomeModal from "@/components/IncomeModal";
 type Appointment = any;
 
 const money = (n: number) =>
-  `$ ${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
+  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -292,7 +292,7 @@ export default function DashboardPage() {
             <DollarSign size={15} className="text-black dark:text-white" />
           </div>
           <p className="text-xs text-gray-400">Total histórico</p>
-          <p className="text-2xl font-bold mt-0.5 dark:text-white">{money(totalCobrado)}</p>
+          <p className="text-xl font-bold mt-0.5 dark:text-white whitespace-nowrap">{money(totalCobrado)}</p>
           <p className="text-xs mt-1 text-gray-400">
             {appointments.length} turnos{sinceLabel ? ` · desde ${sinceLabel}` : ""}
           </p>
