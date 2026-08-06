@@ -95,7 +95,7 @@ export default function MonthlyIncomeByServiceChart({
           {/* tooltip solo aparece al tocar */}
           <Tooltip content={<ChartTooltip />} cursor={false} />
 
-          <Bar dataKey="total" radius={[8, 8, 0, 0]} animationDuration={300}>
+          <Bar dataKey="total" radius={[8, 8, 0, 0]} animationDuration={300} activeBar={false}>
             {chartData.map((_, i) => (
               <Cell key={i} fill={(isDark ? DARK_COLORS : COLORS)[i % COLORS.length]} />
             ))}
