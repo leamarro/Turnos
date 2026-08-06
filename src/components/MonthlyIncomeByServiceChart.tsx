@@ -15,6 +15,7 @@ type Appointment = {
   date: string;
   service: { name: string; price?: number } | null;
   servicePrice?: number | null;
+  payments?: { amount: number; createdAt?: string | Date }[];
 };
 
 const COLORS = ["#111827", "#4B5563", "#9CA3AF", "#6B7280"];
@@ -35,31 +36,31 @@ export default function MonthlyIncomeByServiceChart({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const filteredByMonth = useMemo(() => {
-    if (selectedMonth === "all") return data;
-
-    const [year, month] = selectedMonth.split("-").map(Number);
-
-    return data.filter((a) => {
-      const d = new Date(a.date);
-      return d.getFullYear() === year && d.getMonth() + 1 === month;
-    });
-  }, [data, selectedMonth]);
-
   const chartData = useMemo(() => {
     const map = new Map<string, number>();
 
-    filteredByMonth.forEach((a) => {
+    data.forEach((a) => {
       const name = a.service?.name ?? "Sin servicio";
-      const price = a.service?.price ?? a.servicePrice ?? 0;
-      map.set(name, (map.get(name) ?? 0) + price);
+
+      for (const payment of a.payments ?? []) {
+        if (selectedMonth === "all") {
+          map.set(name, (map.get(name) ?? 0) + payment.amount);
+          continue;
+        }
+
+        const d = new Date(payment.createdAt ?? new Date());
+        const [year, month] = selectedMonth.split("-").map(Number);
+        if (d.getFullYear() === year && d.getMonth() + 1 === month) {
+          map.set(name, (map.get(name) ?? 0) + payment.amount);
+        }
+      }
     });
 
     return Array.from(map.entries()).map(([name, total]) => ({
       name,
       total,
     }));
-  }, [filteredByMonth]);
+  }, [data, selectedMonth]);
 
   if (chartData.length === 0) {
     return (
