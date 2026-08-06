@@ -82,7 +82,7 @@ export default function MonthlyIncomeByServiceChart({
         <p className="text-xs text-gray-400 mb-3 -mt-1">desde {sinceLabel}</p>
       )}
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData}>
+        <BarChart data={chartData} accessibilityLayer={false}>
           <XAxis
             dataKey="name"
             tick={{ fontSize: 12 }}
