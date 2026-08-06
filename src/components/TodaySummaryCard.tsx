@@ -36,9 +36,16 @@ export default function TodaySummaryCard({
       return sum;
     }, 0);
 
+    const pending = todays.reduce((sum, a) => {
+      const total = a.service?.price ?? a.servicePrice ?? 0;
+      const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
+      return sum + Math.max(total - paid, 0);
+    }, 0);
+
     return {
       count: todays.length,
       income: totalIncome,
+      pending,
     };
   }, [appointments]);
 
@@ -54,11 +61,19 @@ export default function TodaySummaryCard({
           <p className="text-sm text-gray-600">turnos</p>
         </div>
 
-        <div className="text-right">
-          <p className="text-3xl font-semibold leading-none">
-            $ {todayData.income}
-          </p>
-          <p className="text-sm text-gray-600">cobrado hoy</p>
+        <div className="text-right space-y-1.5">
+          <div>
+            <p className="text-xl font-semibold leading-none">
+              $ {todayData.income}
+            </p>
+            <p className="text-xs text-gray-600">cobrado hoy</p>
+          </div>
+          <div>
+            <p className="text-xl font-semibold leading-none">
+              $ {todayData.pending}
+            </p>
+            <p className="text-xs text-gray-600">agendado hoy</p>
+          </div>
         </div>
       </div>
     </div>
