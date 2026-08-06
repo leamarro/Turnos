@@ -77,7 +77,6 @@ export default function DashboardPage() {
   const daysElapsed = now.getDate();
   const monthProgress = (daysElapsed / daysInMonth) * 100;
   const dailyAvg = daysElapsed > 0 ? incomeCurrent / daysElapsed : 0;
-  const projected = dailyAvg > 0 ? Math.round(dailyAvg * daysInMonth) : 0;
 
   const agendado = appointments.reduce((sum, a) => {
     const d = new Date(a.date);
@@ -185,20 +184,22 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          <p className="text-[10px] text-white/50 uppercase tracking-wide">
+            Total del mes
+          </p>
+          <p className="text-4xl font-bold tracking-tight">
+            {money(incomeCurrent + agendado)}
+          </p>
+
+          <div className="grid grid-cols-2 gap-2.5 mt-3">
             <div className="bg-white/10 rounded-xl px-3 py-2.5">
               <p className="text-[10px] text-white/50 uppercase tracking-wide">Cobrado</p>
-              <p className="text-2xl font-bold tracking-tight mt-0.5">{money(incomeCurrent)}</p>
+              <p className="text-xl font-bold tracking-tight mt-0.5">{money(incomeCurrent)}</p>
             </div>
             <div className="bg-white/10 rounded-xl px-3 py-2.5">
               <p className="text-[10px] text-white/50 uppercase tracking-wide">Agendado</p>
-              <p className="text-2xl font-bold tracking-tight mt-0.5">{money(agendado)}</p>
+              <p className="text-xl font-bold tracking-tight mt-0.5">{money(agendado)}</p>
             </div>
-          </div>
-
-          <div className="mt-2.5 flex items-center justify-between bg-white/10 rounded-xl px-3 py-2">
-            <span className="text-xs text-white/60">Total del mes</span>
-            <span className="text-base font-bold">{money(incomeCurrent + agendado)}</span>
           </div>
 
           <div className="flex items-center gap-3 mt-3 text-xs text-white/50">
@@ -209,11 +210,6 @@ export default function DashboardPage() {
             )}
             <span>~{money(Math.round(dailyAvg))} / día</span>
           </div>
-          {projected > 0 && (
-            <p className="text-[11px] text-white/40 mt-2">
-              Proyección → {money(projected)}
-            </p>
-          )}
           <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-white rounded-full transition-all duration-500"
