@@ -5,6 +5,7 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
+  Area,
 } from "recharts";
 import { incomeByMonth } from "@/lib/income";
 
@@ -41,12 +42,21 @@ export default function MonthlyTrendSparkline({
     <div className="w-full h-12">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData}>
+          <Area
+            type="monotone"
+            dataKey="total"
+            stroke="none"
+            fill="#000"
+            fillOpacity={0.08}
+            activeDot={false}
+          />
           <Line
             type="monotone"
             dataKey="total"
             stroke="#000"
             strokeWidth={2}
             dot={false}
+            activeDot={false}
           />
         </LineChart>
       </ResponsiveContainer>
