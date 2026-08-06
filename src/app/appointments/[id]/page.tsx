@@ -31,6 +31,7 @@ type Service = {
 type Payment = {
   id: string;
   amount: number;
+  method?: string;
 };
 
 type Appointment = {
@@ -143,6 +144,16 @@ export default function EditAppointmentPage({
       toast("Pago completo ✓", "success");
       router.refresh();
     } catch { toast("Error al completar pago", "error"); }
+  }
+
+  async function handleMarkUnpaid() {
+    if (!confirm("¿Marcar el turno como no pagado?")) return;
+    try {
+      await axios.post(`/api/appointments/${id}/mark-unpaid`);
+      const ap = await axios.get(`/api/appointments/${id}`);
+      setAppointment(ap.data);
+      toast("Marcado como no pagado", "success");
+    } catch { toast("Error al marcar como no pagado", "error"); }
   }
 
   async function handleDelete() {
@@ -354,6 +365,15 @@ export default function EditAppointmentPage({
           {restante > 0 && (
             <button onClick={handleCompletePayment} className="w-full bg-green-600 text-white py-2.5 rounded-xl text-sm font-medium">
               Marcar pago completo
+            </button>
+          )}
+
+          {pagoCompleto && totalServicio > 0 && (
+            <button
+              onClick={handleMarkUnpaid}
+              className="w-full border border-red-200 text-red-500 py-2.5 rounded-xl text-sm font-medium"
+            >
+              Marcar como no pagado
             </button>
           )}
         </section>
