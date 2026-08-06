@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   startOfMonth, endOfMonth, subMonths, isWithinInterval,
-  startOfWeek, endOfWeek, subWeeks,
+  startOfWeek, endOfWeek, subWeeks, startOfDay,
 } from "date-fns";
 import { Download, Calendar, DollarSign, Users, BarChart2, TrendingUp, AlertTriangle } from "lucide-react";
 import TodaySummaryCard from "@/components/TodaySummaryCard";
@@ -88,6 +88,7 @@ export default function DashboardPage() {
 
   const deudaList = appointments.filter((a: any) => {
     if (a.status === "cancelled") return false;
+    if (new Date(a.date) >= startOfDay(now)) return false;
     const total = a.service?.price ?? a.servicePrice ?? 0;
     const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
     return total > 0 && paid < total;
