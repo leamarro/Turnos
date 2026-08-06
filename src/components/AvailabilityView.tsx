@@ -19,6 +19,21 @@ const TIME_SLOTS = [
   "18:00","18:30","19:00","19:30","20:00","20:30","21:00",
 ];
 
+function slotToMinutes(slot: string) {
+  const [h, m] = slot.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function slotOccupied(dayAppts: Appointment[], slot: string) {
+  const start = slotToMinutes(slot);
+  const end = start + 30;
+  return dayAppts.find((a) => {
+    const d = new Date(a.date);
+    const t = d.getHours() * 60 + d.getMinutes();
+    return t >= start && t < end;
+  });
+}
+
 export default function AvailabilityView({
   appointments,
   onSelectAppointment,
@@ -30,15 +45,11 @@ export default function AvailabilityView({
   const today = startOfDay(new Date());
   const isToday = day.getTime() === today.getTime();
 
-  const apptMap = new Map<string, Appointment>();
-  for (const a of appointments) {
-    const d = new Date(a.date);
-    if (format(d, "yyyy-MM-dd") === format(day, "yyyy-MM-dd")) {
-      apptMap.set(format(d, "HH:mm"), a);
-    }
-  }
+  const dayAppts = appointments.filter(
+    (a) => format(new Date(a.date), "yyyy-MM-dd") === format(day, "yyyy-MM-dd")
+  );
 
-  const freeCount = TIME_SLOTS.filter((s) => !apptMap.has(s)).length;
+  const freeCount = TIME_SLOTS.filter((s) => !slotOccupied(dayAppts, s)).length;
 
   return (
     <div className="mt-2">
@@ -86,7 +97,7 @@ export default function AvailabilityView({
           <p className="text-xs text-gray-400 mt-0.5">libres</p>
         </div>
         <div className="flex-1 bg-white rounded-xl px-4 py-3 text-center shadow-sm">
-          <p className="text-2xl font-bold">{apptMap.size}</p>
+          <p className="text-2xl font-bold">{TIME_SLOTS.length - freeCount}</p>
           <p className="text-xs text-gray-400 mt-0.5">ocupados</p>
         </div>
         <div className="flex-1 bg-white rounded-xl px-4 py-3 text-center shadow-sm">
@@ -98,7 +109,7 @@ export default function AvailabilityView({
       {/* Grid de horarios */}
       <div className="space-y-1.5">
         {TIME_SLOTS.map((slot) => {
-          const appt = apptMap.get(slot);
+          const appt = slotOccupied(dayAppts, slot);
 
           return appt ? (
             <button
