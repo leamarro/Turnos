@@ -8,6 +8,7 @@ type Appointment = {
     price?: number;
   } | null;
   servicePrice?: number | null;
+  payments?: { amount: number; createdAt?: string | Date }[];
 };
 
 export default function TodaySummaryCard({
@@ -27,10 +28,13 @@ export default function TodaySummaryCard({
       return d >= today && d < tomorrow;
     });
 
-    const totalIncome = todays.reduce(
-      (sum, a) => sum + (a.service?.price ?? a.servicePrice ?? 0),
-      0
-    );
+    const totalIncome = appointments.reduce((sum, a) => {
+      for (const p of a.payments ?? []) {
+        const d = new Date(p.createdAt ?? new Date());
+        if (d >= today && d < tomorrow) sum += p.amount;
+      }
+      return sum;
+    }, 0);
 
     return {
       count: todays.length,
@@ -54,7 +58,7 @@ export default function TodaySummaryCard({
           <p className="text-3xl font-semibold leading-none">
             $ {todayData.income}
           </p>
-          <p className="text-sm text-gray-600">ingresos</p>
+          <p className="text-sm text-gray-600">cobrado hoy</p>
         </div>
       </div>
     </div>
