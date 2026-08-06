@@ -44,7 +44,7 @@ export default function MonthlyIncomeChart({
               content={<ChartTooltip labelFormatter={formatMonthLabel} />}
               cursor={false}
             />
-            <Bar dataKey="total" fill={isDark ? "#e5e7eb" : "#111827"} radius={[6, 6, 0, 0]} maxBarSize={40} />
+            <Bar dataKey="total" fill={isDark ? "#e5e7eb" : "#111827"} radius={[6, 6, 0, 0]} maxBarSize={40} activeBar={false} />
           </BarChart>
         </ResponsiveContainer>
       </div>
