@@ -5,28 +5,31 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const appointments = await prisma.appointment.findMany({
+    const payments = await prisma.payment.findMany({
       select: {
-        date: true,
-        service: {
+        amount: true,
+        createdAt: true,
+        appointment: {
           select: {
-            name: true,
-            price: true,
+            service: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
-      orderBy: { date: "asc" },
+      orderBy: { createdAt: "asc" },
     });
 
     const result: Record<string, Record<string, number>> = {};
 
-    appointments.forEach((a) => {
-      const month = new Date(a.date).toISOString().slice(0, 7); // YYYY-MM
-      const serviceName = a.service?.name ?? "Sin servicio";
-      const price = a.service?.price ?? 0;
+    payments.forEach((p) => {
+      const month = new Date(p.createdAt).toISOString().slice(0, 7); // YYYY-MM
+      const serviceName = p.appointment?.service?.name ?? "Sin servicio";
 
       if (!result[month]) result[month] = {};
-      result[month][serviceName] = (result[month][serviceName] ?? 0) + price;
+      result[month][serviceName] = (result[month][serviceName] ?? 0) + p.amount;
     });
 
     // 🔥 Convertimos el objeto en un array para Recharts
