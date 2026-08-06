@@ -10,8 +10,13 @@ type Appointment = {
   date: string;
   name: string;
   lastName: string;
-  service: { name: string; color?: string };
+  service: { name: string; color?: string; price?: number };
+  servicePrice?: number | null;
+  payments?: { amount: number; createdAt?: string | Date }[];
 };
+
+const money = (n: number) =>
+  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 export default function WeekView({
   appointments,
@@ -77,26 +82,38 @@ export default function WeekView({
               <p className="text-sm text-gray-400 italic">Sin turnos</p>
             ) : (
               <div className="space-y-2">
-                {items.map((a) => (
-                  <div
-                    key={a.id}
-                    onClick={() => onSelectAppointment?.(a.id)}
-                    className="bg-gray-50 rounded-xl px-3 py-3 cursor-pointer active:bg-gray-100 transition overflow-hidden relative"
-                  >
-                    <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ backgroundColor: a.service.color || "#000000" }} />
-                    <div className="flex justify-between items-center pl-2">
-                      <div>
-                        <p className="text-sm font-medium">
-                          {a.name} {a.lastName}
-                        </p>
-                        <p className="text-xs text-gray-500">{a.service.name}</p>
+                {items.map((a) => {
+                  const total = a.service?.price ?? a.servicePrice ?? 0;
+                  const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
+                  const remaining = total - paid;
+                  return (
+                    <div
+                      key={a.id}
+                      onClick={() => onSelectAppointment?.(a.id)}
+                      className="bg-gray-50 rounded-xl px-3 py-3 cursor-pointer active:bg-gray-100 transition overflow-hidden relative"
+                    >
+                      <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ backgroundColor: a.service.color || "#000000" }} />
+                      <div className="flex justify-between items-center gap-2 pl-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">
+                            {a.name} {a.lastName}
+                          </p>
+                          <p className="text-xs text-gray-500">{a.service.name}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {remaining > 0 && total > 0 && (
+                            <span className="text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 px-2 py-1 rounded-full">
+                              falta {money(remaining)}
+                            </span>
+                          )}
+                          <p className="text-sm font-bold tabular-nums text-gray-700">
+                            {format(new Date(a.date), "HH:mm")}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm font-bold tabular-nums text-gray-700">
-                        {format(new Date(a.date), "HH:mm")}
-                      </p>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
