@@ -13,6 +13,7 @@ import TodayAlertCard from "@/components/TodayAlertCard";
 import MonthlyIncomeChart from "@/components/MonthlyIncomeChart";
 import MonthlyIncomeByServiceChart from "@/components/MonthlyIncomeByServiceChart";
 import MonthlyTrendSparkline from "@/components/MonthlyTrendSparkline";
+import { incomeInInterval } from "@/lib/income";
 import IncomeModal from "@/components/IncomeModal";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,16 +62,13 @@ export default function DashboardPage() {
   const lastWeekDate = subWeeks(now, 1);
   const lastWeek = { start: startOfWeek(lastWeekDate, { weekStartsOn: 1 }), end: endOfWeek(lastWeekDate, { weekStartsOn: 1 }) };
 
-  const income = (list: Appointment[]) =>
-    list.reduce((sum, a) => sum + (a.service?.price ?? a.servicePrice ?? 0), 0);
-
   const currentMonthData = appointments.filter((a) => isWithinInterval(new Date(a.date), currentMonth));
   const prevMonthData = appointments.filter((a) => isWithinInterval(new Date(a.date), prevMonth));
   const thisWeekData = appointments.filter((a) => isWithinInterval(new Date(a.date), thisWeek));
   const lastWeekData = appointments.filter((a) => isWithinInterval(new Date(a.date), lastWeek));
 
-  const incomeCurrent = income(currentMonthData);
-  const incomePrev = income(prevMonthData);
+  const incomeCurrent = incomeInInterval(appointments, currentMonth.start, currentMonth.end);
+  const incomePrev = incomeInInterval(appointments, prevMonth.start, prevMonth.end);
 
   const monthVariation = incomePrev === 0 ? null : ((incomeCurrent - incomePrev) / incomePrev) * 100;
   const weekVariation = lastWeekData.length === 0 ? null : ((thisWeekData.length - lastWeekData.length) / lastWeekData.length) * 100;
@@ -315,7 +313,7 @@ export default function DashboardPage() {
       </div>
 
       <IncomeModal
-        appointments={currentMonthData}
+        appointments={appointments}
         open={showIncome}
         onClose={() => setShowIncome(false)}
       />
