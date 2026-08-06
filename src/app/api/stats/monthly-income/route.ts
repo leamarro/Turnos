@@ -21,10 +21,12 @@ export async function GET() {
       monthly[month] += p.amount;
     });
 
-    const result = Object.entries(monthly).map(([month, total]) => ({
-      month,
-      total,
-    }));
+    const result = Object.entries(monthly)
+      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+      .map(([month, total]) => ({
+        month,
+        total,
+      }));
 
     return NextResponse.json(result);
   } catch (error) {
