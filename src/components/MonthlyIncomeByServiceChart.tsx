@@ -10,6 +10,8 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import ChartTooltip from "@/components/ChartTooltip";
+import useIsDark from "@/lib/useIsDark";
 
 type Appointment = {
   date: string;
@@ -19,15 +21,19 @@ type Appointment = {
 };
 
 const COLORS = ["#111827", "#4B5563", "#9CA3AF", "#6B7280"];
+const DARK_COLORS = ["#e5e7eb", "#9ca3af", "#d1d5db", "#6b7280"];
 
 export default function MonthlyIncomeByServiceChart({
   data,
   selectedMonth = "all",
+  sinceLabel,
 }: {
   data: Appointment[];
   selectedMonth?: string;
+  sinceLabel?: string | null;
 }) {
   const [isMobile, setIsMobile] = useState(false);
+  const isDark = useIsDark();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -72,6 +78,9 @@ export default function MonthlyIncomeByServiceChart({
 
   return (
     <div className="w-full h-[260px]">
+      {sinceLabel && selectedMonth === "all" && (
+        <p className="text-xs text-gray-400 mb-3 -mt-1">desde {sinceLabel}</p>
+      )}
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData}>
           <XAxis
@@ -84,17 +93,11 @@ export default function MonthlyIncomeByServiceChart({
           {!isMobile && <YAxis />}
 
           {/* tooltip solo aparece al tocar */}
-          <Tooltip
-            formatter={(value) => {
-              if (typeof value !== "number") return value;
-              return `$ ${value}`;
-            }}
-            cursor={{ fill: "rgba(0,0,0,0.05)" }}
-          />
+          <Tooltip content={<ChartTooltip />} cursor={false} />
 
           <Bar dataKey="total" radius={[8, 8, 0, 0]} animationDuration={300}>
             {chartData.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              <Cell key={i} fill={(isDark ? DARK_COLORS : COLORS)[i % COLORS.length]} />
             ))}
           </Bar>
         </BarChart>
