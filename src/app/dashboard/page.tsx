@@ -79,6 +79,14 @@ export default function DashboardPage() {
   const dailyAvg = daysElapsed > 0 ? incomeCurrent / daysElapsed : 0;
   const projected = dailyAvg > 0 ? Math.round(dailyAvg * daysInMonth) : 0;
 
+  const agendado = appointments.reduce((sum, a) => {
+    const d = new Date(a.date);
+    if (!isWithinInterval(d, currentMonth) || d < now) return sum;
+    const total = a.service?.price ?? a.servicePrice ?? 0;
+    const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
+    return sum + Math.max(total - paid, 0);
+  }, 0);
+
   const topClients = useMemo(() => {
     const map = new Map<string, number>();
     appointments.forEach((a) => {
@@ -176,7 +184,18 @@ export default function DashboardPage() {
               día {daysElapsed}/{daysInMonth}
             </span>
           </div>
-          <p className="text-4xl font-bold tracking-tight">{money(incomeCurrent)}</p>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="bg-white/10 rounded-xl px-3 py-2.5">
+              <p className="text-[10px] text-white/50 uppercase tracking-wide">Cobrado</p>
+              <p className="text-2xl font-bold tracking-tight mt-0.5">{money(incomeCurrent)}</p>
+            </div>
+            <div className="bg-white/10 rounded-xl px-3 py-2.5">
+              <p className="text-[10px] text-white/50 uppercase tracking-wide">Agendado</p>
+              <p className="text-2xl font-bold tracking-tight mt-0.5">{money(agendado)}</p>
+            </div>
+          </div>
+
           <div className="flex items-center gap-3 mt-3 text-xs text-white/50">
             {monthVariation !== null && (
               <span className={monthVariation > 0 ? "text-emerald-400" : "text-red-400"}>
