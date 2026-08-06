@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { autoCompletePayments } from "@/lib/autoCompletePayments";
 
 export async function POST(req: Request) {
   try {
@@ -49,6 +50,8 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const hasPage = url.searchParams.has("page");
+
+    await autoCompletePayments();
 
     // Backward compatible: without ?page, return plain array
     if (!hasPage) {
