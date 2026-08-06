@@ -1,14 +1,20 @@
 "use client";
 
 import { useMemo } from "react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { X } from "lucide-react";
+
+type Payment = {
+  amount: number;
+  createdAt?: string | Date;
+};
 
 type Appointment = {
   date: string;
   service: { name: string; price?: number } | null;
   servicePrice?: number | null;
+  payments?: Payment[];
 };
 
 const money = (n: number) =>
@@ -24,15 +30,23 @@ export default function IncomeModal({
   onClose: () => void;
 }) {
   const breakdown = useMemo(() => {
+    const now = new Date();
+    const monthInterval = {
+      start: startOfMonth(now),
+      end: endOfMonth(now),
+    };
     const map = new Map<string, { count: number; total: number }>();
 
     appointments.forEach((a) => {
       const name = a.service?.name ?? "Sin servicio";
-      const price = a.service?.price ?? a.servicePrice ?? 0;
-      const entry = map.get(name) ?? { count: 0, total: 0 };
-      entry.count++;
-      entry.total += price;
-      map.set(name, entry);
+
+      for (const payment of a.payments ?? []) {
+        if (!isWithinInterval(new Date(payment.createdAt ?? now), monthInterval)) continue;
+        const entry = map.get(name) ?? { count: 0, total: 0 };
+        entry.count++;
+        entry.total += payment.amount;
+        map.set(name, entry);
+      }
     });
 
     return Array.from(map.entries())
