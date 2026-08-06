@@ -41,7 +41,7 @@ export default function MonthlyTrendSparkline({
   return (
     <div className="w-full h-12">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
+        <LineChart data={chartData} accessibilityLayer={false}>
           <Area
             type="monotone"
             dataKey="total"
