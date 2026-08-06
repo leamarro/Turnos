@@ -1,20 +1,40 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
-import { X } from "lucide-react";
+import { X, ChevronDown, ChevronRight } from "lucide-react";
 
 type Payment = {
+  id?: string;
   amount: number;
+  method?: string;
   createdAt?: string | Date;
 };
 
 type Appointment = {
+  id: string;
   date: string;
+  name?: string;
+  lastName?: string;
   service: { name: string; price?: number } | null;
   servicePrice?: number | null;
   payments?: Payment[];
+};
+
+type DetailItem = {
+  paymentId: string;
+  clientName: string;
+  date: Date;
+  amount: number;
+  isDeposit: boolean;
+};
+
+type ServiceEntry = {
+  name: string;
+  count: number;
+  total: number;
+  items: DetailItem[];
 };
 
 const money = (n: number) =>
@@ -29,29 +49,42 @@ export default function IncomeModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
   const breakdown = useMemo(() => {
     const now = new Date();
     const monthInterval = {
       start: startOfMonth(now),
       end: endOfMonth(now),
     };
-    const map = new Map<string, { count: number; total: number }>();
+    const map = new Map<string, ServiceEntry>();
 
     appointments.forEach((a) => {
       const name = a.service?.name ?? "Sin servicio";
 
       for (const payment of a.payments ?? []) {
-        if (!isWithinInterval(new Date(payment.createdAt ?? now), monthInterval)) continue;
-        const entry = map.get(name) ?? { count: 0, total: 0 };
-        entry.count++;
-        entry.total += payment.amount;
+        const date = new Date(payment.createdAt ?? now);
+        if (!isWithinInterval(date, monthInterval)) continue;
+
+        const entry = map.get(name) ?? { name, count: 0, total: 0, items: [] };
+
+        if (!entry.items.some((i) => i.paymentId === payment.id)) {
+          entry.count += 1;
+          entry.total += payment.amount;
+          entry.items.push({
+            paymentId: payment.id ?? `${a.id}-${date.getTime()}`,
+            clientName: `${a.name ?? ""} ${a.lastName ?? ""}`.trim() || "Sin nombre",
+            date,
+            amount: payment.amount,
+            isDeposit: payment.method !== "full",
+          });
+        }
+
         map.set(name, entry);
       }
     });
 
-    return Array.from(map.entries())
-      .map(([name, data]) => ({ name, ...data }))
-      .sort((a, b) => b.total - a.total);
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
   }, [appointments]);
 
   const grandTotal = breakdown.reduce((s, d) => s + d.total, 0);
@@ -90,27 +123,65 @@ export default function IncomeModal({
                 grandTotal > 0
                   ? ((item.total / grandTotal) * 100).toFixed(0)
                   : "0";
+              const isExpanded = expanded === item.name;
+
               return (
                 <div key={item.name}>
-                  <div className="flex justify-between items-center mb-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm font-medium dark:text-gray-200 truncate">
-                        {item.name}
-                      </span>
-                      <span className="text-xs text-gray-400 shrink-0">
-                        ×{item.count}
+                  <button
+                    onClick={() => setExpanded(isExpanded ? null : item.name)}
+                    className="w-full text-left"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {isExpanded ? (
+                          <ChevronDown size={14} className="text-gray-400 shrink-0" />
+                        ) : (
+                          <ChevronRight size={14} className="text-gray-400 shrink-0" />
+                        )}
+                        <span className="text-sm font-medium dark:text-gray-200 truncate">
+                          {item.name}
+                        </span>
+                        <span className="text-xs text-gray-400 shrink-0">
+                          ×{item.count}
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold dark:text-white shrink-0 ml-3">
+                        {money(item.total)}
                       </span>
                     </div>
-                    <span className="text-sm font-semibold dark:text-white shrink-0 ml-3">
-                      {money(item.total)}
-                    </span>
-                  </div>
-                  <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-black dark:bg-white rounded-full transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+                    <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-black dark:bg-white rounded-full transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="mt-2 ml-4 pl-3 border-l border-gray-100 dark:border-gray-800 space-y-1">
+                      {item.items.map((it) => (
+                        <div
+                          key={it.paymentId}
+                          className="flex justify-between items-center py-1.5"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                              {it.clientName}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {format(it.date, "dd/MM")}
+                              {it.isDeposit && (
+                                <span className="text-amber-500"> (seña)</span>
+                              )}
+                            </p>
+                          </div>
+                          <span className="text-sm font-semibold dark:text-white shrink-0 ml-3">
+                            {money(it.amount)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
