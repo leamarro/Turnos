@@ -30,13 +30,13 @@ export default function ChartTooltip({
     : "";
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2a2a2a] px-3 py-2 shadow-lg">
+    <div className="rounded-xl bg-white dark:bg-[#2a2a2a] px-3 py-2 shadow-xl shadow-black/10">
       {labelText && (
         <p className="text-[10px] uppercase tracking-wide text-gray-400">
           {labelText}
         </p>
       )}
-      <p className="text-sm font-bold dark:text-white">
+      <p className="text-sm font-bold tabular-nums dark:text-white">
         {typeof value === "number"
           ? `$${value.toLocaleString("es-AR")}`
           : value}
