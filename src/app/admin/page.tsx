@@ -92,6 +92,11 @@ export default function AdminPanel() {
     fetchAppointments();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("pendientes") === "1") setShowPendingOnly(true);
+  }, []);
+
   const appointments = useMemo(() => {
     let list = [...allAppointments];
 
@@ -256,6 +261,15 @@ export default function AdminPanel() {
 
                   <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                     <Phone size={14} /> {a.telefono}
+                    {a.telefono && (
+                      <a
+                        href={`tel:${a.telefono.replace(/\D/g, "")}`}
+                        className="text-blue-500 hover:text-blue-600 transition"
+                        title="Llamar"
+                      >
+                        <Phone size={14} />
+                      </a>
+                    )}
                     {a.telefono && (
                       <a
                         href={`https://wa.me/${a.telefono.replace(/\D/g, "")}`}
