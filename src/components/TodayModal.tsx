@@ -13,7 +13,11 @@ type Appointment = {
   lastName: string;
   service: { name: string; color?: string; price?: number };
   servicePrice?: number | null;
+  payments?: { amount: number; createdAt?: string | Date }[];
 };
+
+const money = (n: number) =>
+  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 function dayLabel(date: Date) {
   const today = new Date();
@@ -119,6 +123,9 @@ export default function TodayModal({
             {dayApps.map((a) => {
               const date = new Date(a.date);
               const isPast = isSameDay(selectedDay, today) && date < now;
+              const total = a.service?.price ?? a.servicePrice ?? 0;
+              const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
+              const remaining = total - paid;
               return (
                 <button
                   key={a.id}
@@ -149,6 +156,11 @@ export default function TodayModal({
                       {a.service.name}
                     </p>
                   </div>
+                  {remaining > 0 && total > 0 && (
+                    <span className="shrink-0 text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 px-2 py-1 rounded-full">
+                      falta {money(remaining)}
+                    </span>
+                  )}
                 </button>
               );
             })}
