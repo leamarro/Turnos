@@ -330,3 +330,17 @@ input:focus, select:focus, textarea:focus {
   animation: fade-up 0.4s ease-out both;
 }
 
+/* ==== GRÁFICOS: sin anillos de foco ni tap highlight en mobile ==== */
+.recharts-responsive-container,
+.recharts-wrapper,
+.recharts-surface,
+.recharts-svg,
+.recharts-layer,
+.recharts-bar-rectangle,
+.recharts-curve,
+.recharts-line-curve {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
