@@ -292,7 +292,7 @@ export default function DashboardPage() {
             <DollarSign size={15} className="text-black dark:text-white" />
           </div>
           <p className="text-xs text-gray-400">Total histórico</p>
-          <p className="text-3xl font-bold mt-0.5 dark:text-white">{money(totalCobrado)}</p>
+          <p className="text-2xl font-bold mt-0.5 dark:text-white">{money(totalCobrado)}</p>
           <p className="text-xs mt-1 text-gray-400">
             {appointments.length} turnos{sinceLabel ? ` · desde ${sinceLabel}` : ""}
           </p>
