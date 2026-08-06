@@ -8,6 +8,7 @@ import {
   Area,
 } from "recharts";
 import { incomeByMonth } from "@/lib/income";
+import useIsDark from "@/lib/useIsDark";
 
 type SparklineAppointment = {
   date: string;
@@ -23,20 +24,22 @@ export default function MonthlyTrendSparkline({
 }: {
   data: SparklineAppointment[];
 }) {
-  const chartData = useMemo(() => {
-    const map = incomeByMonth(data);
+  const isDark = useIsDark();
 
-    return Array.from(map.entries())
-      .sort((a, b) => {
-        const [ay, am] = a[0].split("-").map(Number);
-        const [by, bm] = b[0].split("-").map(Number);
-        return ay !== by ? ay - by : am - bm;
-      })
+  const chartData = useMemo(() => {
+    const now = new Date();
+    const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    return Array.from(incomeByMonth(data).entries())
+      .filter(([key]) => key < currentKey)
+      .sort(([a], [b]) => a.localeCompare(b))
       .slice(-3)
       .map(([_, total]) => ({ total }));
   }, [data]);
 
   if (chartData.length < 2) return null;
+
+  const stroke = isDark ? "#e5e5e5" : "#111";
 
   return (
     <div className="w-full h-12">
@@ -46,14 +49,14 @@ export default function MonthlyTrendSparkline({
             type="monotone"
             dataKey="total"
             stroke="none"
-            fill="#000"
+            fill={stroke}
             fillOpacity={0.08}
             activeDot={false}
           />
           <Line
             type="monotone"
             dataKey="total"
-            stroke="#000"
+            stroke={stroke}
             strokeWidth={2}
             dot={false}
             activeDot={false}
