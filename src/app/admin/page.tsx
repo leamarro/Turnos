@@ -139,7 +139,7 @@ export default function AdminPanel() {
         const total = a.servicePrice ?? 0;
         const paid =
           a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
-        return paid < total;
+        return new Date(a.date) < todayStart && paid < total;
       });
     }
 
@@ -220,7 +220,7 @@ export default function AdminPanel() {
             onClick={() => setShowPendingOnly((v) => !v)}
             className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${showPendingOnly ? "bg-red-600 text-white border-red-600" : "text-gray-600"}`}
           >
-            Pendientes
+            Deudas
           </button>
           <button
             onClick={() => setShowPast((v) => !v)}
