@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   startOfMonth, endOfMonth, subMonths, isWithinInterval,
-  startOfWeek, endOfWeek, subWeeks, startOfDay,
+  startOfWeek, endOfWeek, subWeeks, startOfDay, format,
 } from "date-fns";
+import { es } from "date-fns/locale";
 import { Download, Calendar, DollarSign, Users, BarChart2, TrendingUp, AlertTriangle } from "lucide-react";
 import TodaySummaryCard from "@/components/TodaySummaryCard";
 import TodayNextAppointments from "@/components/TodayNextAppointments";
@@ -98,6 +99,17 @@ export default function DashboardPage() {
     const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
     return sum + Math.max(total - paid, 0);
   }, 0);
+
+  const totalCobrado = appointments.reduce((sum, a) => {
+    return sum + (a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0);
+  }, 0);
+
+  const firstDate = appointments.reduce<Date | null>((acc, a) => {
+    const d = new Date(a.date);
+    if (isNaN(d.getTime())) return acc;
+    return !acc || d < acc ? d : acc;
+  }, null);
+  const sinceLabel = firstDate ? format(firstDate, "d MMM yyyy", { locale: es }) : null;
 
   const topClients = useMemo(() => {
     const map = new Map<string, number>();
@@ -280,8 +292,10 @@ export default function DashboardPage() {
             <DollarSign size={15} className="text-black dark:text-white" />
           </div>
           <p className="text-xs text-gray-400">Total histórico</p>
-          <p className="text-3xl font-bold mt-0.5 dark:text-white">{appointments.length}</p>
-          <p className="text-xs mt-1 text-gray-400">turnos registrados</p>
+          <p className="text-3xl font-bold mt-0.5 dark:text-white">{money(totalCobrado)}</p>
+          <p className="text-xs mt-1 text-gray-400">
+            {appointments.length} turnos{sinceLabel ? ` · desde ${sinceLabel}` : ""}
+          </p>
         </div>
       </div>
 
@@ -344,12 +358,17 @@ export default function DashboardPage() {
 
       {/* GRÁFICOS MENSUALES */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold dark:text-white">Evolución mensual</h2>
+        <div>
+          <h2 className="text-lg font-semibold dark:text-white">Evolución mensual</h2>
+          {sinceLabel && (
+            <p className="text-xs text-gray-400 mt-0.5">Datos desde {sinceLabel}</p>
+          )}
+        </div>
         <MonthlyTrendSparkline data={appointments} />
-        <MonthlyIncomeChart />
+        <MonthlyIncomeChart sinceLabel={sinceLabel} />
         <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
           <p className="text-sm font-semibold mb-3 dark:text-white">Ingresos por servicio</p>
-          <MonthlyIncomeByServiceChart data={appointments} />
+          <MonthlyIncomeByServiceChart data={appointments} sinceLabel={sinceLabel} />
         </div>
       </div>
 
