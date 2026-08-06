@@ -19,7 +19,9 @@ type Appointment = {
   date: string;
   name: string;
   lastName: string;
-  service: { name: string; color: string; id: string };
+  service: { name: string; color: string; id: string; price?: number };
+  servicePrice?: number | null;
+  payments?: { amount: number; createdAt?: string | Date }[];
   timeStatus: "past" | "today" | "future";
 };
 
@@ -73,7 +75,10 @@ export default function HomePage() {
             name: a.service?.name ?? "",
             color: a.service?.color ?? "#000000",
             id: a.service?.id ?? "",
+            price: a.service?.price ?? undefined,
           },
+          servicePrice: a.servicePrice ?? null,
+          payments: a.payments ?? [],
           timeStatus,
         };
       }));
