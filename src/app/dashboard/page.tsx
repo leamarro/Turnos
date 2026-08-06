@@ -6,7 +6,7 @@ import {
   startOfMonth, endOfMonth, subMonths, isWithinInterval,
   startOfWeek, endOfWeek, subWeeks,
 } from "date-fns";
-import { Download, Calendar, DollarSign, Users, BarChart2, TrendingUp } from "lucide-react";
+import { Download, Calendar, DollarSign, Users, BarChart2, TrendingUp, AlertTriangle } from "lucide-react";
 import TodaySummaryCard from "@/components/TodaySummaryCard";
 import TodayNextAppointments from "@/components/TodayNextAppointments";
 import TodayAlertCard from "@/components/TodayAlertCard";
@@ -81,6 +81,18 @@ export default function DashboardPage() {
   const agendado = appointments.reduce((sum, a) => {
     const d = new Date(a.date);
     if (!isWithinInterval(d, currentMonth) || d < now) return sum;
+    const total = a.service?.price ?? a.servicePrice ?? 0;
+    const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
+    return sum + Math.max(total - paid, 0);
+  }, 0);
+
+  const deudaList = appointments.filter((a: any) => {
+    if (a.status === "cancelled") return false;
+    const total = a.service?.price ?? a.servicePrice ?? 0;
+    const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
+    return total > 0 && paid < total;
+  });
+  const deudaTotal = deudaList.reduce((sum, a: any) => {
     const total = a.service?.price ?? a.servicePrice ?? 0;
     const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
     return sum + Math.max(total - paid, 0);
@@ -271,6 +283,22 @@ export default function DashboardPage() {
           <p className="text-xs mt-1 text-gray-400">turnos registrados</p>
         </div>
       </div>
+
+      {/* DEUDAS */}
+      <button
+        onClick={() => router.push("/admin?pendientes=1")}
+        className="w-full text-left bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800 active:scale-[0.98] transition"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={15} className="text-red-500" />
+            <p className="text-sm font-semibold dark:text-white">Deudas pendientes</p>
+          </div>
+          <span className="text-xs text-gray-400">{deudaList.length} turno{deudaList.length !== 1 && "s"}</span>
+        </div>
+        <p className="text-3xl font-bold mt-2 dark:text-white">{money(deudaTotal)}</p>
+        <p className="text-xs mt-1 text-red-500">Tocá para ver quiénes quedaron debiendo</p>
+      </button>
 
       {/* CLIENTES FRECUENTES */}
       <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
