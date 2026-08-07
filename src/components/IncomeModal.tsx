@@ -67,7 +67,7 @@ export default function IncomeModal({
       if (mode === "agendado") {
         const date = new Date(a.date);
         if (!isWithinInterval(date, monthInterval) || date < now) return;
-        const total = a.service?.price ?? a.servicePrice ?? 0;
+        const total = a.servicePrice ?? a.service?.price ?? 0;
         const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
         const remaining = Math.max(total - paid, 0);
         if (remaining <= 0) return;
