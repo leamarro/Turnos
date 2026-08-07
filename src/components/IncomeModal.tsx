@@ -44,10 +44,12 @@ export default function IncomeModal({
   appointments,
   open,
   onClose,
+  mode = "cobrado",
 }: {
   appointments: Appointment[];
   open: boolean;
   onClose: () => void;
+  mode?: "cobrado" | "agendado";
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -61,6 +63,28 @@ export default function IncomeModal({
 
     appointments.forEach((a) => {
       const name = a.service?.name ?? "Sin servicio";
+
+      if (mode === "agendado") {
+        const date = new Date(a.date);
+        if (!isWithinInterval(date, monthInterval) || date < now) return;
+        const total = a.service?.price ?? a.servicePrice ?? 0;
+        const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
+        const remaining = Math.max(total - paid, 0);
+        if (remaining <= 0) return;
+
+        const entry = map.get(name) ?? { name, count: 0, total: 0, items: [] };
+        entry.count += 1;
+        entry.total += remaining;
+        entry.items.push({
+          paymentId: a.id,
+          clientName: `${a.name ?? ""} ${a.lastName ?? ""}`.trim() || "Sin nombre",
+          date,
+          amount: remaining,
+          isDeposit: false,
+        });
+        map.set(name, entry);
+        return;
+      }
 
       for (const payment of a.payments ?? []) {
         const date = new Date(payment.createdAt ?? now);
@@ -85,7 +109,7 @@ export default function IncomeModal({
     });
 
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [appointments]);
+  }, [appointments, mode]);
 
   const grandTotal = breakdown.reduce((s, d) => s + d.total, 0);
 
@@ -102,7 +126,7 @@ export default function IncomeModal({
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold dark:text-white">
-            Cobrado este mes
+            {mode === "agendado" ? "Agendado este mes" : "Cobrado este mes"}
           </h2>
           <button
             onClick={onClose}
@@ -114,7 +138,9 @@ export default function IncomeModal({
 
         {breakdown.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-6">
-            Sin datos este mes
+            {mode === "agendado"
+              ? "Sin turnos pendientes este mes"
+              : "Sin datos este mes"}
           </p>
         ) : (
           <div className="space-y-3">
