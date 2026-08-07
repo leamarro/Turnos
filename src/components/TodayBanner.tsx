@@ -17,7 +17,15 @@ type Appointment = {
 const money = (n: number) =>
   `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
-export default function TodayBanner({ appointments, onClick }: { appointments: Appointment[]; onClick?: () => void }) {
+export default function TodayBanner({
+  appointments,
+  onClick,
+  onShowSection,
+}: {
+  appointments: Appointment[];
+  onClick?: () => void;
+  onShowSection?: (section: "cobrado" | "agendado") => void;
+}) {
   const data = useMemo(() => {
     const now = new Date();
     const todayStart = new Date(now);
@@ -49,37 +57,64 @@ export default function TodayBanner({ appointments, onClick }: { appointments: A
   if (data.count === 0) return null;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full bg-black text-white rounded-2xl p-4 mb-4 flex items-center justify-between overflow-hidden relative active:opacity-90 transition text-left"
-    >
+    <div className="w-full bg-black text-white rounded-2xl p-4 mb-4 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
-      <div className="relative z-10 space-y-0.5">
-        <p className="text-xs text-white/60">Hoy</p>
-        <p className="text-xl font-bold tracking-tight">
-          {data.count} {data.count === 1 ? "turno" : "turnos"}
-        </p>
-        <p className="text-xs text-white/50">
-          Cobrado: <span className="text-white/80 font-semibold">{money(data.cobradoHoy)}</span>
-        </p>
-        <p className="text-xs text-white/50">
-          Agendado: <span className="text-white/80 font-semibold">{money(data.agendado)}</span>
-        </p>
+      <div className="relative z-10 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onClick}
+          className="text-left flex-1 active:opacity-80 transition"
+        >
+          <p className="text-xs text-white/60">Hoy</p>
+          <p className="text-xl font-bold tracking-tight">
+            {data.count} {data.count === 1 ? "turno" : "turnos"}
+          </p>
+        </button>
+        {data.next && (
+          <button
+            type="button"
+            onClick={onClick}
+            className="text-right active:opacity-80 transition"
+          >
+            <p className="text-lg font-bold tabular-nums leading-none">
+              {format(new Date(data.next.date), "HH:mm")}
+            </p>
+            <p className="text-xs text-white/70 mt-0.5">
+              {data.next.name} {data.next.lastName}
+            </p>
+            <p className="text-[10px] text-white/40">
+              {data.next.service.name}
+            </p>
+          </button>
+        )}
       </div>
-      {data.next && (
-        <div className="relative z-10 text-right">
-          <p className="text-lg font-bold tabular-nums leading-none">
-            {format(new Date(data.next.date), "HH:mm")}
+
+      <div className="relative z-10 mt-3 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => onShowSection?.("cobrado")}
+          className="bg-white/10 active:bg-white/20 rounded-xl px-3 py-2 transition text-left"
+        >
+          <p className="text-[10px] uppercase tracking-wide text-white/50">
+            Cobrado
           </p>
-          <p className="text-xs text-white/70 mt-0.5">
-            {data.next.name} {data.next.lastName}
+          <p className="text-sm font-semibold text-white">
+            {money(data.cobradoHoy)}
           </p>
-          <p className="text-[10px] text-white/40">
-            {data.next.service.name}
+        </button>
+        <button
+          type="button"
+          onClick={() => onShowSection?.("agendado")}
+          className="bg-white/10 active:bg-white/20 rounded-xl px-3 py-2 transition text-left"
+        >
+          <p className="text-[10px] uppercase tracking-wide text-white/50">
+            Agendado
           </p>
-        </div>
-      )}
-    </button>
+          <p className="text-sm font-semibold text-white">
+            {money(data.agendado)}
+          </p>
+        </button>
+      </div>
+    </div>
   );
 }
