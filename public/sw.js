@@ -113,6 +113,10 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (isStaticAsset(url)) {
+    if (url.pathname === "/sw.js") {
+      event.respondWith(networkFirst(request, CACHE.static));
+      return;
+    }
     event.respondWith(cacheFirst(request, CACHE.static));
     return;
   }
