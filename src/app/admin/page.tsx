@@ -137,7 +137,7 @@ export default function AdminPanel() {
     if (showPendingOnly) {
       list = list.filter((a) => {
         if (a.status === "cancelled") return false;
-        const total = a.service?.price ?? a.servicePrice ?? 0;
+        const total = a.servicePrice ?? a.service?.price ?? 0;
         const paid =
           a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
         return new Date(a.date) < todayStart && total > 0 && paid < total;
@@ -238,7 +238,7 @@ export default function AdminPanel() {
 
       <div className="space-y-4">
         {appointments.map((a) => {
-          const total = a.service?.price ?? a.servicePrice ?? 0;
+          const total = a.servicePrice ?? a.service?.price ?? 0;
           const paid =
             a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
           const remaining = total - paid;
