@@ -37,7 +37,7 @@ export default function TodaySummaryCard({
     }, 0);
 
     const pending = todays.reduce((sum, a) => {
-      const total = a.service?.price ?? a.servicePrice ?? 0;
+      const total = a.servicePrice ?? a.service?.price ?? 0;
       const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
       return sum + Math.max(total - paid, 0);
     }, 0);
