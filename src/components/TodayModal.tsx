@@ -58,7 +58,7 @@ export default function TodayModal({
 
   const filteredApps = useMemo(() => {
     return dayApps.filter((a) => {
-      const total = a.service?.price ?? a.servicePrice ?? 0;
+      const total = a.servicePrice ?? a.service?.price ?? 0;
       const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
       const isCobrado = total <= 0 || paid >= total;
       if (filter === "cobrado") return isCobrado;
@@ -166,7 +166,7 @@ export default function TodayModal({
             {filteredApps.map((a) => {
               const date = new Date(a.date);
               const isPast = isSameDay(selectedDay, today) && date < now;
-              const total = a.service?.price ?? a.servicePrice ?? 0;
+              const total = a.servicePrice ?? a.service?.price ?? 0;
               const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
               const remaining = total - paid;
               return (
