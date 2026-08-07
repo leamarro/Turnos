@@ -27,8 +27,9 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const { name, price, duration, color } = await req.json();
+    const parsedPrice = Number(price);
 
-    if (!name || !price || !duration) {
+    if (!name || !duration || !Number.isFinite(parsedPrice)) {
       return NextResponse.json(
         { error: "Faltan datos obligatorios" },
         { status: 400 }
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
     const service = await prisma.service.create({
       data: {
         name,
-        price: Number(price),
+        price: parsedPrice,
         duration: Number(duration),
         color: color || "#000000",
       },
