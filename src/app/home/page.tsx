@@ -41,6 +41,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showTodayModal, setShowTodayModal] = useState(false);
+  const [todayFilter, setTodayFilter] = useState<"all" | "cobrado" | "agendado">("all");
   const router = useRouter();
 
   const touchStartX = useRef(0);
@@ -173,7 +174,8 @@ export default function HomePage() {
       {!loading && (
         <TodayBanner
           appointments={appointments}
-          onClick={() => { setShowTodayModal(true); haptic(); }}
+          onClick={() => { setTodayFilter("all"); setShowTodayModal(true); haptic(); }}
+          onShowSection={(section) => { setTodayFilter(section); setShowTodayModal(true); haptic(); }}
         />
       )}
 
@@ -256,6 +258,7 @@ export default function HomePage() {
         open={showTodayModal}
         onClose={() => setShowTodayModal(false)}
         onSelect={handleSelect}
+        initialFilter={todayFilter}
       />
     </div>
   );
