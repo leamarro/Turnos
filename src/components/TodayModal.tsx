@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { format, isSameDay, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -32,14 +32,21 @@ export default function TodayModal({
   open,
   onClose,
   onSelect,
+  initialFilter,
 }: {
   appointments: Appointment[];
   open: boolean;
   onClose: () => void;
   onSelect?: (id: string) => void;
+  initialFilter?: "all" | "cobrado" | "agendado";
 }) {
   const today = useMemo(() => new Date(), []);
   const [selectedDay, setSelectedDay] = useState(today);
+  const [filter, setFilter] = useState<"all" | "cobrado" | "agendado">("all");
+
+  useEffect(() => {
+    if (open) setFilter(initialFilter ?? "all");
+  }, [open, initialFilter]);
 
   const touchStartX = useRef(0);
 
@@ -48,6 +55,17 @@ export default function TodayModal({
       .filter((a) => isSameDay(new Date(a.date), selectedDay))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [appointments, selectedDay]);
+
+  const filteredApps = useMemo(() => {
+    return dayApps.filter((a) => {
+      const total = a.service?.price ?? a.servicePrice ?? 0;
+      const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
+      const isCobrado = total <= 0 || paid >= total;
+      if (filter === "cobrado") return isCobrado;
+      if (filter === "agendado") return !isCobrado;
+      return true;
+    });
+  }, [dayApps, filter]);
 
   const canGoPrev = selectedDay > today;
 
@@ -103,7 +121,7 @@ export default function TodayModal({
               {format(selectedDay, "d MMMM yyyy", { locale: es })}
             </p>
             <p className="text-xs text-gray-400 mt-0.5">
-              {dayApps.length} {dayApps.length === 1 ? "turno" : "turnos"}
+              {filteredApps.length} {filteredApps.length === 1 ? "turno" : "turnos"}
             </p>
           </div>
 
@@ -115,12 +133,37 @@ export default function TodayModal({
           </button>
         </div>
 
+        {/* Filtro Cobrados / Pendientes */}
+        {dayApps.length > 0 && (
+          <div className="flex bg-gray-200/70 dark:bg-white/5 rounded-xl p-1 mb-3">
+            {(["all", "cobrado", "agendado"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => { setFilter(f); haptic(); }}
+                className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition ${
+                  filter === f
+                    ? "bg-white dark:bg-[#333] shadow-sm"
+                    : "text-gray-500"
+                }`}
+              >
+                {f === "all" ? "Todos" : f === "cobrado" ? "Cobrados" : "Pendientes"}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Lista */}
-        {dayApps.length === 0 ? (
-          <p className="text-center text-gray-400 py-8 text-sm">Sin turnos este día</p>
+        {filteredApps.length === 0 ? (
+          <p className="text-center text-gray-400 py-8 text-sm">
+            {filter === "cobrado"
+              ? "Sin turnos cobrados este día"
+              : filter === "agendado"
+                ? "Sin turnos pendientes este día"
+                : "Sin turnos este día"}
+          </p>
         ) : (
           <div className="space-y-2">
-            {dayApps.map((a) => {
+            {filteredApps.map((a) => {
               const date = new Date(a.date);
               const isPast = isSameDay(selectedDay, today) && date < now;
               const total = a.service?.price ?? a.servicePrice ?? 0;
