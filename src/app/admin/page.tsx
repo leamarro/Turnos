@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { Pencil, Trash2, Phone, User, CalendarDays, X, MessageCircle, Instagram } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -75,6 +75,8 @@ export default function AdminPanel() {
   const { toast } = useToast();
   const router = useRouter();
   const today = new Date();
+  const todayStart = new Date(today);
+  todayStart.setHours(0, 0, 0, 0);
 
   async function fetchAppointments() {
     try {
@@ -100,9 +102,6 @@ export default function AdminPanel() {
 
   const appointments = useMemo(() => {
     let list = [...allAppointments];
-
-    const todayStart = new Date(today);
-    todayStart.setHours(0, 0, 0, 0);
 
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -243,7 +242,8 @@ export default function AdminPanel() {
           const paid =
             a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
           const remaining = total - paid;
-          const hasDebt = remaining > 0;
+          const isPast = new Date(a.date).getTime() < todayStart.getTime();
+          const hasDebt = isPast && remaining > 0;
           const info = getTimeInfo(a.date);
 
           return (
@@ -315,11 +315,20 @@ export default function AdminPanel() {
                       </p>
                     )}
 
-                    {paid > 0 && paid < total && (
+                    {paid > 0 && paid < total && isPast && (
                       <>
                         <p>Pagado: ${paid}</p>
                         <p className="text-red-600 font-semibold">
                           Debe: ${remaining}
+                        </p>
+                      </>
+                    )}
+
+                    {paid > 0 && paid < total && !isPast && (
+                      <>
+                        <p>Pagado: ${paid}</p>
+                        <p className="text-amber-600 font-semibold">
+                          Falta: ${remaining}
                         </p>
                       </>
                     )}
