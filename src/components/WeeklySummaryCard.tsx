@@ -26,7 +26,7 @@ export default function WeeklySummaryCard({
     });
 
     const income = weekAppointments.reduce(
-      (sum, a) => sum + (a.service?.price ?? a.servicePrice ?? 0),
+      (sum, a) => sum + (a.servicePrice ?? a.service?.price ?? 0),
       0
     );
 
