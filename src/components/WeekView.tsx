@@ -83,7 +83,7 @@ export default function WeekView({
             ) : (
               <div className="space-y-2">
                 {items.map((a) => {
-                  const total = a.service?.price ?? a.servicePrice ?? 0;
+                  const total = a.servicePrice ?? a.service?.price ?? 0;
                   const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
                   const remaining = total - paid;
                   return (
