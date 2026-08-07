@@ -83,7 +83,7 @@ export default function DashboardPage() {
   const agendado = appointments.reduce((sum, a) => {
     const d = new Date(a.date);
     if (!isWithinInterval(d, currentMonth) || d < now) return sum;
-    const total = a.service?.price ?? a.servicePrice ?? 0;
+    const total = a.servicePrice ?? a.service?.price ?? 0;
     const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
     return sum + Math.max(total - paid, 0);
   }, 0);
@@ -91,12 +91,12 @@ export default function DashboardPage() {
   const deudaList = appointments.filter((a: any) => {
     if (a.status === "cancelled") return false;
     if (new Date(a.date) >= startOfDay(now)) return false;
-    const total = a.service?.price ?? a.servicePrice ?? 0;
+    const total = a.servicePrice ?? a.service?.price ?? 0;
     const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
     return total > 0 && paid < total;
   });
   const deudaTotal = deudaList.reduce((sum, a: any) => {
-    const total = a.service?.price ?? a.servicePrice ?? 0;
+    const total = a.servicePrice ?? a.service?.price ?? 0;
     const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
     return sum + Math.max(total - paid, 0);
   }, 0);
@@ -126,7 +126,7 @@ export default function DashboardPage() {
     const rows = [["Fecha", "Hora", "Cliente", "Servicio", "Precio", "Pagado", "Restante"]];
     appointments.forEach((a: any) => {
       const d = new Date(a.date);
-      const total = a.service?.price ?? a.servicePrice ?? 0;
+      const total = a.servicePrice ?? a.service?.price ?? 0;
       const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
       rows.push([
         d.toLocaleDateString("es-AR"),
