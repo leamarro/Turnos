@@ -9,7 +9,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const parsedPrice = Number(price);
     const parsedDuration = Number(duration);
 
-    if (!name || !Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+    if (!name || !Number.isFinite(parsedPrice)) {
       return NextResponse.json(
         { error: "Datos de servicio invalidos" },
         { status: 400 }
