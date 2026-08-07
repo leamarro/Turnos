@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showIncome, setShowIncome] = useState(false);
+  const [incomeMode, setIncomeMode] = useState<"cobrado" | "agendado">("cobrado");
   const [clientMap, setClientMap] = useState<Map<string, string>>(new Map());
   const router = useRouter();
 
@@ -196,35 +197,43 @@ export default function DashboardPage() {
       </div>
 
       {/* CARD PRINCIPAL — ingresos */}
-      <button
-        onClick={() => setShowIncome(true)}
-        className="w-full text-left bg-black text-white rounded-2xl p-5 overflow-hidden relative active:opacity-90 transition"
-      >
+      <div className="w-full text-left bg-black text-white rounded-2xl p-5 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-white/60 uppercase tracking-wide">Ingresos del mes</p>
-            <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full">
-              día {daysElapsed}/{daysInMonth}
-            </span>
-          </div>
+          <button
+            onClick={() => { setIncomeMode("cobrado"); setShowIncome(true); }}
+            className="w-full text-left active:opacity-80 transition"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-white/60 uppercase tracking-wide">Ingresos del mes</p>
+              <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full">
+                día {daysElapsed}/{daysInMonth}
+              </span>
+            </div>
 
-          <p className="text-[10px] text-white/50 uppercase tracking-wide">
-            Total del mes
-          </p>
-          <p className="text-4xl font-bold tracking-tight">
-            {money(incomeCurrent + agendado)}
-          </p>
+            <p className="text-[10px] text-white/50 uppercase tracking-wide">
+              Total del mes
+            </p>
+            <p className="text-4xl font-bold tracking-tight">
+              {money(incomeCurrent + agendado)}
+            </p>
+          </button>
 
           <div className="grid grid-cols-2 gap-2.5 mt-3">
-            <div className="bg-white/10 rounded-xl px-3 py-2.5">
+            <button
+              onClick={() => { setIncomeMode("cobrado"); setShowIncome(true); }}
+              className="text-left bg-white/10 rounded-xl px-3 py-2.5 active:bg-white/20 transition"
+            >
               <p className="text-[10px] text-white/50 uppercase tracking-wide">Cobrado</p>
               <p className="text-xl font-bold tracking-tight mt-0.5">{money(incomeCurrent)}</p>
-            </div>
-            <div className="bg-white/10 rounded-xl px-3 py-2.5">
+            </button>
+            <button
+              onClick={() => { setIncomeMode("agendado"); setShowIncome(true); }}
+              className="text-left bg-white/10 rounded-xl px-3 py-2.5 active:bg-white/20 transition"
+            >
               <p className="text-[10px] text-white/50 uppercase tracking-wide">Agendado</p>
               <p className="text-xl font-bold tracking-tight mt-0.5">{money(agendado)}</p>
-            </div>
+            </button>
           </div>
 
           <div className="flex items-center gap-3 mt-3 text-xs text-white/50">
@@ -242,7 +251,7 @@ export default function DashboardPage() {
             />
           </div>
         </div>
-      </button>
+      </div>
 
       {/* HOY */}
       <TodaySummaryCard appointments={appointments} />
@@ -384,6 +393,7 @@ export default function DashboardPage() {
         appointments={appointments}
         open={showIncome}
         onClose={() => setShowIncome(false)}
+        mode={incomeMode}
       />
     </div>
   );
