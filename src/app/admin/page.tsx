@@ -25,8 +25,9 @@ type Appointment = {
   telefono?: string;
   instagram?: string;
   date: string;
+  status?: string;
   servicePrice?: number | null;
-  service?: { name?: string };
+  service?: { name?: string; price?: number };
   payments?: Payment[];
 };
 
@@ -136,10 +137,11 @@ export default function AdminPanel() {
 
     if (showPendingOnly) {
       list = list.filter((a) => {
-        const total = a.servicePrice ?? 0;
+        if (a.status === "cancelled") return false;
+        const total = a.service?.price ?? a.servicePrice ?? 0;
         const paid =
           a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
-        return new Date(a.date) < todayStart && paid < total;
+        return new Date(a.date) < todayStart && total > 0 && paid < total;
       });
     }
 
@@ -237,7 +239,7 @@ export default function AdminPanel() {
 
       <div className="space-y-4">
         {appointments.map((a) => {
-          const total = a.servicePrice ?? 0;
+          const total = a.service?.price ?? a.servicePrice ?? 0;
           const paid =
             a.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
           const remaining = total - paid;
