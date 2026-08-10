@@ -744,6 +744,13 @@ function computeAllBoxes(ctx: CanvasRenderingContext2D, c: Config): Box[] {
     out.push(base("cta", cx, cy, geom.w * scale, geom.h * scale));
   }
   {
+    const scale = L.photo.scale;
+    const { w, h } = photoBaseSize(c.photoAspect || 1);
+    const cx = L.photo.manual ? L.photo.x : W / 2;
+    const cy = L.photo.manual ? L.photo.y : H / 2;
+    out.push(base("photo", cx, cy, w * scale, h * scale));
+  }
+  {
     const scale = L.handle.scale;
     ctx.font = `600 40px ${c.font}`;
     const tw = ctx.measureText(c.handle || " ").width;
@@ -916,6 +923,44 @@ function drawHandle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: 
   ctx.restore();
 }
 
+function drawPhoto(
+  ctx: CanvasRenderingContext2D,
+  c: Config,
+  pal: Palette,
+  el: El,
+  photo: HTMLImageElement | null
+) {
+  if (!c.photo || !photo) return;
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.scale(el.scale, el.scale);
+  ctx.rotate(el.rotation);
+  const { w, h } = photoBaseSize(c.photoAspect || 1);
+  roundRect(ctx, -w / 2, -h / 2, w, h, 56);
+  ctx.clip();
+  ctx.filter = filterCss(c.photoFilter);
+  const iw = photo.naturalWidth;
+  const ih = photo.naturalHeight;
+  const s = Math.max(w / iw, h / ih);
+  const dw = iw * s;
+  const dh = ih * s;
+  ctx.drawImage(photo, -dw / 2, -dh / 2, dw, dh);
+  ctx.filter = "none";
+  ctx.restore();
+
+  if (pal.lightText) {
+    ctx.save();
+    ctx.translate(el.x, el.y);
+    ctx.scale(el.scale, el.scale);
+    ctx.rotate(el.rotation);
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 3;
+    roundRect(ctx, -w / 2 - 2, -h / 2 - 2, w + 4, h + 4, 58);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 function drawSelection(ctx: CanvasRenderingContext2D, box: Box) {
   const a = box.rotation;
   ctx.save();
@@ -989,6 +1034,7 @@ function drawStory(
     else if (b.id === "title") drawTitle(ctx, c, pal, el);
     else if (b.id === "schedules") drawScheduleCard(ctx, c, pal, el);
     else if (b.id === "cta") drawCTA(ctx, c, pal, el);
+    else if (b.id === "photo") drawPhoto(ctx, c, pal, el, photo);
     else drawHandle(ctx, c, pal, el);
   }
   drawFrame(ctx, c);
@@ -1052,6 +1098,8 @@ export default function HistoriasPage() {
     frame: false,
     photo: null,
     photoBlur: false,
+    photoFilter: "none",
+    photoAspect: 1,
     overlay: "soft",
     layout: defaultLayout(),
   });
@@ -1327,7 +1375,14 @@ export default function HistoriasPage() {
       const img = new Image();
       img.onload = () => {
         photoRef.current = img;
-        set({ photo: String(reader.result), bgMode: "photo" });
+        set({
+          photo: String(reader.result),
+          photoAspect: img.naturalWidth / img.naturalHeight,
+        });
+        setConfig((c) => ({
+          ...c,
+          layout: { ...c.layout, photo: { ...c.layout.photo, visible: true } },
+        }));
         redraw();
       };
       img.src = String(reader.result);
@@ -1337,7 +1392,12 @@ export default function HistoriasPage() {
 
   const removePhoto = () => {
     photoRef.current = null;
-    set({ photo: null, bgMode: "gradient" });
+    set({ photo: null, photoAspect: 1 });
+    setConfig((c) => ({
+      ...c,
+      layout: { ...c.layout, photo: { ...c.layout.photo, visible: false } },
+    }));
+    if (config.bgMode === "photo") set({ bgMode: "gradient" });
   };
 
   const download = () => {
@@ -1667,6 +1727,30 @@ export default function HistoriasPage() {
                         Desenfocar el fondo
                       </label>
                     )}
+                    {config.photo && (
+                      <div>
+                        <label className="block text-[11px] text-gray-400 mb-1.5">
+                          Filtros de la foto
+                        </label>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {PHOTO_FILTERS.map((f) => (
+                            <button
+                              key={f.v}
+                              onClick={() => set({ photoFilter: f.v })}
+                              className={config.photoFilter === f.v ? chipOn : chipOff}
+                            >
+                              {f.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {config.photo && (
+                      <p className="text-[11px] text-gray-400">
+                        La foto se agrega como elemento: tocala en la vista previa para
+                        moverla, agrandarla, rotarla o borrarla.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1912,6 +1996,23 @@ export default function HistoriasPage() {
                       />
                     )}
                   </div>
+
+                  {selected === "photo" && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <label className="text-[11px] text-gray-400 shrink-0">Filtro</label>
+                      <div className="flex gap-1 flex-wrap">
+                        {PHOTO_FILTERS.map((f) => (
+                          <button
+                            key={f.v}
+                            onClick={() => set({ photoFilter: f.v })}
+                            className={config.photoFilter === f.v ? chipOn : chipOff}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
