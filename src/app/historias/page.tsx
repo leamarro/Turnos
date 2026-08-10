@@ -761,6 +761,15 @@ function computeAllBoxes(ctx: CanvasRenderingContext2D, c: Config): Box[] {
   return out;
 }
 
+function hitTest(boxes: Box[], x: number, y: number): Box | null {
+  for (let i = boxes.length - 1; i >= 0; i--) {
+    const b = boxes[i];
+    if (!b.visible) continue;
+    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b;
+  }
+  return null;
+}
+
 function rotPoint(
   cx: number,
   cy: number,
@@ -1129,6 +1138,17 @@ export default function HistoriasPage() {
     baseRotation: number;
   }>(null);
 
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<null | {
+    id: ElementId;
+    dist0: number;
+    scale0: number;
+    baseX: number;
+    baseY: number;
+    midX: number;
+    midY: number;
+  }>(null);
+
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1242,7 +1262,28 @@ export default function HistoriasPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const p = toCanvas(e);
+    pointersRef.current.set(e.pointerId, p);
     const boxes = computeAllBoxes(ctx, configRef.current);
+
+    if (pointersRef.current.size >= 2) {
+      const pts = [...pointersRef.current.values()];
+      const d0 = Math.max(40, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+      const box = hitTest(boxes, pts[0].x, pts[0].y);
+      if (box) {
+        setSelected(box.id);
+        dragRef.current = null;
+        pinchRef.current = {
+          id: box.id,
+          dist0: d0,
+          scale0: box.scale,
+          baseX: box.cx,
+          baseY: box.cy,
+          midX: (pts[0].x + pts[1].x) / 2,
+          midY: (pts[0].y + pts[1].y) / 2,
+        };
+      }
+      return;
+    }
 
     if (selected) {
       const b = boxes.find((bx) => bx.id === selected);
@@ -1296,45 +1337,70 @@ export default function HistoriasPage() {
       }
     }
 
-    for (let i = boxes.length - 1; i >= 0; i--) {
-      const b = boxes[i];
-      if (!b.visible) continue;
-      if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) {
-        const L = configRef.current.layout[b.id];
-        if (!L.manual) {
-          const patch = {
-            [b.id]: { ...L, x: b.cx, y: b.cy, manual: true },
-          };
-          setConfig((c) => ({ ...c, layout: { ...c.layout, ...patch } }));
-        }
-        if (selected !== b.id) setSelected(b.id);
-        dragRef.current = {
-          mode: "move",
-          id: b.id,
-          startX: p.x,
-          startY: p.y,
-          baseX: b.cx,
-          baseY: b.cy,
-          baseScale: 0,
-          anchorX: 0,
-          anchorY: 0,
-          dist: 0,
-          centerX: 0,
-          centerY: 0,
-          startAngle: 0,
-          baseRotation: 0,
+    const b = hitTest(boxes, p.x, p.y);
+    if (b) {
+      const L = configRef.current.layout[b.id];
+      if (!L.manual) {
+        const patch = {
+          [b.id]: { ...L, x: b.cx, y: b.cy, manual: true },
         };
-        canvas.setPointerCapture(e.pointerId);
-        return;
+        setConfig((c) => ({ ...c, layout: { ...c.layout, ...patch } }));
       }
+      if (selected !== b.id) setSelected(b.id);
+      dragRef.current = {
+        mode: "move",
+        id: b.id,
+        startX: p.x,
+        startY: p.y,
+        baseX: b.cx,
+        baseY: b.cy,
+        baseScale: 0,
+        anchorX: 0,
+        anchorY: 0,
+        dist: 0,
+        centerX: 0,
+        centerY: 0,
+        startAngle: 0,
+        baseRotation: 0,
+      };
+      canvas.setPointerCapture(e.pointerId);
+      return;
     }
     setSelected(null);
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const p = toCanvas(e);
+    pointersRef.current.set(e.pointerId, p);
+
+    if (pinchRef.current && pointersRef.current.size >= 2) {
+      const pts = [...pointersRef.current.values()];
+      const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const midX = (pts[0].x + pts[1].x) / 2;
+      const midY = (pts[0].y + pts[1].y) / 2;
+      const pin = pinchRef.current;
+      setConfig((c) => {
+        const L = c.layout[pin.id];
+        const scale = Math.min(3, Math.max(0.35, pin.scale0 * (d / pin.dist0)));
+        return {
+          ...c,
+          layout: {
+            ...c.layout,
+            [pin.id]: {
+              ...L,
+              scale,
+              x: pin.baseX + (midX - pin.midX),
+              y: pin.baseY + (midY - pin.midY),
+              manual: true,
+            },
+          },
+        };
+      });
+      return;
+    }
+
     const d = dragRef.current;
     if (!d) return;
-    const p = toCanvas(e);
     setConfig((c) => {
       const L = c.layout[d.id];
       if (d.mode === "move") {
@@ -1363,7 +1429,9 @@ export default function HistoriasPage() {
     });
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
     dragRef.current = null;
   };
 
@@ -1375,13 +1443,28 @@ export default function HistoriasPage() {
       const img = new Image();
       img.onload = () => {
         photoRef.current = img;
+        const aspect = img.naturalWidth / img.naturalHeight;
+        const base = photoBaseSize(aspect);
+        const cover = Math.max(W / base.w, H / base.h);
         set({
           photo: String(reader.result),
-          photoAspect: img.naturalWidth / img.naturalHeight,
+          photoAspect: aspect,
         });
         setConfig((c) => ({
           ...c,
-          layout: { ...c.layout, photo: { ...c.layout.photo, visible: true } },
+          layout: {
+            ...c.layout,
+            photo: {
+              ...c.layout.photo,
+              visible: true,
+              manual: true,
+              x: W / 2,
+              y: H / 2,
+              scale: cover,
+              rotation: 0,
+              z: -1,
+            },
+          },
         }));
         redraw();
       };
@@ -1747,8 +1830,9 @@ export default function HistoriasPage() {
                     )}
                     {config.photo && (
                       <p className="text-[11px] text-gray-400">
-                        La foto se agrega como elemento: tocala en la vista previa para
-                        moverla, agrandarla, rotarla o borrarla.
+                        La foto cubre toda la historia de fondo y editás los textos encima.
+                        Tocala en la vista previa para moverla, agrandarla con dos dedos
+                        (pellizco) o rotarla.
                       </p>
                     )}
                   </div>
