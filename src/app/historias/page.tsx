@@ -20,7 +20,7 @@ import {
   Inter,
   Rowdies,
 } from "next/font/google";
-import { Plus, X, Upload, ImageDown, Wand2 } from "lucide-react";
+import { Plus, X, Upload, ImageDown, Wand2, Trash2 } from "lucide-react";
 import { haptic } from "@/lib/haptics";
 
 const playfair = Playfair_Display({ subsets: ["latin"], weight: ["600", "700", "800"] });
@@ -109,11 +109,67 @@ type BgMode = "gradient" | "solid" | "photo";
 type TextMode = "auto" | "claro" | "oscuro";
 type Effect = "none" | "dots" | "circles" | "stripes" | "squares" | "hearts";
 type Overlay = "none" | "soft" | "strong";
+type PhotoFilter = "none" | "bw" | "sepia" | "warm" | "cool" | "vivid";
 
-type ElementId = "emoji" | "service" | "title" | "schedules" | "cta" | "handle";
-type ELayout = { x: number; y: number; scale: number; manual: boolean };
+const PHOTO_FILTERS: Array<{ v: PhotoFilter; label: string }> = [
+  { v: "none", label: "Original" },
+  { v: "bw", label: "B/N" },
+  { v: "sepia", label: "Sepia" },
+  { v: "warm", label: "Cálido" },
+  { v: "cool", label: "Frío" },
+  { v: "vivid", label: "Vivo" },
+];
+
+function filterCss(f: PhotoFilter) {
+  switch (f) {
+    case "bw":
+      return "grayscale(1) contrast(1.05)";
+    case "sepia":
+      return "sepia(0.85) contrast(1.05)";
+    case "warm":
+      return "saturate(1.35) sepia(0.22) brightness(1.03)";
+    case "cool":
+      return "saturate(1.15) hue-rotate(12deg) brightness(1.02)";
+    case "vivid":
+      return "saturate(1.6) contrast(1.1)";
+    default:
+      return "none";
+  }
+}
+
+function photoBaseSize(aspect: number) {
+  let w = 720;
+  let h = 720 / aspect;
+  if (h > 1100) {
+    h = 1100;
+    w = h * aspect;
+  }
+  if (w > W - 96) {
+    w = W - 96;
+    h = w / aspect;
+  }
+  return { w, h };
+}
+
+type ElementId =
+  | "emoji"
+  | "service"
+  | "title"
+  | "schedules"
+  | "cta"
+  | "handle"
+  | "photo";
+type ELayout = {
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+  z: number;
+  visible: boolean;
+  manual: boolean;
+};
 type Layout = Record<ElementId, ELayout>;
-type El = { x: number; y: number; scale: number };
+type El = { x: number; y: number; scale: number; rotation: number };
 type Box = {
   id: ElementId;
   x: number;
@@ -123,6 +179,9 @@ type Box = {
   w: number;
   h: number;
   scale: number;
+  rotation: number;
+  z: number;
+  visible: boolean;
 };
 
 const ELEMENT_NAMES: Record<ElementId, string> = {
@@ -132,15 +191,17 @@ const ELEMENT_NAMES: Record<ElementId, string> = {
   schedules: "Horarios",
   cta: "Botón",
   handle: "Usuario",
+  photo: "Foto",
 };
 
 const defaultLayout = (): Layout => ({
-  emoji: { x: W / 2, y: 250, scale: 1, manual: false },
-  service: { x: W / 2, y: 462, scale: 1, manual: false },
-  title: { x: W / 2, y: 600, scale: 1, manual: false },
-  schedules: { x: 96, y: 860, scale: 1, manual: false },
-  cta: { x: W / 2, y: 1510, scale: 1, manual: false },
-  handle: { x: W / 2, y: H - 130, scale: 1, manual: false },
+  emoji: { x: W / 2, y: 250, scale: 1, rotation: 0, z: 0, visible: true, manual: false },
+  service: { x: W / 2, y: 462, scale: 1, rotation: 0, z: 1, visible: true, manual: false },
+  title: { x: W / 2, y: 600, scale: 1, rotation: 0, z: 2, visible: true, manual: false },
+  schedules: { x: W / 2, y: 860, scale: 1, rotation: 0, z: 3, visible: true, manual: false },
+  cta: { x: W / 2, y: 1510, scale: 1, rotation: 0, z: 4, visible: true, manual: false },
+  handle: { x: W / 2, y: H - 130, scale: 1, rotation: 0, z: 5, visible: true, manual: false },
+  photo: { x: W / 2, y: H / 2, scale: 1, rotation: 0, z: 6, visible: false, manual: false },
 });
 
 type Config = {
@@ -160,6 +221,8 @@ type Config = {
   frame: boolean;
   photo: string | null;
   photoBlur: boolean;
+  photoFilter: PhotoFilter;
+  photoAspect: number;
   overlay: Overlay;
   layout: Layout;
 };
@@ -624,64 +687,84 @@ function ctaMeasure(ctx: CanvasRenderingContext2D, c: Config) {
 function computeAllBoxes(ctx: CanvasRenderingContext2D, c: Config): Box[] {
   const L = c.layout;
   const out: Box[] = [];
+  const base = (id: ElementId, cx: number, cy: number, w: number, h: number): Box => ({
+    id,
+    x: cx - w / 2,
+    y: cy - h / 2,
+    cx,
+    cy,
+    w,
+    h,
+    scale: L[id].scale,
+    rotation: (L[id].rotation * Math.PI) / 180,
+    z: L[id].z,
+    visible: L[id].visible,
+  });
 
   {
     const scale = L.emoji.scale;
     const cx = L.emoji.manual ? L.emoji.x : W / 2;
     const cy = L.emoji.manual ? L.emoji.y : 250;
     const d = 192 * scale;
-    out.push({ id: "emoji", x: cx - d / 2, y: cy - d / 2, cx, cy, w: d, h: d, scale });
+    out.push(base("emoji", cx, cy, d, d));
   }
   {
     const scale = L.service.scale;
     ctx.font = `700 44px ${c.font}`;
     const tw = ctx.measureText((c.service || " ").toUpperCase()).width;
-    const w = tw * scale;
-    const h = 60 * scale;
     const cx = L.service.manual ? L.service.x : W / 2;
     const cy = L.service.manual ? L.service.y : 462;
-    out.push({ id: "service", x: cx - w / 2, y: cy - h / 2, cx, cy, w, h, scale });
+    out.push(base("service", cx, cy, tw * scale, 60 * scale));
   }
   {
     const scale = L.title.scale;
     const { size, lines } = titleMeasure(ctx, c);
     const tw = Math.max(...lines.map((l) => ctx.measureText(l).width));
-    const w = tw * scale;
-    const h = lines.length * size * 1.06 * scale;
     const cx = L.title.manual ? L.title.x : W / 2;
     const cy = L.title.manual ? L.title.y : 600;
-    out.push({ id: "title", x: cx - w / 2, y: cy - h / 2, cx, cy, w, h, scale });
+    out.push(base("title", cx, cy, tw * scale, lines.length * size * 1.06 * scale));
   }
   {
     const scale = L.schedules.scale;
     const { h } = scheduleGeom(c);
-    const x = L.schedules.manual ? L.schedules.x : 96;
-    const y = L.schedules.manual ? L.schedules.y : 860;
     const w = (W - 192) * scale;
-    out.push({ id: "schedules", x, y, cx: x, cy: y, w, h: h * scale, scale });
+    const cx = L.schedules.manual ? L.schedules.x : 96 + w / 2;
+    const cy = L.schedules.manual ? L.schedules.y : 860 + h / 2;
+    out.push(base("schedules", cx, cy, w, h * scale));
   }
   {
     const scale = L.cta.scale;
     const card = out.find((b) => b.id === "schedules")!;
     const cardBottom = card.y + card.h;
     const geom = ctaMeasure(ctx, c);
-    const w = geom.w * scale;
-    const h = geom.h * scale;
     const cx = L.cta.manual ? L.cta.x : W / 2;
-    const cy = L.cta.manual ? L.cta.y : Math.min(1590, cardBottom + 150) - geom.h / 2;
-    out.push({ id: "cta", x: cx - w / 2, y: cy - h / 2, cx, cy, w, h, scale });
+    const cy = L.cta.manual
+      ? L.cta.y
+      : Math.min(1590, cardBottom + 150) - geom.h / 2;
+    out.push(base("cta", cx, cy, geom.w * scale, geom.h * scale));
   }
   {
     const scale = L.handle.scale;
     ctx.font = `600 40px ${c.font}`;
     const tw = ctx.measureText(c.handle || " ").width;
-    const w = tw * scale;
-    const h = 40 * scale;
     const cx = L.handle.manual ? L.handle.x : W / 2;
     const cy = L.handle.manual ? L.handle.y : H - 130;
-    out.push({ id: "handle", x: cx - w / 2, y: cy - h / 2, cx, cy, w, h, scale });
+    out.push(base("handle", cx, cy, tw * scale, 40 * scale));
   }
   return out;
+}
+
+function rotPoint(
+  cx: number,
+  cy: number,
+  px: number,
+  py: number,
+  a: number
+): { x: number; y: number } {
+  return {
+    x: cx + px * Math.cos(a) - py * Math.sin(a),
+    y: cy + px * Math.sin(a) + py * Math.cos(a),
+  };
 }
 
 function drawEmoji(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: El) {
@@ -689,6 +772,7 @@ function drawEmoji(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: E
   ctx.save();
   ctx.translate(el.x, el.y);
   ctx.scale(el.scale, el.scale);
+  ctx.rotate(el.rotation);
   ctx.beginPath();
   ctx.arc(0, 0, 96, 0, Math.PI * 2);
   ctx.fillStyle = pal.emojiBg;
@@ -708,6 +792,7 @@ function drawEyebrow(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el:
   ctx.save();
   ctx.translate(el.x, el.y);
   ctx.scale(el.scale, el.scale);
+  ctx.rotate(el.rotation);
   ctx.font = `700 44px ${c.font}`;
   ctx.fillStyle = pal.textSoft;
   ctx.textAlign = "center";
@@ -722,6 +807,7 @@ function drawTitle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: E
   ctx.save();
   ctx.translate(el.x, el.y);
   ctx.scale(el.scale, el.scale);
+  ctx.rotate(el.rotation);
   const { size, lines } = titleMeasure(ctx, c);
   const lh = size * 1.06;
   const top = -((lines.length - 1) * lh) / 2;
@@ -743,10 +829,13 @@ function drawScheduleCard(ctx: CanvasRenderingContext2D, c: Config, pal: Palette
   ctx.save();
   ctx.translate(el.x, el.y);
   ctx.scale(el.scale, el.scale);
+  ctx.rotate(el.rotation);
   const pad = 56;
   const labelH = 54;
   const w = W - 192;
-  roundRect(ctx, 0, 0, w, h, 56);
+  const hl = -h / 2;
+  const wl = -w / 2;
+  roundRect(ctx, wl, hl, w, h, 56);
   ctx.fillStyle = pal.cardBg;
   ctx.fill();
   ctx.lineWidth = 3;
@@ -758,10 +847,10 @@ function drawScheduleCard(ctx: CanvasRenderingContext2D, c: Config, pal: Palette
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   setLetterSpacing(ctx, 6);
-  ctx.fillText("HORARIOS", pad, pad + 22);
+  ctx.fillText("HORARIOS", wl + pad, hl + pad + 22);
   setLetterSpacing(ctx, 0);
 
-  const rowStartY = pad + labelH;
+  const rowStartY = hl + pad + labelH;
   const maxRows = Math.max(1, Math.floor((h - pad - labelH) / rh));
   const shown = rows.slice(0, maxRows);
   const truncated = rows.length > maxRows;
@@ -772,17 +861,17 @@ function drawScheduleCard(ctx: CanvasRenderingContext2D, c: Config, pal: Palette
   shown.forEach((r, i) => {
     const cy = rowStartY + i * rh + rh / 2;
     ctx.beginPath();
-    ctx.arc(pad + 14, cy, 13, 0, Math.PI * 2);
+    ctx.arc(wl + pad + 14, cy, 13, 0, Math.PI * 2);
     ctx.fillStyle = c.accent;
     ctx.fill();
     ctx.fillStyle = pal.textSoft;
-    ctx.fillText(r, pad + 54, cy);
+    ctx.fillText(r, wl + pad + 54, cy);
   });
 
   if (truncated) {
     ctx.font = `600 ${fs - 10}px ${c.font}`;
     ctx.fillStyle = pal.textFaint;
-    ctx.fillText("… y más", pad + 54, h - 40);
+    ctx.fillText("… y más", wl + pad + 54, h / 2 - 40);
   }
   ctx.restore();
 }
@@ -792,6 +881,7 @@ function drawCTA(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: El)
   ctx.save();
   ctx.translate(el.x, el.y);
   ctx.scale(el.scale, el.scale);
+  ctx.rotate(el.rotation);
   const { w, h, size, lines } = ctaMeasure(ctx, c);
   const lh = size * 1.35;
   roundRect(ctx, -w / 2, -h / 2, w, h, 64);
@@ -817,6 +907,7 @@ function drawHandle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: 
   ctx.save();
   ctx.translate(el.x, el.y);
   ctx.scale(el.scale, el.scale);
+  ctx.rotate(el.rotation);
   ctx.font = `600 40px ${c.font}`;
   ctx.fillStyle = pal.textFaint;
   ctx.textAlign = "center";
@@ -826,20 +917,26 @@ function drawHandle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: 
 }
 
 function drawSelection(ctx: CanvasRenderingContext2D, box: Box) {
+  const a = box.rotation;
   ctx.save();
+  ctx.translate(box.cx, box.cy);
+  ctx.rotate(a);
   ctx.setLineDash([16, 12]);
   ctx.lineWidth = 4;
   ctx.strokeStyle = "rgba(255,255,255,0.9)";
-  ctx.strokeRect(box.x - 4, box.y - 4, box.w + 8, box.h + 8);
+  ctx.strokeRect(-box.w / 2 - 4, -box.h / 2 - 4, box.w + 8, box.h + 8);
   ctx.strokeStyle = "rgba(0,0,0,0.5)";
   ctx.lineWidth = 2;
-  ctx.strokeRect(box.x - 4, box.y - 4, box.w + 8, box.h + 8);
+  ctx.strokeRect(-box.w / 2 - 4, -box.h / 2 - 4, box.w + 8, box.h + 8);
   ctx.setLineDash([]);
+  ctx.restore();
+
+  const br = rotPoint(box.cx, box.cy, box.w / 2, box.h / 2, a);
+  const tc = rotPoint(box.cx, box.cy, 0, -box.h / 2 - 14, a);
+
   const r = 26;
-  const hx = box.x + box.w;
-  const hy = box.y + box.h;
   ctx.beginPath();
-  ctx.arc(hx, hy, r, 0, Math.PI * 2);
+  ctx.arc(br.x, br.y, r, 0, Math.PI * 2);
   ctx.fillStyle = "#ffffff";
   ctx.fill();
   ctx.lineWidth = 5;
@@ -848,14 +945,26 @@ function drawSelection(ctx: CanvasRenderingContext2D, box: Box) {
   ctx.lineWidth = 3;
   ctx.strokeStyle = "#111111";
   ctx.beginPath();
-  ctx.moveTo(hx - r * 0.5, hy + r * 0.4);
-  ctx.lineTo(hx + r * 0.4, hy - r * 0.5);
+  ctx.moveTo(br.x - r * 0.5, br.y + r * 0.4);
+  ctx.lineTo(br.x + r * 0.4, br.y - r * 0.5);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(hx - r * 0.5, hy + r * 0.1);
-  ctx.lineTo(hx + r * 0.1, hy - r * 0.5);
+  ctx.moveTo(br.x - r * 0.5, br.y + r * 0.1);
+  ctx.lineTo(br.x + r * 0.1, br.y - r * 0.5);
   ctx.stroke();
-  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(tc.x, tc.y, r, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = "#111111";
+  ctx.stroke();
+  ctx.font = '28px sans-serif';
+  ctx.fillStyle = "#111111";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("↻", tc.x, tc.y + 2);
 }
 
 function drawStory(
@@ -870,14 +979,18 @@ function drawStory(
   ctx.clearRect(0, 0, W, H);
   drawBackground(ctx, c, photo, pal);
   const boxes = computeAllBoxes(ctx, c);
-  const by = (id: ElementId) => boxes.find((b) => b.id === id)!;
-  drawEmoji(ctx, c, pal, { x: by("emoji").cx, y: by("emoji").cy, scale: by("emoji").scale });
-  drawEyebrow(ctx, c, pal, { x: by("service").cx, y: by("service").cy, scale: by("service").scale });
-  drawTitle(ctx, c, pal, { x: by("title").cx, y: by("title").cy, scale: by("title").scale });
-  const sb = by("schedules");
-  drawScheduleCard(ctx, c, pal, { x: sb.x, y: sb.y, scale: sb.scale });
-  drawCTA(ctx, c, pal, { x: by("cta").cx, y: by("cta").cy, scale: by("cta").scale });
-  drawHandle(ctx, c, pal, { x: by("handle").cx, y: by("handle").cy, scale: by("handle").scale });
+  const order = boxes
+    .filter((b) => b.visible)
+    .sort((a, b) => a.z - b.z);
+  for (const b of order) {
+    const el: El = { x: b.cx, y: b.cy, scale: b.scale, rotation: b.rotation };
+    if (b.id === "emoji") drawEmoji(ctx, c, pal, el);
+    else if (b.id === "service") drawEyebrow(ctx, c, pal, el);
+    else if (b.id === "title") drawTitle(ctx, c, pal, el);
+    else if (b.id === "schedules") drawScheduleCard(ctx, c, pal, el);
+    else if (b.id === "cta") drawCTA(ctx, c, pal, el);
+    else drawHandle(ctx, c, pal, el);
+  }
   drawFrame(ctx, c);
   if (selectedBox) drawSelection(ctx, selectedBox);
 }
@@ -952,7 +1065,7 @@ export default function HistoriasPage() {
   configRef.current = config;
 
   const dragRef = useRef<null | {
-    mode: "move" | "resize";
+    mode: "move" | "resize" | "rotate";
     id: ElementId;
     startX: number;
     startY: number;
@@ -962,6 +1075,10 @@ export default function HistoriasPage() {
     anchorX: number;
     anchorY: number;
     dist: number;
+    centerX: number;
+    centerY: number;
+    startAngle: number;
+    baseRotation: number;
   }>(null);
 
   const redraw = useCallback(() => {
@@ -1022,6 +1139,46 @@ export default function HistoriasPage() {
     setConfig((c) => ({ ...c, layout: defaultLayout() }));
   };
 
+  const deleteElement = (id: ElementId) => {
+    setSelected(null);
+    haptic();
+    setConfig((c) => ({
+      ...c,
+      layout: { ...c.layout, [id]: { ...c.layout[id], visible: false } },
+    }));
+  };
+
+  const showElement = (id: ElementId) => {
+    haptic();
+    setConfig((c) => ({
+      ...c,
+      layout: { ...c.layout, [id]: { ...c.layout[id], visible: true } },
+    }));
+    setSelected(id);
+  };
+
+  const moveLayer = (id: ElementId, dir: 1 | -1) => {
+    setConfig((c) => {
+      const z = c.layout[id].z;
+      const other = (Object.keys(c.layout) as ElementId[]).find(
+        (o) => o !== id && c.layout[o].visible && c.layout[o].z === z + dir
+      );
+      if (!other) return c;
+      return {
+        ...c,
+        layout: {
+          ...c.layout,
+          [id]: { ...c.layout[id], z: c.layout[other].z },
+          [other]: { ...c.layout[other], z },
+        },
+      };
+    });
+  };
+
+  const hiddenIds = (Object.keys(config.layout) as ElementId[]).filter(
+    (id) => !config.layout[id].visible
+  );
+
   const toCanvas = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
@@ -1041,30 +1198,65 @@ export default function HistoriasPage() {
 
     if (selected) {
       const b = boxes.find((bx) => bx.id === selected);
-      if (b && Math.hypot(p.x - (b.x + b.w), p.y - (b.y + b.h)) < 56) {
-        dragRef.current = {
-          mode: "resize",
-          id: selected,
-          startX: p.x,
-          startY: p.y,
-          baseX: 0,
-          baseY: 0,
-          baseScale: b.scale,
-          anchorX: b.x,
-          anchorY: b.y,
-          dist: Math.max(40, Math.hypot(p.x - b.x, p.y - b.y)),
-        };
-        canvas.setPointerCapture(e.pointerId);
-        return;
+      if (!b || !b.visible) {
+        setSelected(null);
+      } else {
+        const a = b.rotation;
+        const br = rotPoint(b.cx, b.cy, b.w / 2, b.h / 2, a);
+        const tc = rotPoint(b.cx, b.cy, 0, -b.h / 2 - 14, a);
+        if (Math.hypot(p.x - br.x, p.y - br.y) < 56) {
+          const tl = rotPoint(b.cx, b.cy, -b.w / 2, -b.h / 2, a);
+          dragRef.current = {
+            mode: "resize",
+            id: selected,
+            startX: p.x,
+            startY: p.y,
+            baseX: 0,
+            baseY: 0,
+            baseScale: b.scale,
+            anchorX: tl.x,
+            anchorY: tl.y,
+            dist: Math.max(40, Math.hypot(p.x - tl.x, p.y - tl.y)),
+            centerX: 0,
+            centerY: 0,
+            startAngle: 0,
+            baseRotation: 0,
+          };
+          canvas.setPointerCapture(e.pointerId);
+          return;
+        }
+        if (Math.hypot(p.x - tc.x, p.y - tc.y) < 56) {
+          dragRef.current = {
+            mode: "rotate",
+            id: selected,
+            startX: p.x,
+            startY: p.y,
+            baseX: 0,
+            baseY: 0,
+            baseScale: 0,
+            anchorX: 0,
+            anchorY: 0,
+            dist: 0,
+            centerX: b.cx,
+            centerY: b.cy,
+            startAngle: Math.atan2(p.y - b.cy, p.x - b.cx),
+            baseRotation: a,
+          };
+          canvas.setPointerCapture(e.pointerId);
+          return;
+        }
       }
     }
 
     for (let i = boxes.length - 1; i >= 0; i--) {
       const b = boxes[i];
+      if (!b.visible) continue;
       if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) {
         const L = configRef.current.layout[b.id];
         if (!L.manual) {
-          const patch = { [b.id]: { x: b.cx, y: b.cy, scale: L.scale, manual: true } };
+          const patch = {
+            [b.id]: { ...L, x: b.cx, y: b.cy, manual: true },
+          };
           setConfig((c) => ({ ...c, layout: { ...c.layout, ...patch } }));
         }
         if (selected !== b.id) setSelected(b.id);
@@ -1079,6 +1271,10 @@ export default function HistoriasPage() {
           anchorX: 0,
           anchorY: 0,
           dist: 0,
+          centerX: 0,
+          centerY: 0,
+          startAngle: 0,
+          baseRotation: 0,
         };
         canvas.setPointerCapture(e.pointerId);
         return;
@@ -1106,6 +1302,12 @@ export default function HistoriasPage() {
             },
           },
         };
+      }
+      if (d.mode === "rotate") {
+        const ang = Math.atan2(p.y - d.centerY, p.x - d.centerX);
+        const rot = d.baseRotation + (ang - d.startAngle);
+        const deg = ((rot * (180 / Math.PI) + 180) % 360 + 360) % 360 - 180;
+        return { ...c, layout: { ...c.layout, [d.id]: { ...L, rotation: deg } } };
       }
       const nd = Math.hypot(p.x - d.anchorX, p.y - d.anchorY);
       const scale = Math.min(3, Math.max(0.35, d.baseScale * (nd / d.dist)));
@@ -1553,8 +1755,8 @@ export default function HistoriasPage() {
               </div>
 
               <p className="text-center text-xs text-gray-400 mt-3">
-                Tocá un elemento para seleccionarlo, arrastralo para moverlo y usá el
-                círculo de abajo a la derecha para agrandarlo o achicarlo.
+                Tocá un elemento para seleccionarlo, arrastralo para moverlo, el círculo
+                de abajo a la derecha para redimensionar y el de arriba para rotar.
               </p>
               <p className="text-center text-xs text-gray-400 mt-1">
                 Se descarga en 1080×1920 px (historia 9:16)
@@ -1566,12 +1768,21 @@ export default function HistoriasPage() {
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-300">
                       {ELEMENT_NAMES[selected]}
                     </p>
-                    <button
-                      onClick={() => resetElement(selected)}
-                      className="text-xs text-red-400"
-                    >
-                      Restablecer
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => resetElement(selected)}
+                        className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      >
+                        Restablecer
+                      </button>
+                      <button
+                        onClick={() => deleteElement(selected)}
+                        className="flex items-center gap-1 text-xs text-red-400"
+                      >
+                        <Trash2 size={13} />
+                        Borrar
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -1591,7 +1802,49 @@ export default function HistoriasPage() {
                     </div>
                     <div>
                       <label className="block text-[11px] text-gray-400 mb-1">Tamaño</label>
-                      <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    <label className="text-[11px] text-gray-400 shrink-0 w-14">Rotación</label>
+                    <input
+                      type="range"
+                      min={-180}
+                      max={180}
+                      step={1}
+                      value={Math.round(config.layout[selected].rotation)}
+                      onChange={(e) =>
+                        setConfig((c) => ({
+                          ...c,
+                          layout: {
+                            ...c.layout,
+                            [selected]: {
+                              ...c.layout[selected],
+                              rotation: Number(e.target.value),
+                            },
+                          },
+                        }))
+                      }
+                      className="flex-1"
+                    />
+                    <span className="text-[11px] text-gray-400 w-10 text-right">
+                      {Math.round(config.layout[selected].rotation)}°
+                    </span>
+                  </div>
+
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => moveLayer(selected, 1)}
+                      className={chipOff}
+                    >
+                      Subir capa
+                    </button>
+                    <button
+                      onClick={() => moveLayer(selected, -1)}
+                      className={chipOff}
+                    >
+                      Bajar capa
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
                         <input
                           type="range"
                           min={0.4}
@@ -1658,6 +1911,24 @@ export default function HistoriasPage() {
                         placeholder="Emoji"
                       />
                     )}
+                  </div>
+                </div>
+              )}
+
+              {hiddenIds.length > 0 && (
+                <div className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-3">
+                  <p className="text-[11px] text-gray-400 mb-1.5">Elementos ocultos</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {hiddenIds.map((id) => (
+                      <button
+                        key={id}
+                        onClick={() => showElement(id)}
+                        className="flex items-center gap-1 text-xs border border-gray-200 dark:border-gray-700 rounded-full px-2.5 py-1 text-gray-500 dark:text-gray-300"
+                      >
+                        <Plus size={12} />
+                        {ELEMENT_NAMES[id]}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
