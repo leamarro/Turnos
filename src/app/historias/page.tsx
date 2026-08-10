@@ -9,6 +9,16 @@ import {
   Caveat,
   Oswald,
   Quicksand,
+  Anton,
+  Archivo_Black,
+  Abril_Fatface,
+  Lobster,
+  Pacifico,
+  Dancing_Script,
+  Zilla_Slab,
+  Space_Grotesk,
+  Inter,
+  Rowdies,
 } from "next/font/google";
 import { Plus, X, Upload, ImageDown, Wand2 } from "lucide-react";
 import { haptic } from "@/lib/haptics";
@@ -20,6 +30,16 @@ const poppins = Poppins({ subsets: ["latin"], weight: ["600", "700", "800"] });
 const caveat = Caveat({ subsets: ["latin"], weight: ["600", "700"] });
 const oswald = Oswald({ subsets: ["latin"], weight: ["500", "600", "700"] });
 const quicksand = Quicksand({ subsets: ["latin"], weight: ["500", "600", "700"] });
+const anton = Anton({ subsets: ["latin"], weight: "400" });
+const archivo = Archivo_Black({ subsets: ["latin"], weight: "400" });
+const abril = Abril_Fatface({ subsets: ["latin"], weight: "400" });
+const lobster = Lobster({ subsets: ["latin"], weight: "400" });
+const pacifico = Pacifico({ subsets: ["latin"], weight: "400" });
+const dancing = Dancing_Script({ subsets: ["latin"], weight: ["500", "700"] });
+const zilla = Zilla_Slab({ subsets: ["latin"], weight: ["500", "600", "700"] });
+const grotesk = Space_Grotesk({ subsets: ["latin"], weight: ["500", "600", "700"] });
+const inter = Inter({ subsets: ["latin"], weight: ["600", "700", "800"] });
+const rowdies = Rowdies({ subsets: ["latin"], weight: ["400", "700"] });
 
 const FONT_OPTIONS = [
   { name: "Playfair Display", family: playfair.style.fontFamily },
@@ -29,6 +49,16 @@ const FONT_OPTIONS = [
   { name: "Caveat", family: caveat.style.fontFamily },
   { name: "Oswald", family: oswald.style.fontFamily },
   { name: "Quicksand", family: quicksand.style.fontFamily },
+  { name: "Anton", family: anton.style.fontFamily },
+  { name: "Archivo Black", family: archivo.style.fontFamily },
+  { name: "Abril Fatface", family: abril.style.fontFamily },
+  { name: "Lobster", family: lobster.style.fontFamily },
+  { name: "Pacifico", family: pacifico.style.fontFamily },
+  { name: "Dancing Script", family: dancing.style.fontFamily },
+  { name: "Zilla Slab", family: zilla.style.fontFamily },
+  { name: "Space Grotesk", family: grotesk.style.fontFamily },
+  { name: "Inter", family: inter.style.fontFamily },
+  { name: "Rowdies", family: rowdies.style.fontFamily },
 ];
 
 const GRADIENTS = [
@@ -40,12 +70,78 @@ const GRADIENTS = [
   { name: "Fuego", c1: "#8e0e00", c2: "#1f1c18", accent: "#ffb703" },
   { name: "Oscuro", c1: "#232526", c2: "#414345", accent: "#f5b700" },
   { name: "Morado", c1: "#41295a", c2: "#2f0743", accent: "#ff7eb3" },
+  { name: "Océano", c1: "#2b5876", c2: "#4e4376", accent: "#ffd166" },
+  { name: "Atardecer", c1: "#ff512f", c2: "#dd2476", accent: "#fff1e6" },
+  { name: "Sol", c1: "#f9d423", c2: "#ff4e50", accent: "#8b1e1e" },
+  { name: "Menta", c1: "#11998e", c2: "#38ef7d", accent: "#064e3b" },
+  { name: "Cielo", c1: "#30cfd0", c2: "#330867", accent: "#ffd166" },
+  { name: "Lila", c1: "#c471f5", c2: "#fa71cd", accent: "#4a0072" },
+  { name: "Bosque", c1: "#134e5e", c2: "#71b280", accent: "#fdfbf7" },
+  { name: "Marino", c1: "#000046", c2: "#1cb5e0", accent: "#ffe259" },
+  { name: "Sangría", c1: "#870000", c2: "#190a05", accent: "#f4a261" },
+  { name: "Melocotón", c1: "#ffd89b", c2: "#f857a6", accent: "#b5179e" },
+];
+
+const SOLIDS = [
+  { name: "Crema", hex: "#EFEAE7" },
+  { name: "Blanco", hex: "#ffffff" },
+  { name: "Negro", hex: "#141414" },
+  { name: "Gris claro", hex: "#e5e7eb" },
+  { name: "Gris", hex: "#9ca3af" },
+  { name: "Azul", hex: "#1e3a8a" },
+  { name: "Celeste", hex: "#a5d8ff" },
+  { name: "Verde", hex: "#0f5132" },
+  { name: "Menta", hex: "#b7e4c7" },
+  { name: "Rosa", hex: "#f8a8c0" },
+  { name: "Rosa pastel", hex: "#ffdbe5" },
+  { name: "Lavanda", hex: "#e0d5f5" },
+  { name: "Violeta", hex: "#6d28d9" },
+  { name: "Lila", hex: "#c084fc" },
+  { name: "Rojo", hex: "#b91c1c" },
+  { name: "Naranja", hex: "#ea580c" },
+  { name: "Ámbar", hex: "#f59e0b" },
+  { name: "Dorado", hex: "#caa64c" },
+  { name: "Beige", hex: "#f1e6d3" },
+  { name: "Marrón", hex: "#6b4423" },
 ];
 
 type BgMode = "gradient" | "solid" | "photo";
 type TextMode = "auto" | "claro" | "oscuro";
-type Effect = "none" | "dots" | "circles" | "stripes";
+type Effect = "none" | "dots" | "circles" | "stripes" | "squares" | "hearts";
 type Overlay = "none" | "soft" | "strong";
+
+type ElementId = "emoji" | "service" | "title" | "schedules" | "cta" | "handle";
+type ELayout = { x: number; y: number; scale: number; manual: boolean };
+type Layout = Record<ElementId, ELayout>;
+type El = { x: number; y: number; scale: number };
+type Box = {
+  id: ElementId;
+  x: number;
+  y: number;
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+  scale: number;
+};
+
+const ELEMENT_NAMES: Record<ElementId, string> = {
+  emoji: "Emoji",
+  service: "Subtítulo",
+  title: "Título",
+  schedules: "Horarios",
+  cta: "Botón",
+  handle: "Usuario",
+};
+
+const defaultLayout = (): Layout => ({
+  emoji: { x: W / 2, y: 250, scale: 1, manual: false },
+  service: { x: W / 2, y: 462, scale: 1, manual: false },
+  title: { x: W / 2, y: 600, scale: 1, manual: false },
+  schedules: { x: 96, y: 860, scale: 1, manual: false },
+  cta: { x: W / 2, y: 1510, scale: 1, manual: false },
+  handle: { x: W / 2, y: H - 130, scale: 1, manual: false },
+});
 
 type Config = {
   emoji: string;
@@ -65,6 +161,7 @@ type Config = {
   photo: string | null;
   photoBlur: boolean;
   overlay: Overlay;
+  layout: Layout;
 };
 
 type Preset = { name: string; patch: Partial<Config> };
@@ -138,6 +235,118 @@ const PRESETS: Preset[] = [
       effect: "none",
       frame: false,
       overlay: "soft",
+    },
+  },
+  {
+    name: "Mediterráneo",
+    patch: {
+      bgMode: "gradient",
+      c1: "#ffffff",
+      c2: "#e8f4f8",
+      accent: "#0e7490",
+      font: poppins.style.fontFamily,
+      textMode: "auto",
+      effect: "none",
+      frame: false,
+      overlay: "none",
+    },
+  },
+  {
+    name: "Neón",
+    patch: {
+      bgMode: "gradient",
+      c1: "#0f0c29",
+      c2: "#302b63",
+      accent: "#22d3ee",
+      font: oswald.style.fontFamily,
+      textMode: "auto",
+      effect: "dots",
+      frame: true,
+      overlay: "strong",
+    },
+  },
+  {
+    name: "Pastel",
+    patch: {
+      bgMode: "gradient",
+      c1: "#fbc2eb",
+      c2: "#a6c1ee",
+      accent: "#e64980",
+      font: caveat.style.fontFamily,
+      textMode: "auto",
+      effect: "circles",
+      frame: false,
+      overlay: "none",
+    },
+  },
+  {
+    name: "Café",
+    patch: {
+      bgMode: "solid",
+      c1: "#3e2723",
+      c2: "#3e2723",
+      accent: "#d7a86e",
+      font: playfair.style.fontFamily,
+      textMode: "auto",
+      effect: "none",
+      frame: false,
+      overlay: "soft",
+    },
+  },
+  {
+    name: "Océano",
+    patch: {
+      bgMode: "gradient",
+      c1: "#2b5876",
+      c2: "#4e4376",
+      accent: "#ffd166",
+      font: montserrat.style.fontFamily,
+      textMode: "auto",
+      effect: "stripes",
+      frame: false,
+      overlay: "soft",
+    },
+  },
+  {
+    name: "Romántico",
+    patch: {
+      bgMode: "gradient",
+      c1: "#ffdbe5",
+      c2: "#ff8fab",
+      accent: "#c9184a",
+      font: lobster.style.fontFamily,
+      textMode: "auto",
+      effect: "hearts",
+      frame: false,
+      overlay: "none",
+    },
+  },
+  {
+    name: "Gold",
+    patch: {
+      bgMode: "solid",
+      c1: "#141414",
+      c2: "#141414",
+      accent: "#d4af37",
+      font: archivo.style.fontFamily,
+      textMode: "auto",
+      effect: "none",
+      frame: false,
+      overlay: "soft",
+    },
+  },
+  {
+    name: "Corporativo",
+    patch: {
+      bgMode: "solid",
+      c1: "#0f172a",
+      c2: "#0f172a",
+      accent: "#38bdf8",
+      font: inter.style.fontFamily,
+      textMode: "auto",
+      effect: "squares",
+      frame: false,
+      overlay: "none",
     },
   },
 ];
@@ -274,8 +483,36 @@ function drawPattern(ctx: CanvasRenderingContext2D, c: Config, pal: Palette) {
       ctx.lineTo(x, H);
       ctx.stroke();
     }
+  } else if (c.effect === "squares") {
+    ctx.strokeStyle = `rgba(${col},0.1)`;
+    ctx.lineWidth = 3;
+    for (let y = 70; y < H; y += 150) {
+      for (let x = 70; x < W; x += 150) {
+        ctx.strokeRect(x, y, 46, 46);
+      }
+    }
+  } else if (c.effect === "hearts") {
+    ctx.fillStyle = `rgba(${col},0.09)`;
+    const spots: Array<[number, number, number]> = [
+      [190, 330, 60],
+      [890, 480, 80],
+      [180, 1430, 70],
+      [890, 1560, 90],
+      [540, 780, 50],
+      [760, 260, 45],
+    ];
+    spots.forEach(([x, y, s]) => drawHeart(ctx, x, y, s));
   }
   ctx.restore();
+}
+
+function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + s * 0.85);
+  ctx.bezierCurveTo(x - s, y + s * 0.3, x - s * 0.5, y - s * 0.45, x, y + s * 0.05);
+  ctx.bezierCurveTo(x + s * 0.5, y - s * 0.45, x + s, y + s * 0.3, x, y + s * 0.85);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function drawFrame(ctx: CanvasRenderingContext2D, c: Config) {
@@ -342,37 +579,8 @@ function drawBackground(
 
 /* ---------------- Bloques de contenido ---------------- */
 
-function drawEmoji(ctx: CanvasRenderingContext2D, c: Config, pal: Palette) {
-  if (!c.emoji) return;
-  const cx = W / 2;
-  const cy = 250;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 96, 0, Math.PI * 2);
-  ctx.fillStyle = pal.emojiBg;
-  ctx.fill();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = pal.emojiBorder;
-  ctx.stroke();
-  ctx.font = '100px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(c.emoji, cx, cy + 4);
-}
-
-function drawEyebrow(ctx: CanvasRenderingContext2D, c: Config, pal: Palette) {
-  if (!c.service) return;
-  ctx.font = `700 44px ${c.font}`;
-  ctx.fillStyle = pal.textSoft;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  setLetterSpacing(ctx, 8);
-  ctx.fillText(c.service.toUpperCase(), W / 2, 462);
-  setLetterSpacing(ctx, 0);
-}
-
-function drawTitle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette) {
+function titleMeasure(ctx: CanvasRenderingContext2D, c: Config) {
   const maxW = W - 144;
-  const centerY = 600;
   let size = 150;
   let lines: string[] = [];
   for (;;) {
@@ -382,8 +590,141 @@ function drawTitle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette) {
     if (fits || size <= 54) break;
     size -= 6;
   }
+  return { size, lines };
+}
+
+function scheduleGeom(c: Config) {
+  const rows = c.schedules.filter((s) => s.trim());
+  let rh = rows.length <= 6 ? 92 : 76;
+  let fs = rows.length <= 6 ? 46 : 39;
+  let need = 56 + 54 + rows.length * rh + 56;
+  if (need > 620) {
+    rh = 68;
+    fs = 34;
+    need = 56 + 54 + rows.length * rh + 56;
+  }
+  return { rows, rh, fs, h: Math.min(need, 620) };
+}
+
+function ctaMeasure(ctx: CanvasRenderingContext2D, c: Config) {
+  let size = 50;
+  ctx.font = `800 ${size}px ${c.font}`;
+  let lines = wrapText(ctx, c.cta, 720);
+  while (lines.length > 2 && size > 34) {
+    size -= 4;
+    ctx.font = `800 ${size}px ${c.font}`;
+    lines = wrapText(ctx, c.cta, 720);
+  }
+  let w = Math.max(...lines.map((l) => ctx.measureText(l).width));
+  w = Math.min(920, w + 90);
+  const h = Math.max(130, lines.length * size * 1.35 + 56);
+  return { w, h, size, lines };
+}
+
+function computeAllBoxes(ctx: CanvasRenderingContext2D, c: Config): Box[] {
+  const L = c.layout;
+  const out: Box[] = [];
+
+  {
+    const scale = L.emoji.scale;
+    const cx = L.emoji.manual ? L.emoji.x : W / 2;
+    const cy = L.emoji.manual ? L.emoji.y : 250;
+    const d = 192 * scale;
+    out.push({ id: "emoji", x: cx - d / 2, y: cy - d / 2, cx, cy, w: d, h: d, scale });
+  }
+  {
+    const scale = L.service.scale;
+    ctx.font = `700 44px ${c.font}`;
+    const tw = ctx.measureText((c.service || " ").toUpperCase()).width;
+    const w = tw * scale;
+    const h = 60 * scale;
+    const cx = L.service.manual ? L.service.x : W / 2;
+    const cy = L.service.manual ? L.service.y : 462;
+    out.push({ id: "service", x: cx - w / 2, y: cy - h / 2, cx, cy, w, h, scale });
+  }
+  {
+    const scale = L.title.scale;
+    const { size, lines } = titleMeasure(ctx, c);
+    const tw = Math.max(...lines.map((l) => ctx.measureText(l).width));
+    const w = tw * scale;
+    const h = lines.length * size * 1.06 * scale;
+    const cx = L.title.manual ? L.title.x : W / 2;
+    const cy = L.title.manual ? L.title.y : 600;
+    out.push({ id: "title", x: cx - w / 2, y: cy - h / 2, cx, cy, w, h, scale });
+  }
+  {
+    const scale = L.schedules.scale;
+    const { h } = scheduleGeom(c);
+    const x = L.schedules.manual ? L.schedules.x : 96;
+    const y = L.schedules.manual ? L.schedules.y : 860;
+    const w = (W - 192) * scale;
+    out.push({ id: "schedules", x, y, cx: x, cy: y, w, h: h * scale, scale });
+  }
+  {
+    const scale = L.cta.scale;
+    const card = out.find((b) => b.id === "schedules")!;
+    const cardBottom = card.y + card.h;
+    const geom = ctaMeasure(ctx, c);
+    const w = geom.w * scale;
+    const h = geom.h * scale;
+    const cx = L.cta.manual ? L.cta.x : W / 2;
+    const cy = L.cta.manual ? L.cta.y : Math.min(1590, cardBottom + 150) - geom.h / 2;
+    out.push({ id: "cta", x: cx - w / 2, y: cy - h / 2, cx, cy, w, h, scale });
+  }
+  {
+    const scale = L.handle.scale;
+    ctx.font = `600 40px ${c.font}`;
+    const tw = ctx.measureText(c.handle || " ").width;
+    const w = tw * scale;
+    const h = 40 * scale;
+    const cx = L.handle.manual ? L.handle.x : W / 2;
+    const cy = L.handle.manual ? L.handle.y : H - 130;
+    out.push({ id: "handle", x: cx - w / 2, y: cy - h / 2, cx, cy, w, h, scale });
+  }
+  return out;
+}
+
+function drawEmoji(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: El) {
+  if (!c.emoji) return;
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.scale(el.scale, el.scale);
+  ctx.beginPath();
+  ctx.arc(0, 0, 96, 0, Math.PI * 2);
+  ctx.fillStyle = pal.emojiBg;
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = pal.emojiBorder;
+  ctx.stroke();
+  ctx.font = '100px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(c.emoji, 0, 4);
+  ctx.restore();
+}
+
+function drawEyebrow(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: El) {
+  if (!c.service) return;
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.scale(el.scale, el.scale);
+  ctx.font = `700 44px ${c.font}`;
+  ctx.fillStyle = pal.textSoft;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  setLetterSpacing(ctx, 8);
+  ctx.fillText(c.service.toUpperCase(), 0, 0);
+  setLetterSpacing(ctx, 0);
+  ctx.restore();
+}
+
+function drawTitle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: El) {
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.scale(el.scale, el.scale);
+  const { size, lines } = titleMeasure(ctx, c);
   const lh = size * 1.06;
-  const top = centerY - ((lines.length - 1) * lh) / 2;
+  const top = -((lines.length - 1) * lh) / 2;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = pal.text;
@@ -392,36 +733,20 @@ function drawTitle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette) {
     ctx.shadowBlur = 26;
     ctx.shadowOffsetY = 6;
   }
-  lines.forEach((l, i) => ctx.fillText(l, W / 2, top + i * lh));
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
+  lines.forEach((l, i) => ctx.fillText(l, 0, top + i * lh));
+  ctx.restore();
 }
 
-function drawScheduleCard(ctx: CanvasRenderingContext2D, c: Config, pal: Palette) {
-  const rows = c.schedules.filter((s) => s.trim());
-  if (rows.length === 0) return 860;
-
-  const left = 96;
-  const right = W - 96;
+function drawScheduleCard(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: El) {
+  const { rows, rh, fs, h } = scheduleGeom(c);
+  if (rows.length === 0) return;
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.scale(el.scale, el.scale);
   const pad = 56;
   const labelH = 54;
-  const cap = 620;
-  const top = 860;
-
-  let rh = rows.length <= 6 ? 92 : 76;
-  let fs = rows.length <= 6 ? 46 : 39;
-  let need = pad + labelH + rows.length * rh + pad;
-  if (need > cap) {
-    rh = 68;
-    fs = 34;
-    need = pad + labelH + rows.length * rh + pad;
-  }
-  const bottom = top + Math.min(need, cap);
-  const maxRows = Math.max(1, Math.floor((Math.min(need, cap) - pad - labelH) / rh));
-  const shown = rows.slice(0, maxRows);
-  const truncated = rows.length > maxRows;
-
-  roundRect(ctx, left, top, right - left, bottom - top, 56);
+  const w = W - 192;
+  roundRect(ctx, 0, 0, w, h, 56);
   ctx.fillStyle = pal.cardBg;
   ctx.fill();
   ctx.lineWidth = 3;
@@ -433,53 +758,43 @@ function drawScheduleCard(ctx: CanvasRenderingContext2D, c: Config, pal: Palette
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   setLetterSpacing(ctx, 6);
-  ctx.fillText("HORARIOS", left + pad, top + pad + 22);
+  ctx.fillText("HORARIOS", pad, pad + 22);
   setLetterSpacing(ctx, 0);
 
-  const rowStartY = top + pad + labelH;
+  const rowStartY = pad + labelH;
+  const maxRows = Math.max(1, Math.floor((h - pad - labelH) / rh));
+  const shown = rows.slice(0, maxRows);
+  const truncated = rows.length > maxRows;
+
   ctx.font = `600 ${fs}px ${c.font}`;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-
   shown.forEach((r, i) => {
     const cy = rowStartY + i * rh + rh / 2;
     ctx.beginPath();
-    ctx.arc(left + pad + 14, cy, 13, 0, Math.PI * 2);
+    ctx.arc(pad + 14, cy, 13, 0, Math.PI * 2);
     ctx.fillStyle = c.accent;
     ctx.fill();
     ctx.fillStyle = pal.textSoft;
-    ctx.fillText(r, left + pad + 54, cy);
+    ctx.fillText(r, pad + 54, cy);
   });
 
   if (truncated) {
     ctx.font = `600 ${fs - 10}px ${c.font}`;
     ctx.fillStyle = pal.textFaint;
-    ctx.fillText("… y más", left + pad + 54, bottom - 40);
+    ctx.fillText("… y más", pad + 54, h - 40);
   }
-
-  return bottom;
+  ctx.restore();
 }
 
-function drawCTA(ctx: CanvasRenderingContext2D, c: Config, cardBottom: number) {
+function drawCTA(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: El) {
   if (!c.cta) return;
-  let size = 50;
-  ctx.font = `800 ${size}px ${c.font}`;
-  let lines = wrapText(ctx, c.cta, 720);
-  while (lines.length > 2 && size > 34) {
-    size -= 4;
-    ctx.font = `800 ${size}px ${c.font}`;
-    lines = wrapText(ctx, c.cta, 720);
-  }
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.scale(el.scale, el.scale);
+  const { w, h, size, lines } = ctaMeasure(ctx, c);
   const lh = size * 1.35;
-  let w = 0;
-  lines.forEach((l) => (w = Math.max(w, ctx.measureText(l).width)));
-  w = Math.min(920, w + 90);
-  const h = Math.max(130, lines.length * lh + 56);
-  const topY = Math.min(1590, cardBottom + 150);
-  const y = topY - h / 2;
-  const x = (W - w) / 2;
-
-  roundRect(ctx, x, y, w, h, 64);
+  roundRect(ctx, -w / 2, -h / 2, w, h, 64);
   ctx.fillStyle = c.accent;
   ctx.shadowColor = "rgba(0,0,0,0.3)";
   ctx.shadowBlur = 24;
@@ -488,40 +803,83 @@ function drawCTA(ctx: CanvasRenderingContext2D, c: Config, cardBottom: number) {
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
 
-  const textTop = y + (h - lines.length * lh) / 2 + size / 2;
+  const textTop = -h / 2 + (h - lines.length * lh) / 2 + size / 2;
   ctx.font = `800 ${size}px ${c.font}`;
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  lines.forEach((l, i) => ctx.fillText(l, W / 2, textTop + i * lh));
+  lines.forEach((l, i) => ctx.fillText(l, 0, textTop + i * lh));
+  ctx.restore();
 }
 
-function drawHandle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette) {
+function drawHandle(ctx: CanvasRenderingContext2D, c: Config, pal: Palette, el: El) {
   if (!c.handle) return;
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.scale(el.scale, el.scale);
   ctx.font = `600 40px ${c.font}`;
   ctx.fillStyle = pal.textFaint;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(c.handle, W / 2, H - 130);
+  ctx.fillText(c.handle, 0, 0);
+  ctx.restore();
+}
+
+function drawSelection(ctx: CanvasRenderingContext2D, box: Box) {
+  ctx.save();
+  ctx.setLineDash([16, 12]);
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "rgba(255,255,255,0.9)";
+  ctx.strokeRect(box.x - 4, box.y - 4, box.w + 8, box.h + 8);
+  ctx.strokeStyle = "rgba(0,0,0,0.5)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(box.x - 4, box.y - 4, box.w + 8, box.h + 8);
+  ctx.setLineDash([]);
+  const r = 26;
+  const hx = box.x + box.w;
+  const hy = box.y + box.h;
+  ctx.beginPath();
+  ctx.arc(hx, hy, r, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = "#111111";
+  ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#111111";
+  ctx.beginPath();
+  ctx.moveTo(hx - r * 0.5, hy + r * 0.4);
+  ctx.lineTo(hx + r * 0.4, hy - r * 0.5);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(hx - r * 0.5, hy + r * 0.1);
+  ctx.lineTo(hx + r * 0.1, hy - r * 0.5);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawStory(
   canvas: HTMLCanvasElement,
   c: Config,
-  photo: HTMLImageElement | null
+  photo: HTMLImageElement | null,
+  selectedBox?: Box
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const pal = getPalette(c);
   ctx.clearRect(0, 0, W, H);
   drawBackground(ctx, c, photo, pal);
-  drawEmoji(ctx, c, pal);
-  drawEyebrow(ctx, c, pal);
-  drawTitle(ctx, c, pal);
-  const cardBottom = drawScheduleCard(ctx, c, pal);
-  drawCTA(ctx, c, cardBottom);
-  drawHandle(ctx, c, pal);
+  const boxes = computeAllBoxes(ctx, c);
+  const by = (id: ElementId) => boxes.find((b) => b.id === id)!;
+  drawEmoji(ctx, c, pal, { x: by("emoji").cx, y: by("emoji").cy, scale: by("emoji").scale });
+  drawEyebrow(ctx, c, pal, { x: by("service").cx, y: by("service").cy, scale: by("service").scale });
+  drawTitle(ctx, c, pal, { x: by("title").cx, y: by("title").cy, scale: by("title").scale });
+  const sb = by("schedules");
+  drawScheduleCard(ctx, c, pal, { x: sb.x, y: sb.y, scale: sb.scale });
+  drawCTA(ctx, c, pal, { x: by("cta").cx, y: by("cta").cy, scale: by("cta").scale });
+  drawHandle(ctx, c, pal, { x: by("handle").cx, y: by("handle").cy, scale: by("handle").scale });
   drawFrame(ctx, c);
+  if (selectedBox) drawSelection(ctx, selectedBox);
 }
 
 /* ---------------- Componente ---------------- */
@@ -582,23 +940,44 @@ export default function HistoriasPage() {
     photo: null,
     photoBlur: false,
     overlay: "soft",
+    layout: defaultLayout(),
   });
   const [swatchIndex, setSwatchIndex] = useState(0);
+  const [solidIndex, setSolidIndex] = useState(-1);
+  const [selected, setSelected] = useState<ElementId | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const photoRef = useRef<HTMLImageElement | null>(null);
   const configRef = useRef(config);
   configRef.current = config;
 
+  const dragRef = useRef<null | {
+    mode: "move" | "resize";
+    id: ElementId;
+    startX: number;
+    startY: number;
+    baseX: number;
+    baseY: number;
+    baseScale: number;
+    anchorX: number;
+    anchorY: number;
+    dist: number;
+  }>(null);
+
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    drawStory(canvas, configRef.current, photoRef.current);
-  }, []);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const box = selected
+      ? computeAllBoxes(ctx, configRef.current).find((b) => b.id === selected)
+      : undefined;
+    drawStory(canvas, configRef.current, photoRef.current, box);
+  }, [selected]);
 
   useEffect(() => {
     redraw();
-  }, [config, redraw]);
+  }, [config, selected, redraw]);
 
   useEffect(() => {
     if (document.fonts && document.fonts.ready) {
@@ -611,13 +990,131 @@ export default function HistoriasPage() {
   const applySwatch = (i: number) => {
     const g = GRADIENTS[i];
     setSwatchIndex(i);
+    setSolidIndex(-1);
     set({ bgMode: "gradient", c1: g.c1, c2: g.c2, accent: g.accent });
+  };
+
+  const matchSolid = (hex: string) =>
+    SOLIDS.findIndex((s) => s.hex.toLowerCase() === hex.toLowerCase());
+
+  const applySolid = (i: number) => {
+    const s = SOLIDS[i];
+    setSolidIndex(i);
+    setSwatchIndex(-1);
+    set({ bgMode: "solid", c1: s.hex, c2: s.hex });
   };
 
   const applyPreset = (p: Preset) => {
     setSwatchIndex(-1);
+    setSolidIndex(p.patch.c1 ? matchSolid(p.patch.c1) : -1);
+    setSelected(null);
     haptic();
-    set(p.patch);
+    set({ ...p.patch, layout: defaultLayout() });
+  };
+
+  const resetElement = (id: ElementId) => {
+    setConfig((c) => ({ ...c, layout: { ...c.layout, [id]: defaultLayout()[id] } }));
+  };
+
+  const resetAll = () => {
+    setSelected(null);
+    haptic();
+    setConfig((c) => ({ ...c, layout: defaultLayout() }));
+  };
+
+  const toCanvas = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((e.clientX - rect.left) * W) / rect.width,
+      y: ((e.clientY - rect.top) * H) / rect.height,
+    };
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const p = toCanvas(e);
+    const boxes = computeAllBoxes(ctx, configRef.current);
+
+    if (selected) {
+      const b = boxes.find((bx) => bx.id === selected);
+      if (b && Math.hypot(p.x - (b.x + b.w), p.y - (b.y + b.h)) < 56) {
+        dragRef.current = {
+          mode: "resize",
+          id: selected,
+          startX: p.x,
+          startY: p.y,
+          baseX: 0,
+          baseY: 0,
+          baseScale: b.scale,
+          anchorX: b.x,
+          anchorY: b.y,
+          dist: Math.max(40, Math.hypot(p.x - b.x, p.y - b.y)),
+        };
+        canvas.setPointerCapture(e.pointerId);
+        return;
+      }
+    }
+
+    for (let i = boxes.length - 1; i >= 0; i--) {
+      const b = boxes[i];
+      if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) {
+        const L = configRef.current.layout[b.id];
+        if (!L.manual) {
+          const patch = { [b.id]: { x: b.cx, y: b.cy, scale: L.scale, manual: true } };
+          setConfig((c) => ({ ...c, layout: { ...c.layout, ...patch } }));
+        }
+        if (selected !== b.id) setSelected(b.id);
+        dragRef.current = {
+          mode: "move",
+          id: b.id,
+          startX: p.x,
+          startY: p.y,
+          baseX: b.cx,
+          baseY: b.cy,
+          baseScale: 0,
+          anchorX: 0,
+          anchorY: 0,
+          dist: 0,
+        };
+        canvas.setPointerCapture(e.pointerId);
+        return;
+      }
+    }
+    setSelected(null);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const p = toCanvas(e);
+    setConfig((c) => {
+      const L = c.layout[d.id];
+      if (d.mode === "move") {
+        return {
+          ...c,
+          layout: {
+            ...c.layout,
+            [d.id]: {
+              ...L,
+              x: d.baseX + (p.x - d.startX),
+              y: d.baseY + (p.y - d.startY),
+              manual: true,
+            },
+          },
+        };
+      }
+      const nd = Math.hypot(p.x - d.anchorX, p.y - d.anchorY);
+      const scale = Math.min(3, Math.max(0.35, d.baseScale * (nd / d.dist)));
+      return { ...c, layout: { ...c.layout, [d.id]: { ...L, scale, manual: true } } };
+    });
+  };
+
+  const onPointerUp = () => {
+    dragRef.current = null;
   };
 
   const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -668,6 +1165,16 @@ export default function HistoriasPage() {
         <span className={caveat.className}>.</span>
         <span className={oswald.className}>.</span>
         <span className={quicksand.className}>.</span>
+        <span className={anton.className}>.</span>
+        <span className={archivo.className}>.</span>
+        <span className={abril.className}>.</span>
+        <span className={lobster.className}>.</span>
+        <span className={pacifico.className}>.</span>
+        <span className={dancing.className}>.</span>
+        <span className={zilla.className}>.</span>
+        <span className={grotesk.className}>.</span>
+        <span className={inter.className}>.</span>
+        <span className={rowdies.className}>.</span>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 pt-6 pb-6">
@@ -885,26 +1392,50 @@ export default function HistoriasPage() {
                 )}
 
                 {config.bgMode === "solid" && (
-                  <div className="flex items-center gap-4 mt-3">
-                    <label className="flex flex-col gap-1 text-[11px] text-gray-400">
-                      Color de fondo
-                      <input
-                        type="color"
-                        value={config.c1}
-                        onChange={(e) => set({ c1: e.target.value, c2: e.target.value })}
-                        className="w-10 h-8 rounded cursor-pointer border-0"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1 text-[11px] text-gray-400">
-                      Acento
-                      <input
-                        type="color"
-                        value={config.accent}
-                        onChange={(e) => set({ accent: e.target.value })}
-                        className="w-10 h-8 rounded cursor-pointer border-0"
-                      />
-                    </label>
-                  </div>
+                  <>
+                    <div className="flex gap-2 flex-wrap mt-3">
+                      {SOLIDS.map((s, i) => (
+                        <button
+                          key={s.name}
+                          type="button"
+                          onClick={() => applySolid(i)}
+                          className={`w-8 h-8 rounded-full border-2 transition ${
+                            solidIndex === i
+                              ? "border-black dark:border-white scale-110"
+                              : "border-gray-200 dark:border-gray-700"
+                          }`}
+                          style={{ background: s.hex }}
+                          aria-label={s.name}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-4 mt-3">
+                      <label className="flex flex-col gap-1 text-[11px] text-gray-400">
+                        Color de fondo
+                        <input
+                          type="color"
+                          value={config.c1}
+                          onChange={(e) =>
+                            set({
+                              c1: e.target.value,
+                              c2: e.target.value,
+                            })
+                          }
+                          onInput={() => setSolidIndex(-1)}
+                          className="w-10 h-8 rounded cursor-pointer border-0"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1 text-[11px] text-gray-400">
+                        Acento
+                        <input
+                          type="color"
+                          value={config.accent}
+                          onChange={(e) => set({ accent: e.target.value })}
+                          className="w-10 h-8 rounded cursor-pointer border-0"
+                        />
+                      </label>
+                    </div>
+                  </>
                 )}
 
                 {config.bgMode === "photo" && (
@@ -973,6 +1504,8 @@ export default function HistoriasPage() {
                     <option value="dots">Puntos</option>
                     <option value="circles">Círculos</option>
                     <option value="stripes">Rayas</option>
+                    <option value="squares">Cuadrícula</option>
+                    <option value="hearts">Corazones</option>
                   </select>
                   <button
                     onClick={() => set({ frame: !config.frame })}
@@ -1010,13 +1543,131 @@ export default function HistoriasPage() {
                   ref={canvasRef}
                   width={W}
                   height={H}
-                  className="absolute inset-0 w-full h-full"
+                  className="absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing"
+                  style={{ touchAction: "none" }}
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={onPointerUp}
+                  onPointerCancel={onPointerUp}
                 />
               </div>
 
               <p className="text-center text-xs text-gray-400 mt-3">
+                Tocá un elemento para seleccionarlo, arrastralo para moverlo y usá el
+                círculo de abajo a la derecha para agrandarlo o achicarlo.
+              </p>
+              <p className="text-center text-xs text-gray-400 mt-1">
                 Se descarga en 1080×1920 px (historia 9:16)
               </p>
+
+              {selected && (
+                <div className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-300">
+                      {ELEMENT_NAMES[selected]}
+                    </p>
+                    <button
+                      onClick={() => resetElement(selected)}
+                      className="text-xs text-red-400"
+                    >
+                      Restablecer
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-gray-400 mb-1">Fuente</label>
+                      <select
+                        value={config.font}
+                        onChange={(e) => set({ font: e.target.value })}
+                        className={inputCls}
+                      >
+                        {FONT_OPTIONS.map((f) => (
+                          <option key={f.name} value={f.family}>
+                            {f.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-gray-400 mb-1">Tamaño</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range"
+                          min={0.4}
+                          max={2.5}
+                          step={0.05}
+                          value={config.layout[selected].scale}
+                          onChange={(e) =>
+                            setConfig((c) => ({
+                              ...c,
+                              layout: {
+                                ...c.layout,
+                                [selected]: {
+                                  ...c.layout[selected],
+                                  scale: Number(e.target.value),
+                                  manual: true,
+                                },
+                              },
+                            }))
+                          }
+                          className="flex-1"
+                        />
+                        <span className="text-[11px] text-gray-400 w-10 text-right">
+                          {Math.round(config.layout[selected].scale * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="text-[11px] text-gray-400 shrink-0">Color texto</label>
+                    <div className="flex gap-1 flex-wrap">
+                      {(
+                        [
+                          { v: "auto", label: "Auto" },
+                          { v: "claro", label: "Claro" },
+                          { v: "oscuro", label: "Oscuro" },
+                        ] as const
+                      ).map((o) => (
+                        <button
+                          key={o.v}
+                          onClick={() => set({ textMode: o.v })}
+                          className={config.textMode === o.v ? chipOn : chipOff}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="text-[11px] text-gray-400 shrink-0">Acento</label>
+                    <input
+                      type="color"
+                      value={config.accent}
+                      onChange={(e) => set({ accent: e.target.value })}
+                      className="w-9 h-7 rounded cursor-pointer border-0"
+                    />
+                    {selected === "emoji" && (
+                      <input
+                        value={config.emoji}
+                        onChange={(e) => set({ emoji: e.target.value })}
+                        maxLength={4}
+                        className={inputCls + " !py-1"}
+                        placeholder="Emoji"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={resetAll}
+                className="w-full mt-3 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
+              >
+                Reiniciar posiciones
+              </button>
 
               <button
                 onClick={download}
