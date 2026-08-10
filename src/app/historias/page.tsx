@@ -988,7 +988,7 @@ function drawSelection(ctx: CanvasRenderingContext2D, box: Box) {
   const br = rotPoint(box.cx, box.cy, box.w / 2, box.h / 2, a);
   const tc = rotPoint(box.cx, box.cy, 0, -box.h / 2 - 14, a);
 
-  const r = 26;
+  const r = 32;
   ctx.beginPath();
   ctx.arc(br.x, br.y, r, 0, Math.PI * 2);
   ctx.fillStyle = "#ffffff";
@@ -1240,6 +1240,24 @@ export default function HistoriasPage() {
           [other]: { ...c.layout[other], z },
         },
       };
+    });
+  };
+
+  const nudge = (id: ElementId, dir: 1 | -1) => {
+    haptic();
+    setConfig((c) => {
+      const L = c.layout[id];
+      const scale = Math.min(3, Math.max(0.35, L.scale + dir * 0.1));
+      return { ...c, layout: { ...c.layout, [id]: { ...L, scale, manual: true } } };
+    });
+  };
+
+  const rotateBy = (id: ElementId, deg: number) => {
+    haptic();
+    setConfig((c) => {
+      const L = c.layout[id];
+      const rot = ((L.rotation + deg + 180) % 360 + 360) % 360 - 180;
+      return { ...c, layout: { ...c.layout, [id]: { ...L, rotation: rot } } };
     });
   };
 
@@ -1908,18 +1926,67 @@ export default function HistoriasPage() {
           {/* ===== PREVIEW ===== */}
           <div className="lg:sticky lg:top-20">
             <div className="bg-white dark:bg-[#252525] rounded-2xl shadow-sm dark:shadow-none dark:border dark:border-gray-800 p-4">
-              <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[9/16] rounded-xl overflow-hidden bg-black mx-auto">
+              <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[9/16] rounded-xl overflow-hidden bg-black mx-auto select-none">
                 <canvas
                   ref={canvasRef}
                   width={W}
                   height={H}
                   className="absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing"
-                  style={{ touchAction: "none" }}
+                  style={{ touchAction: "none", WebkitTouchCallout: "none" }}
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onPointerCancel={onPointerUp}
                 />
+
+                {selected && (
+                  <div className="absolute top-2 inset-x-0 z-10 flex justify-center pointer-events-none">
+                    <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-black/85 backdrop-blur px-2 py-1.5 shadow-lg">
+                      <button
+                        onClick={() => nudge(selected, -1)}
+                        className="w-9 h-9 grid place-items-center text-white text-xl leading-none active:scale-90 transition"
+                        aria-label="Achicar"
+                      >
+                        −
+                      </button>
+                      <span className="text-white text-[11px] w-9 text-center font-medium tabular-nums">
+                        {Math.round(config.layout[selected].scale * 100)}%
+                      </span>
+                      <button
+                        onClick={() => nudge(selected, 1)}
+                        className="w-9 h-9 grid place-items-center text-white text-xl leading-none active:scale-90 transition"
+                        aria-label="Agrandar"
+                      >
+                        +
+                      </button>
+                      <div className="w-px h-5 bg-white/25 mx-1" />
+                      <button
+                        onClick={() => rotateBy(selected, -15)}
+                        className="w-9 h-9 grid place-items-center text-white text-base active:scale-90 transition"
+                        aria-label="Rotar a la izquierda"
+                      >
+                        ⟲
+                      </button>
+                      <button
+                        onClick={() => rotateBy(selected, 15)}
+                        className="w-9 h-9 grid place-items-center text-white text-base active:scale-90 transition"
+                        aria-label="Rotar a la derecha"
+                      >
+                        ⟳
+                      </button>
+                      <div className="w-px h-5 bg-white/25 mx-1" />
+                      <button
+                        onClick={() => deleteElement(selected)}
+                        className="w-9 h-9 grid place-items-center text-red-400 active:scale-90 transition"
+                        aria-label="Borrar elemento"
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <p className="text-center text-xs text-gray-400 mt-3">
