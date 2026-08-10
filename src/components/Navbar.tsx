@@ -12,6 +12,7 @@ import {
   BarChart2,
   Plus,
   Sparkles,
+  Instagram,
   Settings,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -23,6 +24,7 @@ const tabs = [
   { href: "/clients", icon: Users, label: "Clientes" },
   { href: "/dashboard", icon: BarChart2, label: "Stats" },
   { href: "/services", icon: Sparkles, label: "Servicios" },
+  { href: "/historias", icon: Instagram, label: "Historias" },
 ];
 
 function getPageTitle(pathname: string) {
@@ -30,6 +32,7 @@ function getPageTitle(pathname: string) {
   if (pathname.startsWith("/admin")) return "Turnos";
   if (pathname.startsWith("/clients")) return "Clientes";
   if (pathname === "/dashboard") return "Dashboard";
+  if (pathname.startsWith("/historias")) return "Historias";
   if (pathname.startsWith("/services")) return "Servicios";
   if (pathname.startsWith("/appointments")) return "Nuevo turno";
   return "";
