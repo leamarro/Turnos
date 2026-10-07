@@ -24,9 +24,14 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1a1a1a" />
+        <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("theme")==="dark";document.documentElement.classList.toggle("dark",t);var m=document.querySelector('meta[name="theme-color"]');m&&m.setAttribute("content",t?"#1a1a1a":"#ffffff")}catch(e){}`,
+          }}
+        />
       </head>
       <body>
         <script dangerouslySetInnerHTML={{
