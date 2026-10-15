@@ -1,4 +1,4 @@
-"use client";
+¿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -116,12 +116,6 @@ export default function EditAppointmentPage({
   const totalPagado = appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
   const restante = totalServicio - totalPagado;
   const pagoCompleto = restante <= 0;
-
-  const methodLabels: Record<string, string> = {
-    full: "Pago final",
-    deposit: "Seña",
-    cash: "Efectivo",
-  };
 
   const pagosVisibles = (appointment.payments ?? [])
     .filter((p) => p.method !== "pendiente")
@@ -382,7 +376,6 @@ export default function EditAppointmentPage({
                 <div key={p.id} className="flex justify-between text-xs text-gray-500">
                   <span>
                     {p.createdAt ? format(new Date(p.createdAt), "dd/MM/yyyy", { locale: es }) : "—"}
-                    {p.method ? ` · ${methodLabels[p.method] ?? p.method}` : ""}
                   </span>
                   <span className="font-medium text-gray-700 dark:text-gray-300">${p.amount}</span>
                 </div>
