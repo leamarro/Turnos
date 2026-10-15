@@ -32,6 +32,7 @@ type Payment = {
   id: string;
   amount: number;
   method?: string;
+  createdAt?: string;
 };
 
 type Appointment = {
@@ -115,6 +116,17 @@ export default function EditAppointmentPage({
   const totalPagado = appointment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
   const restante = totalServicio - totalPagado;
   const pagoCompleto = restante <= 0;
+
+  const methodLabels: Record<string, string> = {
+    full: "Pago final",
+    deposit: "Seña",
+    cash: "Efectivo",
+  };
+
+  const pagosVisibles = (appointment.payments ?? [])
+    .filter((p) => p.method !== "pendiente")
+    .slice()
+    .sort((a, b) => new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime());
 
   async function handleSave() {
     if (!name.trim()) { toast("El nombre es obligatorio", "error"); return; }
@@ -361,6 +373,21 @@ export default function EditAppointmentPage({
           )}
           {restante === 0 && totalServicio > 0 && (
             <p className="text-sm text-green-600 font-medium text-center">Pago completo ✓</p>
+          )}
+
+          {pagosVisibles.length > 0 && (
+            <div className="space-y-1.5 border-t pt-2">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Historial de pagos</p>
+              {pagosVisibles.map((p) => (
+                <div key={p.id} className="flex justify-between text-xs text-gray-500">
+                  <span>
+                    {p.createdAt ? format(new Date(p.createdAt), "dd/MM/yyyy", { locale: es }) : "—"}
+                    {p.method ? ` · ${methodLabels[p.method] ?? p.method}` : ""}
+                  </span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">${p.amount}</span>
+                </div>
+              ))}
+            </div>
           )}
 
           {!pagoCompleto && (
