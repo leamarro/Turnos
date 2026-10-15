@@ -1,7 +1,7 @@
 const CACHE = {
-  static: "static-v2",
-  navigations: "navigations-v2",
-  api: "api-v2",
+  static: "static-v3",
+  navigations: "navigations-v3",
+  api: "api-v3",
 };
 
 const STATIC_URLS = [
@@ -100,6 +100,24 @@ function cacheFirst(request, cacheName) {
   });
 }
 
+// Para datos dinámicos (API): siempre red. Solo cae al cache si no hay
+// conexión (fetch rechaza). Nunca sirve datos viejos por lentitud/timeout.
+function networkFirstFresh(request, cacheName) {
+  return fetch(request)
+    .then((res) => {
+      if (res && res.ok) {
+        const clone = res.clone();
+        caches.open(cacheName).then((cache) => cache.put(request, clone));
+      }
+      return res;
+    })
+    .catch(() =>
+      caches
+        .match(request)
+        .then((cached) => cached || new Response("Offline", { status: 503 }))
+    );
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -108,7 +126,7 @@ self.addEventListener("fetch", (event) => {
   if (!url.protocol.startsWith("http")) return;
 
   if (isApi(url)) {
-    event.respondWith(networkFirst(request, CACHE.api));
+    event.respondWith(networkFirstFresh(request, CACHE.api));
     return;
   }
 
