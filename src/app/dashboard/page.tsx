@@ -212,10 +212,10 @@ export default function DashboardPage() {
             </div>
 
             <p className="text-[10px] text-white/50 uppercase tracking-wide">
-              Cobrado este mes
+              Cobrado + A cobrar
             </p>
             <p className="text-4xl font-bold tracking-tight">
-              {money(incomeCurrent)}
+              {money(incomeCurrent + agendado)}
             </p>
           </button>
 
@@ -224,7 +224,7 @@ export default function DashboardPage() {
               onClick={() => { setIncomeMode("cobrado"); setShowIncome(true); }}
               className="text-left bg-white/10 rounded-xl px-3 py-2.5 active:bg-white/20 transition"
             >
-              <p className="text-[10px] text-white/50 uppercase tracking-wide">Detalle cobrado</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-wide">Cobrado este mes</p>
               <p className="text-xl font-bold tracking-tight mt-0.5">{money(incomeCurrent)}</p>
             </button>
             <button
