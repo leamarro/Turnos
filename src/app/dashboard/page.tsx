@@ -205,17 +205,17 @@ export default function DashboardPage() {
             className="w-full text-left active:opacity-80 transition"
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-white/60 uppercase tracking-wide">Ingresos del mes</p>
+              <p className="text-xs text-white/60 uppercase tracking-wide">Ingresos</p>
               <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full">
                 día {daysElapsed}/{daysInMonth}
               </span>
             </div>
 
             <p className="text-[10px] text-white/50 uppercase tracking-wide">
-              Total del mes
+              Cobrado este mes
             </p>
             <p className="text-4xl font-bold tracking-tight">
-              {money(incomeCurrent + agendado)}
+              {money(incomeCurrent)}
             </p>
           </button>
 
@@ -224,14 +224,14 @@ export default function DashboardPage() {
               onClick={() => { setIncomeMode("cobrado"); setShowIncome(true); }}
               className="text-left bg-white/10 rounded-xl px-3 py-2.5 active:bg-white/20 transition"
             >
-              <p className="text-[10px] text-white/50 uppercase tracking-wide">Cobrado</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-wide">Detalle cobrado</p>
               <p className="text-xl font-bold tracking-tight mt-0.5">{money(incomeCurrent)}</p>
             </button>
             <button
               onClick={() => { setIncomeMode("agendado"); setShowIncome(true); }}
               className="text-left bg-white/10 rounded-xl px-3 py-2.5 active:bg-white/20 transition"
             >
-              <p className="text-[10px] text-white/50 uppercase tracking-wide">Agendado</p>
+              <p className="text-[10px] text-white/50 uppercase tracking-wide">A cobrar (turnos futuros)</p>
               <p className="text-xl font-bold tracking-tight mt-0.5">{money(agendado)}</p>
             </button>
           </div>
