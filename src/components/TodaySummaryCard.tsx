@@ -4,12 +4,16 @@ import { useMemo } from "react";
 
 type Appointment = {
   date: string;
+  status?: string;
   service: {
     price?: number;
   } | null;
   servicePrice?: number | null;
   payments?: { amount: number; createdAt?: string | Date }[];
 };
+
+const money = (n: number) =>
+  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 export default function TodaySummaryCard({
   appointments,
@@ -24,6 +28,7 @@ export default function TodaySummaryCard({
     tomorrow.setDate(today.getDate() + 1);
 
     const todays = appointments.filter((a) => {
+      if (a.status === "cancelled") return false;
       const d = new Date(a.date);
       return d >= today && d < tomorrow;
     });
@@ -50,29 +55,29 @@ export default function TodaySummaryCard({
   }, [appointments]);
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm">
-      <p className="text-xs text-gray-500 mb-1">Hoy</p>
+    <div className="bg-white dark:bg-[#252525] rounded-2xl p-5 shadow-sm dark:border dark:border-gray-800">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Hoy</p>
 
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-3xl font-semibold leading-none">
+          <p className="text-3xl font-semibold leading-none text-gray-900 dark:text-white">
             {todayData.count}
           </p>
-          <p className="text-sm text-gray-600">turnos</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">turnos</p>
         </div>
 
         <div className="text-right space-y-1.5">
           <div>
-            <p className="text-xl font-semibold leading-none">
-              $ {todayData.income}
+            <p className="text-xl font-semibold leading-none text-gray-900 dark:text-white">
+              {money(todayData.income)}
             </p>
-            <p className="text-xs text-gray-600">cobrado hoy</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">cobrado hoy</p>
           </div>
           <div>
-            <p className="text-xl font-semibold leading-none">
-              $ {todayData.pending}
+            <p className="text-xl font-semibold leading-none text-gray-900 dark:text-white">
+              {money(todayData.pending)}
             </p>
-            <p className="text-xs text-gray-600">agendado hoy</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">agendado hoy</p>
           </div>
         </div>
       </div>
