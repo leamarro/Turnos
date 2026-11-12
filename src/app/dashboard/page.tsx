@@ -32,6 +32,11 @@ export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const router = useRouter();
 
+  const activeAppointments = useMemo(
+    () => appointments.filter((a) => a.status !== "cancelled"),
+    [appointments]
+  );
+
   useEffect(() => {
     const load = async () => {
       const [apptRes, clientRes] = await Promise.all([
@@ -65,10 +70,10 @@ export default function DashboardPage() {
   const lastWeekDate = subWeeks(now, 1);
   const lastWeek = { start: startOfWeek(lastWeekDate, { weekStartsOn: 1 }), end: endOfWeek(lastWeekDate, { weekStartsOn: 1 }) };
 
-  const currentMonthData = appointments.filter((a) => isWithinInterval(new Date(a.date), currentMonth));
-  const prevMonthData = appointments.filter((a) => isWithinInterval(new Date(a.date), prevMonth));
-  const thisWeekData = appointments.filter((a) => isWithinInterval(new Date(a.date), thisWeek));
-  const lastWeekData = appointments.filter((a) => isWithinInterval(new Date(a.date), lastWeek));
+  const currentMonthData = activeAppointments.filter((a) => isWithinInterval(new Date(a.date), currentMonth));
+  const prevMonthData = activeAppointments.filter((a) => isWithinInterval(new Date(a.date), prevMonth));
+  const thisWeekData = activeAppointments.filter((a) => isWithinInterval(new Date(a.date), thisWeek));
+  const lastWeekData = activeAppointments.filter((a) => isWithinInterval(new Date(a.date), lastWeek));
 
   const incomeCurrent = incomeInInterval(appointments, currentMonth.start, currentMonth.end);
   const incomePrev = incomeInInterval(appointments, prevMonth.start, prevMonth.end);
@@ -81,7 +86,7 @@ export default function DashboardPage() {
   const monthProgress = (daysElapsed / daysInMonth) * 100;
   const dailyAvg = daysElapsed > 0 ? incomeCurrent / daysElapsed : 0;
 
-  const agendado = appointments.reduce((sum, a) => {
+  const agendado = activeAppointments.reduce((sum, a) => {
     const d = new Date(a.date);
     if (!isWithinInterval(d, currentMonth) || d < now) return sum;
     const total = a.servicePrice ?? a.service?.price ?? 0;
@@ -89,7 +94,7 @@ export default function DashboardPage() {
     return sum + Math.max(total - paid, 0);
   }, 0);
 
-  const deudaList = appointments.filter((a: any) => {
+  const deudaList = activeAppointments.filter((a: any) => {
     if (a.status === "cancelled") return false;
     if (new Date(a.date) >= startOfDay(now)) return false;
     const total = a.servicePrice ?? a.service?.price ?? 0;
@@ -106,26 +111,31 @@ export default function DashboardPage() {
     return sum + (a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0);
   }, 0);
 
-  const firstDate = appointments.reduce<Date | null>((acc, a) => {
-    const d = new Date(a.date);
-    if (isNaN(d.getTime())) return acc;
-    return !acc || d < acc ? d : acc;
+  const firstPaymentDate = appointments.reduce<Date | null>((acc, a) => {
+    for (const p of a.payments ?? []) {
+      const d = new Date(p.createdAt ?? a.date);
+      if (isNaN(d.getTime())) continue;
+      if (!acc || d < acc) acc = d;
+    }
+    return acc;
   }, null);
-  const sinceLabel = firstDate ? format(firstDate, "d MMM yyyy", { locale: es }) : null;
+  const sinceLabel = firstPaymentDate
+    ? format(firstPaymentDate, "d MMM yyyy", { locale: es })
+    : null;
 
   const topClients = useMemo(() => {
     const map = new Map<string, number>();
-    appointments.forEach((a) => {
+    activeAppointments.forEach((a) => {
       const name = `${a.name ?? ""} ${a.lastName ?? ""}`.trim();
       if (!name) return;
       map.set(name, (map.get(name) ?? 0) + 1);
     });
     return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-  }, [appointments]);
+  }, [activeAppointments]);
 
   function exportCSV() {
     const rows = [["Fecha", "Hora", "Cliente", "Servicio", "Precio", "Pagado", "Restante"]];
-    appointments.forEach((a: any) => {
+    activeAppointments.forEach((a: any) => {
       const d = new Date(a.date);
       const total = a.servicePrice ?? a.service?.price ?? 0;
       const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
@@ -193,7 +203,7 @@ export default function DashboardPage() {
             <Download size={13} />
             Exportar CSV
           </button>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{appointments.length} turnos</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{activeAppointments.length} turnos</p>
         </div>
       </div>
 
@@ -257,6 +267,28 @@ export default function DashboardPage() {
       {/* HOY */}
       <TodaySummaryCard appointments={appointments} />
 
+      {/* PRÓXIMOS TURNOS HOY */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <TodayNextAppointments appointments={activeAppointments} />
+        <TodayAlertCard appointments={activeAppointments} />
+      </div>
+
+      {/* DEUDAS */}
+      <button
+        onClick={() => router.push("/admin?pendientes=1")}
+        className="w-full text-left bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800 active:scale-[0.98] transition"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={15} className="text-red-500" />
+            <p className="text-sm font-semibold dark:text-white">Deudas pendientes</p>
+          </div>
+          <span className="text-xs text-gray-400">{deudaList.length} turno{deudaList.length !== 1 && "s"}</span>
+        </div>
+        <p className="text-3xl font-bold mt-2 dark:text-white">{money(deudaTotal)}</p>
+        <p className="text-xs mt-1 text-red-500">Tocá para ver quiénes quedaron debiendo</p>
+      </button>
+
       {/* KPI CARDS */}
       <div className="grid grid-cols-2 gap-3">
         <button
@@ -304,26 +336,36 @@ export default function DashboardPage() {
           <p className="text-xs text-gray-400">Total histórico</p>
           <p className="text-xl font-bold mt-0.5 dark:text-white whitespace-nowrap">{money(totalCobrado)}</p>
           <p className="text-xs mt-1 text-gray-400">
-            {appointments.length} turnos{sinceLabel ? ` · desde ${sinceLabel}` : ""}
+            {activeAppointments.length} turnos{sinceLabel ? ` · desde ${sinceLabel}` : ""}
           </p>
         </div>
       </div>
 
-      {/* DEUDAS */}
-      <button
-        onClick={() => router.push("/admin?pendientes=1")}
-        className="w-full text-left bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800 active:scale-[0.98] transition"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={15} className="text-red-500" />
-            <p className="text-sm font-semibold dark:text-white">Deudas pendientes</p>
-          </div>
-          <span className="text-xs text-gray-400">{deudaList.length} turno{deudaList.length !== 1 && "s"}</span>
+      {/* GRÁFICOS MENSUALES */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold dark:text-white">Evolución mensual</h2>
+          {sinceLabel && (
+            <p className="text-xs text-gray-400 mt-0.5">Datos desde {sinceLabel}</p>
+          )}
         </div>
-        <p className="text-3xl font-bold mt-2 dark:text-white">{money(deudaTotal)}</p>
-        <p className="text-xs mt-1 text-red-500">Tocá para ver quiénes quedaron debiendo</p>
-      </button>
+        <MonthlyIncomeChart
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          onSelectYear={(year) => {
+            setSelectedYear(year);
+            setSelectedMonth(null);
+          }}
+          onSelectMonth={setSelectedMonth}
+        />
+        <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
+          <MonthlyIncomeByServiceChart
+            data={appointments}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+          />
+        </div>
+      </div>
 
       {/* CLIENTES FRECUENTES */}
       <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
@@ -364,38 +406,6 @@ export default function DashboardPage() {
             })}
           </div>
         )}
-      </div>
-
-      {/* GRÁFICOS MENSUALES */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold dark:text-white">Evolución mensual</h2>
-          {sinceLabel && (
-            <p className="text-xs text-gray-400 mt-0.5">Datos desde {sinceLabel}</p>
-          )}
-        </div>
-        <MonthlyIncomeChart
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          onSelectYear={(year) => {
-            setSelectedYear(year);
-            setSelectedMonth(null);
-          }}
-          onSelectMonth={setSelectedMonth}
-        />
-        <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
-          <MonthlyIncomeByServiceChart
-            data={appointments}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-          />
-        </div>
-      </div>
-
-      {/* PRÓXIMOS TURNOS HOY */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <TodayNextAppointments appointments={appointments} />
-        <TodayAlertCard appointments={appointments} />
       </div>
 
       </div>
