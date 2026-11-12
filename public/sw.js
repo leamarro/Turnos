@@ -1,7 +1,7 @@
 const CACHE = {
-  static: "static-v3",
-  navigations: "navigations-v3",
-  api: "api-v3",
+  static: "static-v4",
+  navigations: "navigations-v4",
+  api: "api-v4",
 };
 
 const STATIC_URLS = [
