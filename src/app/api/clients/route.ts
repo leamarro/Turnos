@@ -24,6 +24,7 @@ export async function GET() {
         telefono: true,
         instagram: true,
         date: true,
+        status: true,
       },
     });
 
@@ -48,10 +49,12 @@ export async function GET() {
       const client = map.get(key);
       if (!client) continue;
 
-      client.totalAppointments += 1;
+      if (a.status !== "cancelled") {
+        client.totalAppointments += 1;
 
-      if (!client.lastAppointment || new Date(a.date) > new Date(client.lastAppointment)) {
-        client.lastAppointment = a.date;
+        if (!client.lastAppointment || new Date(a.date) > new Date(client.lastAppointment)) {
+          client.lastAppointment = a.date;
+        }
       }
     }
 
