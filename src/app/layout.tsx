@@ -35,7 +35,9 @@ export default function RootLayout({
       </head>
       <body>
         <script dangerouslySetInnerHTML={{
-          __html: `"serviceWorker"in navigator&&navigator.serviceWorker.register("/sw.js",{updateViaCache:"none"}).then(r=>{r.onupdatefound=()=>{const i=r.installing;i&&(i.onstatechange=()=>{i.state==="installed"&&navigator.serviceWorker.controller&&location.reload()})}}).catch(()=>{})`,
+          __html: process.env.NODE_ENV === "production"
+            ? `"serviceWorker"in navigator&&navigator.serviceWorker.register("/sw.js",{updateViaCache:"none"}).then(r=>{r.onupdatefound=()=>{const i=r.installing;i&&(i.onstatechange=()=>{i.state==="installed"&&navigator.serviceWorker.controller&&location.reload()})}}).catch(()=>{})`
+            : `"serviceWorker"in navigator&&navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))).catch(()=>{})`,
         }} />
         <ToastProvider>
           <ClientLayout>{children}</ClientLayout>
