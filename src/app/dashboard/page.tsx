@@ -1,421 +1,235 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  startOfMonth, endOfMonth, subMonths, isWithinInterval,
-  startOfWeek, endOfWeek, subWeeks, startOfDay, format,
-} from "date-fns";
+import { useMemo, useState } from "react";
+import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
-import { Download, Calendar, DollarSign, Users, BarChart2, TrendingUp, AlertTriangle } from "lucide-react";
-import TodaySummaryCard from "@/components/TodaySummaryCard";
-import TodayNextAppointments from "@/components/TodayNextAppointments";
-import TodayAlertCard from "@/components/TodayAlertCard";
-import MonthlyIncomeChart from "@/components/MonthlyIncomeChart";
-import MonthlyIncomeByServiceChart from "@/components/MonthlyIncomeByServiceChart";
-import { incomeInInterval } from "@/lib/income";
-import IncomeModal from "@/components/IncomeModal";
+import { X, ChevronDown, ChevronRight } from "lucide-react";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Appointment = any;
+type Payment = {
+  id?: string;
+  amount: number;
+  method?: string;
+  createdAt?: string | Date;
+};
+
+type Appointment = {
+  id: string;
+  date: string;
+  status?: string;
+  name?: string;
+  lastName?: string;
+  service: { name: string; price?: number } | null;
+  servicePrice?: number | null;
+  payments?: Payment[];
+};
+
+type DetailItem = {
+  paymentId: string;
+  clientName: string;
+  date: Date;
+  amount: number;
+  isDeposit: boolean;
+};
+
+type ServiceEntry = {
+  name: string;
+  count: number;
+  total: number;
+  items: DetailItem[];
+};
 
 const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
+  `$ ${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
-export default function DashboardPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showIncome, setShowIncome] = useState(false);
-  const [incomeMode, setIncomeMode] = useState<"cobrado" | "agendado">("cobrado");
-  const [clientMap, setClientMap] = useState<Map<string, string>>(new Map());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const router = useRouter();
+export default function IncomeModal({
+  appointments,
+  open,
+  onClose,
+  mode = "cobrado",
+}: {
+  appointments: Appointment[];
+  open: boolean;
+  onClose: () => void;
+  mode?: "cobrado" | "agendado";
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null);
 
-  const activeAppointments = useMemo(
-    () => appointments.filter((a) => a.status !== "cancelled"),
-    [appointments]
-  );
+  const breakdown = useMemo(() => {
+    const now = new Date();
+    const monthInterval = {
+      start: startOfMonth(now),
+      end: endOfMonth(now),
+    };
+    const map = new Map<string, ServiceEntry>();
 
-  useEffect(() => {
-    const load = async () => {
-      const [apptRes, clientRes] = await Promise.all([
-        fetch("/api/appointments", { cache: "no-store" }),
-        fetch("/api/clients", { cache: "no-store" }),
-      ]);
-      const apptData = await apptRes.json();
-      setAppointments(Array.isArray(apptData) ? apptData : []);
+    appointments.forEach((a) => {
+      const name = a.service?.name ?? "Sin servicio";
 
-      const clientData = await clientRes.json();
-      if (Array.isArray(clientData)) {
-        const map = new Map<string, string>();
-        clientData.forEach((c: any) => {
-          const key = `${c.name} ${c.lastName ?? ""}`.trim().toLowerCase();
-          if (key) map.set(key, c.id);
+      if (mode === "agendado") {
+        if (a.status === "cancelled") return;
+        const date = new Date(a.date);
+        if (!isWithinInterval(date, monthInterval) || date < now) return;
+        const total = a.servicePrice ?? a.service?.price ?? 0;
+        const paid = a.payments?.reduce((s, p) => s + p.amount, 0) ?? 0;
+        const remaining = Math.max(total - paid, 0);
+        if (remaining <= 0) return;
+
+        const entry = map.get(name) ?? { name, count: 0, total: 0, items: [] };
+        entry.count += 1;
+        entry.total += remaining;
+        entry.items.push({
+          paymentId: a.id,
+          clientName: `${a.name ?? ""} ${a.lastName ?? ""}`.trim() || "Sin nombre",
+          date,
+          amount: remaining,
+          isDeposit: false,
         });
-        setClientMap(map);
+        map.set(name, entry);
+        return;
       }
 
-      setLoading(false);
-    };
-    load();
-  }, []);
+      for (const payment of a.payments ?? []) {
+        const date = new Date(payment.createdAt ?? now);
+        if (!isWithinInterval(date, monthInterval)) continue;
 
-  const now = new Date();
+        const entry = map.get(name) ?? { name, count: 0, total: 0, items: [] };
 
-  const currentMonth = { start: startOfMonth(now), end: endOfMonth(now) };
-  const prevMonthDate = subMonths(now, 1);
-  const prevMonth = { start: startOfMonth(prevMonthDate), end: endOfMonth(prevMonthDate) };
-  const thisWeek = { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
-  const lastWeekDate = subWeeks(now, 1);
-  const lastWeek = { start: startOfWeek(lastWeekDate, { weekStartsOn: 1 }), end: endOfWeek(lastWeekDate, { weekStartsOn: 1 }) };
+        if (!entry.items.some((i) => i.paymentId === payment.id)) {
+          entry.count += 1;
+          entry.total += payment.amount;
+          entry.items.push({
+            paymentId: payment.id ?? `${a.id}-${date.getTime()}`,
+            clientName: `${a.name ?? ""} ${a.lastName ?? ""}`.trim() || "Sin nombre",
+            date,
+            amount: payment.amount,
+            isDeposit: payment.method !== "full",
+          });
+        }
 
-  const currentMonthData = activeAppointments.filter((a) => isWithinInterval(new Date(a.date), currentMonth));
-  const prevMonthData = activeAppointments.filter((a) => isWithinInterval(new Date(a.date), prevMonth));
-  const thisWeekData = activeAppointments.filter((a) => isWithinInterval(new Date(a.date), thisWeek));
-  const lastWeekData = activeAppointments.filter((a) => isWithinInterval(new Date(a.date), lastWeek));
-
-  const incomeCurrent = incomeInInterval(appointments, currentMonth.start, currentMonth.end);
-  const incomePrev = incomeInInterval(appointments, prevMonth.start, prevMonth.end);
-
-  const monthVariation = incomePrev === 0 ? null : ((incomeCurrent - incomePrev) / incomePrev) * 100;
-  const weekVariation = lastWeekData.length === 0 ? null : ((thisWeekData.length - lastWeekData.length) / lastWeekData.length) * 100;
-
-  const daysInMonth = endOfMonth(now).getDate();
-  const daysElapsed = now.getDate();
-  const monthProgress = (daysElapsed / daysInMonth) * 100;
-  const dailyAvg = daysElapsed > 0 ? incomeCurrent / daysElapsed : 0;
-
-  const agendado = activeAppointments.reduce((sum, a) => {
-    const d = new Date(a.date);
-    if (!isWithinInterval(d, currentMonth) || d < now) return sum;
-    const total = a.servicePrice ?? a.service?.price ?? 0;
-    const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
-    return sum + Math.max(total - paid, 0);
-  }, 0);
-
-  const deudaList = activeAppointments.filter((a: any) => {
-    if (a.status === "cancelled") return false;
-    if (new Date(a.date) >= startOfDay(now)) return false;
-    const total = a.servicePrice ?? a.service?.price ?? 0;
-    const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
-    return total > 0 && paid < total;
-  });
-  const deudaTotal = deudaList.reduce((sum, a: any) => {
-    const total = a.servicePrice ?? a.service?.price ?? 0;
-    const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
-    return sum + Math.max(total - paid, 0);
-  }, 0);
-
-  const totalCobrado = appointments.reduce((sum, a) => {
-    return sum + (a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0);
-  }, 0);
-
-  const firstPaymentDate = appointments.reduce<Date | null>((acc, a) => {
-    for (const p of a.payments ?? []) {
-      const d = new Date(p.createdAt ?? a.date);
-      if (isNaN(d.getTime())) continue;
-      if (!acc || d < acc) acc = d;
-    }
-    return acc;
-  }, null);
-  const sinceLabel = firstPaymentDate
-    ? format(firstPaymentDate, "d MMM yyyy", { locale: es })
-    : null;
-
-  const topClients = useMemo(() => {
-    const map = new Map<string, number>();
-    activeAppointments.forEach((a) => {
-      const name = `${a.name ?? ""} ${a.lastName ?? ""}`.trim();
-      if (!name) return;
-      map.set(name, (map.get(name) ?? 0) + 1);
+        map.set(name, entry);
+      }
     });
-    return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-  }, [activeAppointments]);
 
-  function exportCSV() {
-    const rows = [["Fecha", "Hora", "Cliente", "Servicio", "Precio", "Pagado", "Restante"]];
-    activeAppointments.forEach((a: any) => {
-      const d = new Date(a.date);
-      const total = a.servicePrice ?? a.service?.price ?? 0;
-      const paid = a.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0;
-      rows.push([
-        d.toLocaleDateString("es-AR"),
-        d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
-        `${a.name ?? ""} ${a.lastName ?? ""}`.trim(),
-        a.service?.name ?? "",
-        String(total),
-        String(paid),
-        String(total - paid),
-      ]);
-    });
-    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `turnos_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }, [appointments, mode]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#1a1a1a] px-4 pt-4 pb-6 animate-pulse">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="h-8 w-36 bg-gray-200 dark:bg-[#333] rounded-lg" />
-            <div className="h-7 w-28 bg-gray-200 dark:bg-[#333] rounded-full" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-24 shadow-sm dark:border dark:border-gray-800" />
-            ))}
-          </div>
-          <div className="bg-gray-200 dark:bg-[#333] rounded-2xl h-32" />
-          <div className="grid grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-28 shadow-sm dark:border dark:border-gray-800" />
-            ))}
-          </div>
-          <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-32 shadow-sm dark:border dark:border-gray-800" />
-          <div className="h-6 w-40 bg-gray-200 dark:bg-[#333] rounded-lg" />
-          <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-48 shadow-sm dark:border dark:border-gray-800" />
-          <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-48 shadow-sm dark:border dark:border-gray-800" />
-          <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 h-48 shadow-sm dark:border dark:border-gray-800" />
-        </div>
-      </div>
-    );
-  }
+  const grandTotal = breakdown.reduce((s, d) => s + d.total, 0);
+
+  if (!open) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#1a1a1a] px-4 pt-4 pb-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold dark:text-white">Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={exportCSV}
-            className="flex items-center gap-1.5 text-xs border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 px-3 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#252525] transition"
-          >
-            <Download size={13} />
-            Exportar CSV
-          </button>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{activeAppointments.length} turnos</p>
-        </div>
-      </div>
-
-      {/* CARD PRINCIPAL — ingresos */}
-      <div className="w-full text-left bg-black text-white rounded-2xl p-5 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
-        <div className="relative z-10">
-          <button
-            onClick={() => { setIncomeMode("cobrado"); setShowIncome(true); }}
-            className="w-full text-left active:opacity-80 transition"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-white/60 uppercase tracking-wide">Ingresos</p>
-              <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full">
-                día {daysElapsed}/{daysInMonth}
-              </span>
-            </div>
-
-            <p className="text-[10px] text-white/50 uppercase tracking-wide">
-              Cobrado + A cobrar
-            </p>
-            <p className="text-4xl font-bold tracking-tight">
-              {money(incomeCurrent + agendado)}
-            </p>
-          </button>
-
-          <div className="grid grid-cols-2 gap-2.5 mt-3">
-            <button
-              onClick={() => { setIncomeMode("cobrado"); setShowIncome(true); }}
-              className="text-left bg-white/10 rounded-xl px-3 py-2.5 active:bg-white/20 transition"
-            >
-              <p className="text-[10px] text-white/50 uppercase tracking-wide">Cobrado este mes</p>
-              <p className="text-xl font-bold tracking-tight mt-0.5">{money(incomeCurrent)}</p>
-            </button>
-            <button
-              onClick={() => { setIncomeMode("agendado"); setShowIncome(true); }}
-              className="text-left bg-white/10 rounded-xl px-3 py-2.5 active:bg-white/20 transition"
-            >
-              <p className="text-[10px] text-white/50 uppercase tracking-wide">A cobrar (turnos futuros)</p>
-              <p className="text-xl font-bold tracking-tight mt-0.5">{money(agendado)}</p>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3 mt-3 text-xs text-white/50">
-            {monthVariation !== null && (
-              <span className={monthVariation > 0 ? "text-emerald-400" : "text-red-400"}>
-                {monthVariation > 0 ? "↑" : "↓"} {Math.abs(monthVariation).toFixed(1)}% vs mes ant.
-              </span>
-            )}
-            <span>~{money(Math.round(dailyAvg))} / día</span>
-          </div>
-          <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(monthProgress, 100)}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* HOY */}
-      <TodaySummaryCard appointments={appointments} />
-
-      {/* PRÓXIMOS TURNOS HOY */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <TodayNextAppointments appointments={activeAppointments} />
-        <TodayAlertCard appointments={activeAppointments} />
-      </div>
-
-      {/* DEUDAS */}
-      <button
-        onClick={() => router.push("/admin?pendientes=1")}
-        className="w-full text-left bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800 active:scale-[0.98] transition"
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-[#252525] rounded-2xl w-full max-w-sm p-5 pb-8 max-h-[70vh] overflow-y-auto mx-4"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={15} className="text-red-500" />
-            <p className="text-sm font-semibold dark:text-white">Deudas pendientes</p>
-          </div>
-          <span className="text-xs text-gray-400">{deudaList.length} turno{deudaList.length !== 1 && "s"}</span>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold dark:text-white">
+            {mode === "agendado" ? "A cobrar este mes" : "Cobrado este mes"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+          >
+            <X size={18} className="text-gray-400" />
+          </button>
         </div>
-        <p className="text-3xl font-bold mt-2 dark:text-white">{money(deudaTotal)}</p>
-        <p className="text-xs mt-1 text-red-500">Tocá para ver quiénes quedaron debiendo</p>
-      </button>
 
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => router.push("/admin")}
-          className="text-left bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800 active:scale-[0.98] transition"
-        >
-          <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
-            <Calendar size={15} className="text-black dark:text-white" />
-          </div>
-          <p className="text-xs text-gray-400">Turnos este mes</p>
-          <p className="text-3xl font-bold mt-0.5 dark:text-white">{currentMonthData.length}</p>
-          <p className="text-xs mt-1 text-gray-400">
-            {prevMonthData.length === 0 ? "Sin mes previo"
-              : `${currentMonthData.length > prevMonthData.length ? "↑" : "↓"} ${Math.abs(
-                  ((currentMonthData.length - prevMonthData.length) / prevMonthData.length) * 100
-                ).toFixed(0)}% vs mes anterior`}
+        {breakdown.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">
+            {mode === "agendado"
+              ? "Sin turnos pendientes este mes"
+              : "Sin datos este mes"}
           </p>
-        </button>
-        <button
-          onClick={() => router.push("/admin")}
-          className="text-left bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800 active:scale-[0.98] transition"
-        >
-          <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
-            <BarChart2 size={15} className="text-black dark:text-white" />
-          </div>
-          <p className="text-xs text-gray-400">Esta semana</p>
-          <p className="text-3xl font-bold mt-0.5 dark:text-white">{thisWeekData.length}</p>
-          <p className="text-xs mt-1 text-gray-400">
-            {weekVariation === null ? "Sin semana previa"
-              : `${weekVariation > 0 ? "↑" : "↓"} ${Math.abs(weekVariation).toFixed(0)}% vs semana ant.`}
-          </p>
-        </button>
-        <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
-          <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
-            <TrendingUp size={15} className="text-black dark:text-white" />
-          </div>
-          <p className="text-xs text-gray-400">Semana anterior</p>
-          <p className="text-3xl font-bold mt-0.5 dark:text-white">{lastWeekData.length}</p>
-          <p className="text-xs mt-1 text-gray-400">{(lastWeekData.length / 7).toFixed(1)} turnos / día</p>
-        </div>
-        <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
-          <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
-            <DollarSign size={15} className="text-black dark:text-white" />
-          </div>
-          <p className="text-xs text-gray-400">Total histórico</p>
-          <p className="text-xl font-bold mt-0.5 dark:text-white whitespace-nowrap">{money(totalCobrado)}</p>
-          <p className="text-xs mt-1 text-gray-400">
-            {activeAppointments.length} turnos{sinceLabel ? ` · desde ${sinceLabel}` : ""}
-          </p>
-        </div>
-      </div>
-
-      {/* GRÁFICOS MENSUALES */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold dark:text-white">Evolución mensual</h2>
-          {sinceLabel && (
-            <p className="text-xs text-gray-400 mt-0.5">Datos desde {sinceLabel}</p>
-          )}
-        </div>
-        <MonthlyIncomeChart
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          onSelectYear={(year) => {
-            setSelectedYear(year);
-            setSelectedMonth(null);
-          }}
-          onSelectMonth={setSelectedMonth}
-        />
-        <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
-          <MonthlyIncomeByServiceChart
-            data={appointments}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-          />
-        </div>
-      </div>
-
-      {/* CLIENTES FRECUENTES */}
-      <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
-        <div className="flex items-center gap-2 mb-3">
-          <Users size={15} className="text-gray-400" />
-          <p className="text-sm font-semibold dark:text-white">Clientes frecuentes</p>
-        </div>
-        {topClients.length === 0 ? (
-          <p className="text-sm text-gray-400">Sin datos</p>
         ) : (
           <div className="space-y-3">
-            {topClients.map(([clientName, count], i) => {
-              const clientId = clientMap.get(clientName.toLowerCase());
+            {breakdown.map((item) => {
+              const pct =
+                grandTotal > 0
+                  ? ((item.total / grandTotal) * 100).toFixed(0)
+                  : "0";
+              const isExpanded = expanded === item.name;
+
               return (
-                <button
-                  key={clientName}
-                  onClick={() => clientId && router.push(`/clients/${clientId}`)}
-                  disabled={!clientId}
-                  className="w-full flex justify-between items-center active:bg-gray-50 dark:active:bg-[#2a2a2a] rounded-xl px-1 py-1.5 transition disabled:opacity-100"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                      i === 0 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400" :
-                      i === 1 ? "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300" :
-                      i === 2 ? "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400" :
-                      "bg-gray-50 text-gray-400"
-                    }`}>
-                      {i + 1}
-                    </span>
-                    <span className="text-sm dark:text-gray-200">{clientName}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold dark:text-white">{count}</span>
-                    <span className="text-[10px] text-gray-400">turnos</span>
-                  </div>
-                </button>
+                <div key={item.name}>
+                  <button
+                    onClick={() => setExpanded(isExpanded ? null : item.name)}
+                    className="w-full text-left"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {isExpanded ? (
+                          <ChevronDown size={14} className="text-gray-400 shrink-0" />
+                        ) : (
+                          <ChevronRight size={14} className="text-gray-400 shrink-0" />
+                        )}
+                        <span className="text-sm font-medium dark:text-gray-200 truncate">
+                          {item.name}
+                        </span>
+                        <span className="text-xs text-gray-400 shrink-0">
+                          ×{item.count}
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold dark:text-white shrink-0 ml-3">
+                        {money(item.total)}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-black dark:bg-white rounded-full transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="mt-2 ml-4 pl-3 border-l border-gray-100 dark:border-gray-800 space-y-1">
+                      {item.items.map((it) => (
+                        <div
+                          key={it.paymentId}
+                          className="flex justify-between items-center py-1.5"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                              {it.clientName}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {format(it.date, "dd/MM")}
+                              {it.isDeposit && (
+                                <span className="text-amber-500"> (seña)</span>
+                              )}
+                            </p>
+                          </div>
+                          <span className="text-sm font-semibold dark:text-white shrink-0 ml-3">
+                            {money(it.amount)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
+
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-3 mt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold dark:text-gray-200">
+                  Total
+                </span>
+                <span className="text-base font-bold dark:text-white">
+                  {money(grandTotal)}
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                {format(new Date(), "MMMM yyyy", { locale: es })}
+              </p>
+            </div>
           </div>
         )}
       </div>
-
-      </div>
-
-      <IncomeModal
-        appointments={appointments}
-        open={showIncome}
-        onClose={() => setShowIncome(false)}
-        mode={incomeMode}
-      />
     </div>
   );
 }
