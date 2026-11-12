@@ -12,7 +12,6 @@ import {
   BarChart2,
   Plus,
   Sparkles,
-  Instagram,
   Settings,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -24,7 +23,6 @@ const tabs = [
   { href: "/clients", icon: Users, label: "Clientes" },
   { href: "/dashboard", icon: BarChart2, label: "Stats" },
   { href: "/services", icon: Sparkles, label: "Servicios" },
-  { href: "/historias", icon: Instagram, label: "Historias" },
 ];
 
 function getPageTitle(pathname: string) {
@@ -32,7 +30,6 @@ function getPageTitle(pathname: string) {
   if (pathname.startsWith("/admin")) return "Turnos";
   if (pathname.startsWith("/clients")) return "Clientes";
   if (pathname === "/dashboard") return "Dashboard";
-  if (pathname.startsWith("/historias")) return "Historias";
   if (pathname.startsWith("/services")) return "Servicios";
   if (pathname.startsWith("/appointments")) return "Nuevo turno";
   return "";
@@ -186,7 +183,7 @@ export default function Navbar() {
         <div className="relative flex items-stretch justify-around h-16">
           {/* Tabs izquierda */}
           <div className="flex flex-1">
-            {tabs.slice(0, 3).map((tab) => (
+            {tabs.slice(0, 2).map((tab) => (
               <NavTab key={tab.href} tab={tab} pathname={pathname} />
             ))}
           </div>
@@ -196,7 +193,7 @@ export default function Navbar() {
 
           {/* Tabs derecha */}
           <div className="flex flex-1">
-            {tabs.slice(3).map((tab) => (
+            {tabs.slice(2).map((tab) => (
               <NavTab key={tab.href} tab={tab} pathname={pathname} />
             ))}
           </div>
