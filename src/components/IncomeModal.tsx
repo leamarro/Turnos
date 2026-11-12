@@ -15,6 +15,7 @@ type Payment = {
 type Appointment = {
   id: string;
   date: string;
+  status?: string;
   name?: string;
   lastName?: string;
   service: { name: string; price?: number } | null;
@@ -65,6 +66,7 @@ export default function IncomeModal({
       const name = a.service?.name ?? "Sin servicio";
 
       if (mode === "agendado") {
+        if (a.status === "cancelled") return;
         const date = new Date(a.date);
         if (!isWithinInterval(date, monthInterval) || date < now) return;
         const total = a.servicePrice ?? a.service?.price ?? 0;
