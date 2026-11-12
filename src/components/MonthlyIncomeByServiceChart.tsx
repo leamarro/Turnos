@@ -1,107 +1,123 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
-import ChartTooltip from "@/components/ChartTooltip";
-import useIsDark from "@/lib/useIsDark";
+import { useMemo } from "react";
 
 type Appointment = {
   date: string;
-  service: { name: string; price?: number } | null;
+  service: { name: string; price?: number; color?: string } | null;
   servicePrice?: number | null;
   payments?: { amount: number; createdAt?: string | Date }[];
 };
 
-const COLORS = ["#111827", "#4B5563", "#9CA3AF", "#6B7280"];
-const DARK_COLORS = ["#e5e7eb", "#9ca3af", "#d1d5db", "#6b7280"];
+const money = (n: number) =>
+  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
+
+function monthLong(key: string) {
+  const [year, month] = key.split("-").map(Number);
+  const label = new Date(year, month - 1, 1).toLocaleDateString("es-AR", {
+    month: "long",
+    year: "numeric",
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
 
 export default function MonthlyIncomeByServiceChart({
   data,
-  selectedMonth = "all",
-  sinceLabel,
+  selectedYear,
+  selectedMonth,
 }: {
   data: Appointment[];
-  selectedMonth?: string;
-  sinceLabel?: string | null;
+  selectedYear: number;
+  selectedMonth: string | null;
 }) {
-  const [isMobile, setIsMobile] = useState(false);
-  const isDark = useIsDark();
+  const { chartData, total } = useMemo(() => {
+    const map = new Map<
+      string,
+      { name: string; color: string; total: number; count: number }
+    >();
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
+    data.forEach((appointment) => {
+      const name = appointment.service?.name ?? "Sin servicio";
+      const color = appointment.service?.color ?? "#6b7280";
 
-  const chartData = useMemo(() => {
-    const map = new Map<string, number>();
+      for (const payment of appointment.payments ?? []) {
+        const date = new Date(payment.createdAt ?? new Date());
+        const matches = selectedMonth
+          ? date.getFullYear() === selectedYear &&
+            date.getMonth() + 1 === Number(selectedMonth.slice(5, 7))
+          : date.getFullYear() === selectedYear;
 
-    data.forEach((a) => {
-      const name = a.service?.name ?? "Sin servicio";
+        if (!matches) continue;
 
-      for (const payment of a.payments ?? []) {
-        if (selectedMonth === "all") {
-          map.set(name, (map.get(name) ?? 0) + payment.amount);
-          continue;
-        }
-
-        const d = new Date(payment.createdAt ?? new Date());
-        const [year, month] = selectedMonth.split("-").map(Number);
-        if (d.getFullYear() === year && d.getMonth() + 1 === month) {
-          map.set(name, (map.get(name) ?? 0) + payment.amount);
-        }
+        const entry =
+          map.get(name) ?? { name, color, total: 0, count: 0 };
+        entry.total += payment.amount;
+        entry.count += 1;
+        map.set(name, entry);
       }
     });
 
-    return Array.from(map.entries()).map(([name, total]) => ({
-      name,
-      total,
-    }));
-  }, [data, selectedMonth]);
+    const list = [...map.values()]
+      .filter((entry) => entry.total > 0)
+      .sort((a, b) => b.total - a.total);
 
-  if (chartData.length === 0) {
-    return (
-      <p className="text-sm text-gray-500 text-center py-10">
-        No hay datos para este mes
-      </p>
-    );
-  }
+    return {
+      chartData: list,
+      total: list.reduce((sum, entry) => sum + entry.total, 0),
+    };
+  }, [data, selectedYear, selectedMonth]);
+
+  const periodLabel = selectedMonth
+    ? monthLong(selectedMonth)
+    : `Año ${selectedYear}`;
 
   return (
-    <div className="w-full h-[260px]">
-      {sinceLabel && selectedMonth === "all" && (
-        <p className="text-xs text-gray-400 mb-3 -mt-1">desde {sinceLabel}</p>
+    <div>
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <p className="text-sm font-semibold dark:text-white">
+          Ingresos por servicio
+        </p>
+        <span className="text-[10px] text-gray-400 shrink-0">
+          {periodLabel}
+        </span>
+      </div>
+
+      {chartData.length === 0 ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+          Sin ingresos en {periodLabel.toLowerCase()}
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {chartData.map((item) => {
+            const pct = total > 0 ? (item.total / total) * 100 : 0;
+
+            return (
+              <div key={item.name}>
+                <div className="flex items-baseline justify-between gap-3 mb-1">
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                    {item.name}
+                    <span className="ml-1.5 text-[10px] text-gray-400">
+                      ×{item.count}
+                    </span>
+                  </span>
+                  <span className="text-xs font-semibold tabular-nums text-gray-900 dark:text-white shrink-0">
+                    {money(item.total)}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.max(pct, 1)}%`,
+                      backgroundColor: item.color,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} accessibilityLayer={false}>
-          <XAxis
-            dataKey="name"
-            tick={{ fontSize: 12 }}
-            interval={0}
-          />
-
-          {/* 🔥 ocultamos Y en mobile */}
-          {!isMobile && <YAxis />}
-
-          {/* tooltip solo aparece al tocar */}
-          <Tooltip content={<ChartTooltip />} cursor={false} />
-
-          <Bar dataKey="total" radius={[8, 8, 0, 0]} animationDuration={300} activeBar={false}>
-            {chartData.map((_, i) => (
-              <Cell key={i} fill={(isDark ? DARK_COLORS : COLORS)[i % COLORS.length]} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
     </div>
   );
 }
