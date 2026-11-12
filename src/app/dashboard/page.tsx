@@ -13,7 +13,6 @@ import TodayNextAppointments from "@/components/TodayNextAppointments";
 import TodayAlertCard from "@/components/TodayAlertCard";
 import MonthlyIncomeChart from "@/components/MonthlyIncomeChart";
 import MonthlyIncomeByServiceChart from "@/components/MonthlyIncomeByServiceChart";
-import MonthlyTrendSparkline from "@/components/MonthlyTrendSparkline";
 import { incomeInInterval } from "@/lib/income";
 import IncomeModal from "@/components/IncomeModal";
 
@@ -29,6 +28,8 @@ export default function DashboardPage() {
   const [showIncome, setShowIncome] = useState(false);
   const [incomeMode, setIncomeMode] = useState<"cobrado" | "agendado">("cobrado");
   const [clientMap, setClientMap] = useState<Map<string, string>>(new Map());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -373,11 +374,21 @@ export default function DashboardPage() {
             <p className="text-xs text-gray-400 mt-0.5">Datos desde {sinceLabel}</p>
           )}
         </div>
-        <MonthlyTrendSparkline data={appointments} />
-        <MonthlyIncomeChart sinceLabel={sinceLabel} />
+        <MonthlyIncomeChart
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          onSelectYear={(year) => {
+            setSelectedYear(year);
+            setSelectedMonth(null);
+          }}
+          onSelectMonth={setSelectedMonth}
+        />
         <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
-          <p className="text-sm font-semibold mb-3 dark:text-white">Ingresos por servicio</p>
-          <MonthlyIncomeByServiceChart data={appointments} sinceLabel={sinceLabel} />
+          <MonthlyIncomeByServiceChart
+            data={appointments}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+          />
         </div>
       </div>
 
