@@ -35,8 +35,8 @@ export default function TodayNextAppointments({
 
   if (list.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <p className="text-sm text-gray-500">
+      <div className="bg-white dark:bg-[#252525] rounded-2xl p-5 shadow-sm dark:border dark:border-gray-800">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           No hay más turnos hoy
         </p>
       </div>
@@ -44,8 +44,8 @@ export default function TodayNextAppointments({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm space-y-3">
-      <p className="text-xs text-gray-500">
+    <div className="bg-white dark:bg-[#252525] rounded-2xl p-5 shadow-sm space-y-3 dark:border dark:border-gray-800">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         Próximos turnos hoy
       </p>
 
@@ -55,15 +55,15 @@ export default function TodayNextAppointments({
           className="flex items-center justify-between"
         >
           <div>
-            <p className="text-sm font-medium">
+            <p className="text-sm font-medium text-gray-900 dark:text-white">
               {a.name} {a.lastName}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {a.service?.name}
             </p>
           </div>
 
-          <p className="text-sm font-semibold tabular-nums">
+          <p className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
             {format(new Date(a.date), "HH:mm")}
           </p>
         </div>
