@@ -119,14 +119,19 @@ export async function GET(
   }
 
   // Calculate aggregated stats
+  const activeAppointments = appointments.filter(
+    (a) => a.status !== "cancelled"
+  );
+
   const serviceCount = new Map<string, { name: string; count: number }>();
   let totalSpent = 0;
 
   for (const a of appointments) {
     const appPayments = paymentMap.get(a.id) || [];
-    const paid = appPayments.reduce((acc, p) => acc + p.amount, 0);
-    totalSpent += paid;
+    totalSpent += appPayments.reduce((acc, p) => acc + p.amount, 0);
+  }
 
+  for (const a of activeAppointments) {
     const svcName = a.service?.name || "Sin servicio";
     const existing = serviceCount.get(svcName);
     if (existing) {
@@ -148,9 +153,9 @@ export async function GET(
     telefono: first.telefono ?? null,
     instagram: first.instagram ?? null,
     totalSpent,
-    totalAppointments: appointments.length,
+    totalAppointments: activeAppointments.length,
     topServices: topServices.slice(0, 3),
-    lastAppointment: appointments[0]?.date ?? null,
+    lastAppointment: activeAppointments[0]?.date ?? null,
     appointments: appointments.map((a) => ({
       id: a.id,
       date: a.date,
