@@ -97,13 +97,13 @@ export default function EmptyState({ variant, title, subtitle, action }: EmptySt
       <h3 className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">
         {title ?? config.defaultTitle}
       </h3>
-      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 text-center max-w-xs">
+      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-center max-w-xs">
         {subtitle ?? config.defaultSubtitle}
       </p>
       {action && (
         <button
           onClick={action.onClick}
-          className="mt-4 bg-black text-white text-sm font-medium px-5 py-2.5 rounded-xl active:scale-95 transition"
+          className="mt-4 bg-brand text-brand-contrast text-sm font-medium px-5 py-2.5 rounded-xl active:scale-95 transition"
         >
           {action.label}
         </button>
