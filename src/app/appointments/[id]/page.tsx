@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   MessageCircle,
 } from "lucide-react";
+import { formatMoney } from "@/lib/format";
 
 type Service = {
   id: string;
@@ -105,7 +106,7 @@ export default function EditAppointmentPage({
   if (!appointment) {
     return (
       <div className="flex items-center justify-center h-40">
-        <p className="text-sm text-gray-400">Cargando…</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Cargando…</p>
       </div>
     );
   }
@@ -228,7 +229,7 @@ export default function EditAppointmentPage({
       {/* Back */}
       <button
         onClick={() => router.push("/admin")}
-        className="flex items-center gap-1 text-sm text-gray-500 mb-4 -ml-1"
+        className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-4 -ml-1"
       >
         <ChevronLeft size={16} />
         Turnos
@@ -239,7 +240,7 @@ export default function EditAppointmentPage({
       <div className="space-y-4">
         {/* DATOS PERSONALES */}
         <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
-          <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Cliente</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Cliente</p>
           <Field icon={<User size={15} />} label="Nombre">
             <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
           </Field>
@@ -259,7 +260,7 @@ export default function EditAppointmentPage({
 
         {/* TURNO */}
         <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
-          <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Turno</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Turno</p>
           <Field icon={<Sparkles size={15} />} label="Servicio">
             <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input">
               <option value="">Seleccionar servicio</option>
@@ -279,12 +280,12 @@ export default function EditAppointmentPage({
         {/* ESTADO */}
         <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Estado</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Estado</p>
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-              status === "completed" ? "bg-gray-100 text-gray-600" :
-              status === "cancelled" ? "bg-red-50 text-red-500" :
-              status === "confirmed" ? "bg-green-50 text-green-600" :
-              "bg-yellow-50 text-yellow-600"
+              status === "completed" ? "bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300" :
+              status === "cancelled" ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400" :
+              status === "confirmed" ? "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400" :
+              "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400"
             }`}>
               {status === "completed" ? "Realizado" :
                status === "cancelled" ? "Cancelado" :
@@ -294,7 +295,7 @@ export default function EditAppointmentPage({
           {(status === "confirmed" || status === "pending") && (
             <button
               onClick={() => handleQuickStatus("completed")}
-              className="w-full py-2.5 rounded-xl bg-black text-white text-sm font-medium active:opacity-80 transition"
+              className="w-full py-2.5 rounded-xl bg-brand text-brand-contrast text-sm font-medium active:opacity-80 transition"
             >
               Realizado ✓
             </button>
@@ -304,7 +305,7 @@ export default function EditAppointmentPage({
         {/* CONTACTAR */}
         {(telefono || instagram) && (
           <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-3 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Contactar</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Contactar</p>
             {telefono && (
               <div className="flex gap-2">
                 <button
@@ -323,7 +324,7 @@ export default function EditAppointmentPage({
                 </button>
                 <button
                   onClick={handleConfirmWhatsapp}
-                  className="flex-1 flex items-center justify-center gap-2 bg-black text-white py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
+                  className="flex-1 flex items-center justify-center gap-2 bg-brand text-brand-contrast py-2.5 rounded-xl text-sm font-medium active:opacity-80 transition"
                 >
                   <MessageCircle size={15} />
                   Confirmar
@@ -344,40 +345,40 @@ export default function EditAppointmentPage({
 
         {/* PAGOS */}
         <section className="bg-white dark:bg-[#252525] rounded-2xl p-4 space-y-3 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
-          <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Pagos</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Pagos</p>
 
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Total servicio</span>
+            <span className="text-gray-500 dark:text-gray-400">Total servicio</span>
             <div className="flex items-center gap-2">
               {precioCambio && (
-                <span className="text-gray-300 line-through text-xs">${precioOriginal}</span>
+                <span className="text-gray-300 dark:text-gray-500 line-through text-xs">{formatMoney(precioOriginal)}</span>
               )}
-              <span className="font-medium">${totalServicio}</span>
+              <span className="font-medium">{formatMoney(totalServicio)}</span>
             </div>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Pagado</span>
-            <span className="font-medium text-green-600">${totalPagado}</span>
+            <span className="text-gray-500 dark:text-gray-400">Pagado</span>
+            <span className="font-medium text-green-600 dark:text-green-400">{formatMoney(totalPagado)}</span>
           </div>
           {restante > 0 && (
             <div className="flex justify-between text-sm border-t pt-2">
-              <span className="text-gray-500">Restante</span>
-              <span className="font-semibold text-red-500">${restante}</span>
+              <span className="text-gray-500 dark:text-gray-400">Restante</span>
+              <span className="font-semibold text-red-500 dark:text-red-400">{formatMoney(restante)}</span>
             </div>
           )}
           {restante === 0 && totalServicio > 0 && (
-            <p className="text-sm text-green-600 font-medium text-center">Pago completo ✓</p>
+            <p className="text-sm text-green-600 dark:text-green-400 font-medium text-center">Pago completo ✓</p>
           )}
 
           {pagosVisibles.length > 0 && (
             <div className="space-y-1.5 border-t pt-2">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Historial de pagos</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Historial de pagos</p>
               {pagosVisibles.map((p) => (
-                <div key={p.id} className="flex justify-between text-xs text-gray-500">
+                <div key={p.id} className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                   <span>
                     {p.createdAt ? format(new Date(p.createdAt), "dd/MM/yyyy", { locale: es }) : "—"}
                   </span>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">${p.amount}</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{formatMoney(p.amount)}</span>
                 </div>
               ))}
             </div>
@@ -397,7 +398,7 @@ export default function EditAppointmentPage({
 
               <button
                 onClick={handleAddDeposit}
-                className="w-full bg-gray-100 text-gray-800 py-2.5 rounded-xl text-sm font-medium"
+                className="w-full bg-gray-100 dark:bg-[#333] text-gray-800 dark:text-gray-100 py-2.5 rounded-xl text-sm font-medium"
               >
                 Registrar seña
               </button>
@@ -405,15 +406,15 @@ export default function EditAppointmentPage({
           )}
 
           {restante > 0 && (
-            <button onClick={handleCompletePayment} className="w-full bg-green-600 text-white py-2.5 rounded-xl text-sm font-medium">
-              Cobrar el resto (${restante})
+            <button onClick={handleCompletePayment} className="w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium">
+              Cobrar el resto ({formatMoney(restante)})
             </button>
           )}
 
           {pagoCompleto && totalServicio > 0 && (
             <button
               onClick={handleMarkUnpaid}
-              className="w-full border border-red-200 text-red-500 py-2.5 rounded-xl text-sm font-medium"
+              className="w-full border border-red-200 dark:border-red-900 text-red-500 dark:text-red-400 py-2.5 rounded-xl text-sm font-medium"
             >
               Marcar como no pagado
             </button>
@@ -424,14 +425,14 @@ export default function EditAppointmentPage({
         <div className="flex gap-3 pb-2">
           <button
             onClick={handleDelete}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-red-200 text-red-500 flex-1 text-sm"
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-red-200 dark:border-red-900 text-red-500 dark:text-red-400 flex-1 text-sm"
           >
             <Trash2 size={15} />
             Eliminar
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-black text-white flex-1 text-sm font-medium"
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand text-brand-contrast flex-1 text-sm font-medium"
           >
             <Save size={15} />
             Guardar
@@ -453,7 +454,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1 w-full">
-      <label className="flex items-center gap-1.5 text-xs text-gray-400">
+      <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
         {icon}
         {label}
       </label>
