@@ -14,13 +14,11 @@ import TodayAlertCard from "@/components/TodayAlertCard";
 import MonthlyIncomeChart from "@/components/MonthlyIncomeChart";
 import MonthlyIncomeByServiceChart from "@/components/MonthlyIncomeByServiceChart";
 import { incomeInInterval } from "@/lib/income";
+import { formatMoney as money } from "@/lib/format";
 import IncomeModal from "@/components/IncomeModal";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Appointment = any;
-
-const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -161,7 +159,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#1a1a1a] px-4 pt-4 pb-6 animate-pulse">
+      <div className="min-h-screen bg-[var(--bg-primary)] px-4 pt-4 pb-6 animate-pulse">
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div className="h-8 w-36 bg-gray-200 dark:bg-[#333] rounded-lg" />
@@ -189,7 +187,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#1a1a1a] px-4 pt-4 pb-6">
+    <div className="min-h-screen bg-[var(--bg-primary)] px-4 pt-4 pb-6">
       <div className="max-w-6xl mx-auto space-y-6">
 
       {/* HEADER */}
@@ -208,7 +206,7 @@ export default function DashboardPage() {
       </div>
 
       {/* CARD PRINCIPAL — ingresos */}
-      <div className="w-full text-left bg-black text-white rounded-2xl p-5 overflow-hidden relative">
+      <div className="w-full text-left bg-black text-white rounded-2xl p-5 overflow-hidden relative dark:bg-[#252525] dark:border dark:border-gray-800">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="relative z-10">
           <button
@@ -217,7 +215,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs text-white/60 uppercase tracking-wide">Ingresos</p>
-              <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full">
+              <span className="text-[10px] bg-brand text-brand-contrast px-2 py-1 rounded-full">
                 día {daysElapsed}/{daysInMonth}
               </span>
             </div>
@@ -257,7 +255,7 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-white rounded-full transition-all duration-500"
+              className="h-full bg-brand rounded-full transition-all duration-500"
               style={{ width: `${Math.min(monthProgress, 100)}%` }}
             />
           </div>
@@ -283,10 +281,10 @@ export default function DashboardPage() {
             <AlertTriangle size={15} className="text-red-500" />
             <p className="text-sm font-semibold dark:text-white">Deudas pendientes</p>
           </div>
-          <span className="text-xs text-gray-400">{deudaList.length} turno{deudaList.length !== 1 && "s"}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">{deudaList.length} turno{deudaList.length !== 1 && "s"}</span>
         </div>
         <p className="text-3xl font-bold mt-2 dark:text-white">{money(deudaTotal)}</p>
-        <p className="text-xs mt-1 text-red-500">Tocá para ver quiénes quedaron debiendo</p>
+        <p className="text-xs mt-1 text-red-500 dark:text-red-400">Tocá para ver quiénes quedaron debiendo</p>
       </button>
 
       {/* KPI CARDS */}
@@ -298,9 +296,9 @@ export default function DashboardPage() {
           <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
             <Calendar size={15} className="text-black dark:text-white" />
           </div>
-          <p className="text-xs text-gray-400">Turnos este mes</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Turnos este mes</p>
           <p className="text-3xl font-bold mt-0.5 dark:text-white">{currentMonthData.length}</p>
-          <p className="text-xs mt-1 text-gray-400">
+          <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">
             {prevMonthData.length === 0 ? "Sin mes previo"
               : `${currentMonthData.length > prevMonthData.length ? "↑" : "↓"} ${Math.abs(
                   ((currentMonthData.length - prevMonthData.length) / prevMonthData.length) * 100
@@ -314,9 +312,9 @@ export default function DashboardPage() {
           <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
             <BarChart2 size={15} className="text-black dark:text-white" />
           </div>
-          <p className="text-xs text-gray-400">Esta semana</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Esta semana</p>
           <p className="text-3xl font-bold mt-0.5 dark:text-white">{thisWeekData.length}</p>
-          <p className="text-xs mt-1 text-gray-400">
+          <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">
             {weekVariation === null ? "Sin semana previa"
               : `${weekVariation > 0 ? "↑" : "↓"} ${Math.abs(weekVariation).toFixed(0)}% vs semana ant.`}
           </p>
@@ -325,17 +323,17 @@ export default function DashboardPage() {
           <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
             <TrendingUp size={15} className="text-black dark:text-white" />
           </div>
-          <p className="text-xs text-gray-400">Semana anterior</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Semana anterior</p>
           <p className="text-3xl font-bold mt-0.5 dark:text-white">{lastWeekData.length}</p>
-          <p className="text-xs mt-1 text-gray-400">{(lastWeekData.length / 7).toFixed(1)} turnos / día</p>
+          <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">{(lastWeekData.length / 7).toFixed(1)} turnos / día</p>
         </div>
         <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
           <div className="w-8 h-8 bg-black/5 dark:bg-white/10 rounded-xl flex items-center justify-center mb-2">
             <DollarSign size={15} className="text-black dark:text-white" />
           </div>
-          <p className="text-xs text-gray-400">Total histórico</p>
-          <p className="text-xl font-bold mt-0.5 dark:text-white whitespace-nowrap">{money(totalCobrado)}</p>
-          <p className="text-xs mt-1 text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Total histórico</p>
+          <p className="text-2xl sm:text-3xl font-bold mt-0.5 dark:text-white whitespace-nowrap">{money(totalCobrado)}</p>
+          <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">
             {activeAppointments.length} turnos{sinceLabel ? ` · desde ${sinceLabel}` : ""}
           </p>
         </div>
@@ -346,7 +344,7 @@ export default function DashboardPage() {
         <div>
           <h2 className="text-lg font-semibold dark:text-white">Evolución mensual</h2>
           {sinceLabel && (
-            <p className="text-xs text-gray-400 mt-0.5">Datos desde {sinceLabel}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Datos desde {sinceLabel}</p>
           )}
         </div>
         <MonthlyIncomeChart
@@ -370,11 +368,11 @@ export default function DashboardPage() {
       {/* CLIENTES FRECUENTES */}
       <div className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:border dark:border-gray-800">
         <div className="flex items-center gap-2 mb-3">
-          <Users size={15} className="text-gray-400" />
+          <Users size={15} className="text-gray-500 dark:text-gray-400" />
           <p className="text-sm font-semibold dark:text-white">Clientes frecuentes</p>
         </div>
         {topClients.length === 0 ? (
-          <p className="text-sm text-gray-400">Sin datos</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Sin datos</p>
         ) : (
           <div className="space-y-3">
             {topClients.map(([clientName, count], i) => {
@@ -391,7 +389,7 @@ export default function DashboardPage() {
                       i === 0 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400" :
                       i === 1 ? "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300" :
                       i === 2 ? "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400" :
-                      "bg-gray-50 text-gray-400"
+                      "bg-gray-50 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
                     }`}>
                       {i + 1}
                     </span>
@@ -399,7 +397,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-semibold dark:text-white">{count}</span>
-                    <span className="text-[10px] text-gray-400">turnos</span>
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400">turnos</span>
                   </div>
                 </button>
               );
