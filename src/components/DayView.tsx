@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format, addDays, startOfDay, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { formatMoney as money } from "@/lib/format";
 
 type Payment = {
   amount: number;
@@ -19,9 +20,6 @@ type Appointment = {
   servicePrice?: number | null;
   payments?: Payment[];
 };
-
-const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 function gapMinutes(a: Appointment, b: Appointment) {
   return (
@@ -50,26 +48,26 @@ export default function DayView({
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={() => setDay((d) => addDays(d, -1))}
-          className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition"
+          className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 transition"
         >
-          <ChevronLeft size={20} className="text-gray-500" />
+          <ChevronLeft size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
 
         <div className="text-center">
           <p className="text-base font-semibold capitalize">
             {format(day, "EEEE d", { locale: es })}
-            {isToday && <span className="text-black bg-gray-100 dark:bg-gray-800 text-[10px] ml-2 px-2 py-0.5 rounded-full font-medium">Hoy</span>}
+            {isToday && <span className="text-brand-text bg-brand-soft text-[10px] ml-2 px-2 py-0.5 rounded-full font-medium">Hoy</span>}
           </p>
-          <p className="text-xs text-gray-400 capitalize">
+          <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
             {format(day, "MMMM yyyy", { locale: es })}
           </p>
         </div>
 
         <button
           onClick={() => setDay((d) => addDays(d, 1))}
-          className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition"
+          className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 transition"
         >
-          <ChevronRight size={20} className="text-gray-500" />
+          <ChevronRight size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
       </div>
 
@@ -77,7 +75,7 @@ export default function DayView({
         <div className="flex justify-center mb-3">
           <button
             onClick={() => setDay(today)}
-            className="text-xs px-3 py-1 rounded-full border border-gray-300 text-gray-500 active:bg-gray-100 transition"
+            className="text-xs px-3 py-1 rounded-full border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition"
           >
             Volver a hoy
           </button>
@@ -87,7 +85,7 @@ export default function DayView({
       {/* Timeline */}
       <div className="bg-white dark:bg-[#252525] rounded-2xl overflow-hidden shadow-sm dark:border dark:border-gray-800 relative">
         {dayAppts.length === 0 ? (
-          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
             Sin turnos este día
           </p>
         ) : (
@@ -126,7 +124,7 @@ export default function DayView({
                           <p className="text-sm font-medium leading-tight">
                             {appt.name} {appt.lastName}
                           </p>
-                          <p className="text-xs mt-0.5 text-gray-400">
+                          <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
                             {appt.service.name}
                           </p>
                         </div>
