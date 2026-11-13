@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { formatMoney as money } from "@/lib/format";
 
 type Appointment = {
   date: string;
@@ -8,9 +9,6 @@ type Appointment = {
   servicePrice?: number | null;
   payments?: { amount: number; createdAt?: string | Date }[];
 };
-
-const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 function monthLong(key: string) {
   const [year, month] = key.split("-").map(Number);
@@ -77,7 +75,7 @@ export default function MonthlyIncomeByServiceChart({
         <p className="text-sm font-semibold dark:text-white">
           Ingresos por servicio
         </p>
-        <span className="text-[10px] text-gray-400 shrink-0">
+        <span className="text-[10px] text-gray-500 dark:text-gray-400 shrink-0">
           {periodLabel}
         </span>
       </div>
@@ -96,7 +94,7 @@ export default function MonthlyIncomeByServiceChart({
                 <div className="flex items-baseline justify-between gap-3 mb-1">
                   <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
                     {item.name}
-                    <span className="ml-1.5 text-[10px] text-gray-400">
+                    <span className="ml-1.5 text-[10px] text-gray-500 dark:text-gray-400">
                       ×{item.count}
                     </span>
                   </span>
