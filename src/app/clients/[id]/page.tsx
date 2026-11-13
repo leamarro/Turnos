@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { DollarSign, Calendar, Sparkles, Trash2, Phone, Instagram, ChevronLeft } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
+import { formatMoney } from "@/lib/format";
 
 type Appointment = {
   id: string;
@@ -77,11 +78,11 @@ export default function ClientDetail({
     }
   }
 
-  if (loading) return <p className="p-6 text-gray-500">Cargando...</p>;
+  if (loading) return <p className="p-6 text-gray-500 dark:text-gray-400">Cargando...</p>;
 
   if (error) {
     return (
-      <p className="p-6 text-red-600">
+      <p className="p-6 text-red-600 dark:text-red-400">
         {error}
       </p>
     );
@@ -93,7 +94,7 @@ export default function ClientDetail({
     <div className="max-w-3xl mx-auto px-4 py-6">
       <button
         onClick={() => router.push("/clients")}
-        className="flex items-center gap-1 text-sm text-gray-500 mb-3 -ml-1"
+        className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-3 -ml-1"
       >
         <ChevronLeft size={16} />
         Clientes
@@ -116,20 +117,20 @@ export default function ClientDetail({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="bg-white dark:bg-[#252525] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800">
           <DollarSign size={16} className="text-green-500 mb-1" />
-          <p className="text-lg font-bold">${client.totalSpent.toLocaleString()}</p>
-          <p className="text-xs text-gray-400">Gastado</p>
+          <p className="text-lg font-bold">{formatMoney(client.totalSpent)}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Gastado</p>
         </div>
         <div className="bg-white dark:bg-[#252525] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800">
           <Calendar size={16} className="text-blue-500 mb-1" />
           <p className="text-lg font-bold">{client.totalAppointments}</p>
-          <p className="text-xs text-gray-400">Turnos</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Turnos</p>
         </div>
         <div className="bg-white dark:bg-[#252525] rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-800 col-span-2">
           <Sparkles size={16} className="text-purple-500 mb-1" />
           <p className="text-sm font-medium truncate">
             {client.topServices[0]?.name || "—"}
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {client.topServices[0]
               ? `${client.topServices[0].count} turnos · más frecuente`
               : "Sin servicios"}
@@ -140,7 +141,7 @@ export default function ClientDetail({
       {/* TOP SERVICES */}
       {client.topServices.length > 1 && (
         <div className="mb-6">
-          <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
             Servicios más frecuentes
           </h3>
           <div className="space-y-1.5">
@@ -152,7 +153,7 @@ export default function ClientDetail({
                 <span>
                   {i + 1}. {s.name}
                 </span>
-                <span className="text-gray-400">{s.count} turno{s.count > 1 ? "s" : ""}</span>
+                <span className="text-gray-500 dark:text-gray-400">{s.count} turno{s.count > 1 ? "s" : ""}</span>
               </div>
             ))}
           </div>
@@ -176,7 +177,7 @@ export default function ClientDetail({
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {format(new Date(a.date), "d MMM yyyy, HH:mm", { locale: es })}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {a.status === "completed" ? "Realizado" :
                  a.status === "cancelled" ? "Cancelado" :
                  a.status === "confirmed" ? "Confirmado" : "Pendiente"}
@@ -189,7 +190,7 @@ export default function ClientDetail({
       <button
         onClick={handleDelete}
         disabled={deleting}
-        className="w-full mt-6 flex items-center justify-center gap-1.5 text-sm text-red-500 border border-red-200 dark:border-red-900/50 px-4 py-3 rounded-xl disabled:opacity-50 active:bg-red-50 dark:active:bg-red-900/20 transition"
+        className="w-full mt-6 flex items-center justify-center gap-1.5 text-sm text-red-500 dark:text-red-400 border border-red-200 dark:border-red-900/50 px-4 py-3 rounded-xl disabled:opacity-50 active:bg-red-50 dark:active:bg-red-900/20 transition"
       >
         <Trash2 size={14} />
         {deleting ? "Borrando..." : "Borrar cliente y todos sus turnos"}
