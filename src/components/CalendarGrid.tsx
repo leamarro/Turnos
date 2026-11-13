@@ -67,8 +67,8 @@ export default function CalendarGrid({
       <div className="relative space-y-3 mt-2 pt-1 pb-4">
         {/* Navegación */}
         <div className="flex items-center justify-between">
-          <button onClick={prev} className="p-2 active:bg-gray-100 rounded-full transition">
-            <ChevronLeft size={20} className="text-gray-500" />
+          <button onClick={prev} className="p-2 active:bg-gray-100 dark:active:bg-gray-800 rounded-full transition">
+              <ChevronLeft size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
           <div className="flex items-center gap-2">
             <h2 className="font-semibold capitalize">
@@ -76,13 +76,13 @@ export default function CalendarGrid({
             </h2>
             <button
               onClick={goToday}
-              className="text-xs px-2.5 py-1 rounded-full bg-black text-white font-medium active:scale-95 transition"
+              className="text-xs px-2.5 py-1 rounded-full bg-brand text-brand-contrast font-medium active:scale-95 transition"
             >
               Hoy
             </button>
           </div>
-          <button onClick={next} className="p-2 active:bg-gray-100 rounded-full transition">
-            <ChevronRight size={20} className="text-gray-500" />
+          <button onClick={next} className="p-2 active:bg-gray-100 dark:active:bg-gray-800 rounded-full transition">
+              <ChevronRight size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -91,7 +91,7 @@ export default function CalendarGrid({
           <button
             onClick={() => setShowPastDays((v) => !v)}
             className={`text-xs px-3 py-1.5 rounded-full border transition active:scale-95 ${
-              showPastDays ? "bg-black text-white border-black" : "border-gray-300 text-gray-600"
+              showPastDays ? "bg-brand text-brand-contrast border-brand" : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300"
             }`}
           >
             {showPastDays ? "Ocultar días anteriores" : "Ver días anteriores"}
@@ -107,13 +107,13 @@ export default function CalendarGrid({
           return (
             <div
               key={day.toISOString()}
-              className={`bg-white rounded-2xl p-4 shadow-sm ${isPast ? "opacity-50" : ""}`}
+              className={`bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800 ${isPast ? "opacity-50" : ""}`}
             >
               <h3 className="flex items-center gap-2 font-medium mb-3 capitalize">
-                <span className="text-gray-600">{format(day, "EEEE", { locale: es })}</span>
+                <span className="text-gray-600 dark:text-gray-300">{format(day, "EEEE", { locale: es })}</span>
                 <span
                   className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-semibold ${
-                    isToday ? "bg-black text-white" : "text-gray-700"
+                    isToday ? "bg-brand text-brand-contrast" : "text-gray-700 dark:text-gray-300"
                   }`}
                 >
                   {format(day, "d")}
@@ -121,14 +121,14 @@ export default function CalendarGrid({
               </h3>
 
               {items.length === 0 ? (
-                <p className="text-sm text-gray-400 italic">Sin turnos</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">Sin turnos</p>
               ) : (
                 <div className="space-y-2">
                   {items.map((a) => (
                     <div
                       key={a.id}
                       onClick={() => onSelectAppointment?.(a.id)}
-                      className="bg-gray-50 rounded-xl px-3 py-3 cursor-pointer active:bg-gray-100 transition overflow-hidden relative"
+                      className="bg-gray-50 dark:bg-[#2a2a2a] rounded-xl px-3 py-3 cursor-pointer active:bg-gray-100 dark:active:bg-[#333] transition overflow-hidden relative"
                     >
                       <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ backgroundColor: a.service.color || "#000000" }} />
                       <div className="flex justify-between items-center pl-2">
@@ -136,9 +136,9 @@ export default function CalendarGrid({
                           <p className="text-sm font-medium">
                             {a.user.name} {a.user.lastName}
                           </p>
-                          <p className="text-xs text-gray-500">{a.service.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{a.service.name}</p>
                         </div>
-                        <p className="text-sm font-bold tabular-nums text-gray-700">
+                        <p className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-200">
                           {format(new Date(a.date), "HH:mm")}
                         </p>
                       </div>
@@ -165,21 +165,21 @@ export default function CalendarGrid({
   return (
     <div className="relative space-y-4 mt-4">
       <div className="flex items-center justify-between">
-        <button onClick={prev} className="text-gray-500 hover:text-black text-lg px-2">←</button>
+        <button onClick={prev} className="text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white text-lg px-2">←</button>
         <h2 className="font-semibold capitalize text-lg">
           {format(currentDate, "MMMM yyyy", { locale: es })}
         </h2>
         <div className="flex items-center gap-3">
-          <button onClick={goToday} className="text-xs px-3 py-1.5 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition">
+          <button onClick={goToday} className="text-xs px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
             Hoy
           </button>
-          <button onClick={next} className="text-gray-500 hover:text-black text-lg px-2">→</button>
+          <button onClick={next} className="text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white text-lg px-2">→</button>
         </div>
       </div>
 
       <div className="grid grid-cols-7 gap-2">
         {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map((d) => (
-          <div key={d} className="text-center text-xs font-medium text-gray-500 uppercase tracking-wide py-1">{d}</div>
+          <div key={d} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide py-1">{d}</div>
         ))}
       </div>
 
@@ -192,18 +192,18 @@ export default function CalendarGrid({
           const isToday = format(day, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
           const isPast = day < today;
           return (
-            <div key={day.toISOString()} className={`min-h-[100px] rounded-xl p-2 border transition ${isToday ? "bg-white border-black shadow-sm" : isPast ? "bg-gray-50 border-gray-100 opacity-60" : "bg-white border-gray-200 hover:border-gray-400"}`}>
-              <span className={`text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full mb-1 ${isToday ? "bg-black text-white" : "text-gray-700"}`}>
+            <div key={day.toISOString()} className={`min-h-[100px] rounded-xl p-2 border transition ${isToday ? "bg-white dark:bg-[#252525] border-brand shadow-sm dark:shadow-none" : isPast ? "bg-gray-50 dark:bg-[#222] border-gray-100 dark:border-gray-800 opacity-60" : "bg-white dark:bg-[#252525] border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600"}`}>
+              <span className={`text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full mb-1 ${isToday ? "bg-brand text-brand-contrast" : "text-gray-700 dark:text-gray-300"}`}>
                 {format(day, "d")}
               </span>
               <div className="space-y-1">
                 {items.slice(0, 3).map((a) => (
-                  <div key={a.id} onClick={() => onSelectAppointment?.(a.id)} className="text-[11px] rounded-md px-1.5 py-1 cursor-pointer hover:opacity-80 transition truncate flex items-center gap-1" title={`${a.user.name} ${a.user.lastName}`} style={{ backgroundColor: a.service.color ? `${a.service.color}20` : "#f3f4f6", borderLeft: `3px solid ${a.service.color || "#000000"}` }}>
+                  <div key={a.id} onClick={() => onSelectAppointment?.(a.id)} className="text-[11px] rounded-md px-1.5 py-1 cursor-pointer hover:opacity-80 transition truncate flex items-center gap-1 bg-gray-100 dark:bg-[#2a2a2a]" title={`${a.user.name} ${a.user.lastName}`} style={{ backgroundColor: a.service.color ? `${a.service.color}20` : undefined, borderLeft: `3px solid ${a.service.color || "#000000"}` }}>
                     <span className="font-medium">{format(new Date(a.date), "HH:mm")}</span>{" "}
-                    <span className="text-gray-600">{a.user.name}</span>
+                    <span className="text-gray-600 dark:text-gray-300">{a.user.name}</span>
                   </div>
                 ))}
-                {items.length > 3 && <p className="text-[11px] text-gray-400 pl-1">+{items.length - 3} más</p>}
+                {items.length > 3 && <p className="text-[11px] text-gray-500 dark:text-gray-400 pl-1">+{items.length - 3} más</p>}
               </div>
             </div>
           );
