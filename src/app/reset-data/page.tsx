@@ -31,10 +31,10 @@ export default function ResetDataPage() {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center space-y-4">
           <p className="text-2xl font-semibold">Listo</p>
-          <p className="text-gray-500">Todos los datos fueron borrados.</p>
+          <p className="text-gray-500 dark:text-gray-400">Todos los datos fueron borrados.</p>
           <button
             onClick={() => router.push("/home")}
-            className="mt-4 px-6 py-2 bg-black text-white rounded-xl text-sm"
+            className="mt-4 px-6 py-2 bg-brand text-brand-contrast rounded-xl text-sm"
           >
             Ir al inicio
           </button>
@@ -48,13 +48,13 @@ export default function ResetDataPage() {
       <div className="w-full max-w-sm space-y-6 text-center">
         <div>
           <h1 className="text-xl font-semibold">Borrar todos los datos</h1>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
             Se van a eliminar permanentemente todos los turnos, clientes y pagos.
             Los servicios y precios se mantienen.
           </p>
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
 
         <button
           onClick={handleReset}
@@ -66,7 +66,7 @@ export default function ResetDataPage() {
 
         <button
           onClick={() => router.back()}
-          className="w-full py-3 border rounded-xl text-sm text-gray-600"
+          className="w-full py-3 border dark:border-gray-700 rounded-xl text-sm text-gray-600 dark:text-gray-300"
         >
           Cancelar
         </button>
