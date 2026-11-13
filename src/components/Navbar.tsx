@@ -52,13 +52,13 @@ function NavTab({
     >
       <Icon
         size={20}
-        className={active ? "text-black" : "text-gray-400"}
+        className={active ? "text-brand-text" : "text-gray-500 dark:text-gray-400"}
         strokeWidth={active ? 2.2 : 1.7}
       />
 
       <span
         className={`text-[9px] leading-none ${
-          active ? "text-black font-semibold" : "text-gray-400"
+          active ? "text-brand-text font-semibold" : "text-gray-500 dark:text-gray-400"
         }`}
       >
         {tab.label}
@@ -83,11 +83,12 @@ export default function Navbar() {
         <div className="sm:hidden mx-auto px-4 h-12 flex items-center justify-between">
           <Link href="/home" className="shrink-0">
             <Image
-              src="/logo.png"
+              src="/logo.png?v=2"
               alt="Logo"
               width={44}
               height={44}
               priority
+              className="dark:invert"
             />
           </Link>
 
@@ -100,7 +101,7 @@ export default function Navbar() {
           <div className="flex items-center gap-1">
             <Link
               href="/admin/notificaciones"
-              className="p-2 text-gray-400 active:text-black dark:text-gray-400 transition"
+              className="p-2 text-gray-500 active:text-black dark:text-gray-400 dark:active:text-white transition"
               aria-label="Configurar notificaciones"
             >
               <Settings size={18} />
@@ -108,7 +109,7 @@ export default function Navbar() {
             <ThemeToggle />
             <button
               onClick={handleLogout}
-              className="shrink-0 p-2 -mr-2 text-gray-500 active:text-black dark:text-gray-400 transition"
+              className="shrink-0 p-2 -mr-2 text-gray-500 active:text-black dark:text-gray-400 dark:active:text-white transition"
               aria-label="Cerrar sesión"
             >
               <LogOut size={18} />
@@ -120,11 +121,12 @@ export default function Navbar() {
         <div className="hidden sm:flex max-w-6xl mx-auto px-4 h-14 items-center justify-between">
           <Link href="/home">
             <Image
-              src="/logo.png"
+              src="/logo.png?v=2"
               alt="Logo"
               width={60}
               height={60}
               priority
+              className="dark:invert"
             />
           </Link>
 
@@ -135,8 +137,8 @@ export default function Navbar() {
                 href={tab.href}
                 className={`text-sm transition ${
                   pathname.startsWith(tab.href)
-                    ? "text-black font-medium"
-                    : "text-gray-500 hover:text-black"
+                    ? "text-brand-text font-medium"
+                    : "text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white"
                 }`}
               >
                 {tab.label === "Stats" ? "Dashboard" : tab.label}
@@ -147,8 +149,8 @@ export default function Navbar() {
               href="/appointments"
               className={`text-sm transition ${
                 pathname.startsWith("/appointments")
-                  ? "text-black font-medium"
-                  : "text-gray-500 hover:text-black"
+                  ? "text-black font-medium dark:text-white"
+                  : "text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white"
               }`}
             >
               Nuevo turno
@@ -158,7 +160,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <Link
               href="/admin/notificaciones"
-              className="text-gray-400 hover:text-black dark:hover:text-white transition"
+              className="text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition"
               aria-label="Configurar notificaciones"
             >
               <Settings size={18} />
@@ -204,10 +206,10 @@ export default function Navbar() {
             onClick={() => haptic()}
             className="absolute left-1/2 -translate-x-1/2 -top-5 z-50 active:scale-95 transition-transform"
           >
-            <div className="bg-black rounded-full w-14 h-14 flex items-center justify-center shadow-xl border-4 border-[#F5F3EE] dark:border-[#1a1a1a]">
+            <div className="bg-brand rounded-full w-14 h-14 flex items-center justify-center shadow-xl border-4 border-[#F5F3EE] dark:border-[#333]">
               <Plus
                 size={24}
-                className="text-white"
+                className="text-brand-contrast"
                 strokeWidth={2.7}
               />
             </div>
