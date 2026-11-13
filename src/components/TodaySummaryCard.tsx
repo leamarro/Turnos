@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { formatMoney as money } from "@/lib/format";
 
 type Appointment = {
   date: string;
@@ -11,9 +12,6 @@ type Appointment = {
   servicePrice?: number | null;
   payments?: { amount: number; createdAt?: string | Date }[];
 };
-
-const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 export default function TodaySummaryCard({
   appointments,
@@ -56,7 +54,7 @@ export default function TodaySummaryCard({
 
   return (
     <div className="bg-white dark:bg-[#252525] rounded-2xl p-5 shadow-sm dark:border dark:border-gray-800">
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Hoy</p>
+      <p className="text-xs font-medium text-brand-text mb-1">Hoy</p>
 
       <div className="flex items-end justify-between">
         <div>
