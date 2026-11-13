@@ -84,11 +84,11 @@ export default function NotificacionesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F3EE] dark:bg-[#1a1a1a]">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       <div className="max-w-2xl mx-auto px-4 py-6">
         <Link
           href="/admin"
-          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-black dark:hover:text-white mb-4"
+          className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white mb-4"
         >
           <ArrowLeft size={16} />
           Volver
@@ -117,7 +117,7 @@ export default function NotificacionesPage() {
                     }
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-black dark:peer-checked:bg-white dark:bg-gray-600" />
+                  <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand dark:bg-gray-600" />
                 </label>
               </div>
 
@@ -132,8 +132,8 @@ export default function NotificacionesPage() {
                       onClick={() => toggleDay(config.type, d.value)}
                       className={`w-9 h-9 rounded-full text-xs font-medium transition ${
                         config.workDays.split(",").includes(d.value)
-                          ? "bg-black text-white dark:bg-white dark:text-black"
-                          : "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                          ? "bg-brand text-brand-contrast"
+                          : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
                       }`}
                     >
                       {d.label}
@@ -154,7 +154,7 @@ export default function NotificacionesPage() {
                         onClick={() => update(config.type, "hoursBefore", h)}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                           config.hoursBefore === h
-                            ? "bg-black text-white dark:bg-white dark:text-black"
+                            ? "bg-brand text-brand-contrast"
                             : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
                         }`}
                       >
@@ -176,7 +176,7 @@ export default function NotificacionesPage() {
                     onChange={(e) =>
                       update(config.type, "sendTime", e.target.value)
                     }
-                    className="mt-1 px-3 py-1.5 text-sm bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400 w-32"
+                    className="mt-1 px-3 py-1.5 text-sm bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white focus:outline-none focus:ring-1 focus:ring-brand w-32"
                   />
                 </div>
               )}
@@ -191,7 +191,7 @@ export default function NotificacionesPage() {
                     update(config.type, "template", e.target.value)
                   }
                   rows={3}
-                  className="w-full mt-1 px-3 py-2 text-sm bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white resize-none focus:outline-none focus:ring-1 focus:ring-gray-400"
+                  className="w-full mt-1 px-3 py-2 text-sm bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg dark:text-white resize-none focus:outline-none focus:ring-1 focus:ring-brand"
                 />
                 <div className="flex flex-wrap gap-1 mt-1">
                   {PLACEHOLDERS[config.type]?.map((p) => (
@@ -225,7 +225,7 @@ export default function NotificacionesPage() {
               <button
                 onClick={() => handleSave(config.type)}
                 disabled={saving === config.type}
-                className="w-full flex items-center justify-center gap-1.5 py-2 text-sm bg-black text-white dark:bg-white dark:text-black rounded-lg disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-1.5 py-2 text-sm bg-brand text-brand-contrast rounded-lg disabled:opacity-50"
               >
                 <Save size={14} />
                 {saving === config.type ? "Guardando..." : "Guardar"}
