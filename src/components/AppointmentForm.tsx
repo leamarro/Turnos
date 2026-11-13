@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { haptic } from "@/lib/haptics";
+import { formatMoney } from "@/lib/format";
 
 type ClientSuggestion = {
   id: string;
@@ -50,14 +51,6 @@ const timeSlots = [
   "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
   "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00",
 ];
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function getTodayInputValue() {
   const today = new Date();
@@ -225,17 +218,17 @@ export default function AppointmentForm() {
         {createdDates.map((d, i) => {
           const date = new Date(d);
           return (
-            <p key={i} className="text-sm text-gray-600">
+            <p key={i} className="text-sm text-gray-600 dark:text-gray-300">
               {date.toLocaleDateString("es-AR", { weekday: "long", day: "2-digit", month: "long" })}
               {" "}a las{" "}
               {date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
             </p>
           );
         })}
-        <p className="text-xs text-gray-400">Redirigiendo a la agenda…</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Redirigiendo a la agenda…</p>
         <button
           onClick={() => router.push("/home")}
-          className="mt-2 w-full bg-black text-white py-3 rounded-xl text-sm font-medium"
+          className="mt-2 w-full bg-brand text-brand-contrast py-3 rounded-xl text-sm font-medium"
         >
           Ver en agenda
         </button>
@@ -276,21 +269,21 @@ export default function AppointmentForm() {
             {showSuggestions && suggestedClients.length > 0 && (
               <div
                 ref={suggestionsRef}
-                className="absolute z-50 top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+                className="absolute z-50 top-full mt-1 left-0 right-0 bg-white dark:bg-[#252525] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg dark:shadow-none overflow-hidden"
               >
                 {suggestedClients.map((c) => (
                   <button
                     type="button"
                     key={c.id}
                     onClick={() => handleSelectClient(c)}
-                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-0 transition"
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-[#2f2f2f] border-b border-gray-100 dark:border-gray-800 last:border-0 transition"
                   >
                     <span className="font-medium">{c.name} {c.lastName}</span>
                     {c.telefono && (
-                      <span className="text-gray-400 ml-2">{c.telefono}</span>
+                      <span className="text-gray-500 dark:text-gray-400 ml-2">{c.telefono}</span>
                     )}
                     {c.instagram && !c.telefono && (
-                      <span className="text-gray-400 ml-2">{c.instagram}</span>
+                      <span className="text-gray-500 dark:text-gray-400 ml-2">{c.instagram}</span>
                     )}
                   </button>
                 ))}
@@ -323,7 +316,7 @@ export default function AppointmentForm() {
       <div className="space-y-2">
         <label className="label">Servicio *</label>
         {loadingServices ? (
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <Loader2 size={14} className="animate-spin" /> Cargando...
           </div>
         ) : (
@@ -335,12 +328,12 @@ export default function AppointmentForm() {
                 onClick={() => updateField("serviceId", s.id)}
                 className={`w-full flex justify-between items-center px-4 py-3 rounded-xl border text-sm transition ${
                   form.serviceId === s.id
-                    ? "bg-black text-white border-black"
-                    : "bg-white text-gray-800 border-gray-200"
+                    ? "bg-brand text-brand-contrast border-brand"
+                    : "bg-white dark:bg-[#252525] text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                 }`}
               >
                 <span className="font-medium">{s.name}</span>
-                <span className={form.serviceId === s.id ? "text-gray-300" : "text-gray-500"}>
+                <span className={form.serviceId === s.id ? "text-white/80" : "text-gray-500 dark:text-gray-400"}>
                   {formatMoney(s.price)}
                 </span>
               </button>
@@ -354,7 +347,7 @@ export default function AppointmentForm() {
         <div className="flex items-baseline justify-between">
           <label className="label">Horario *</label>
           {form.times.length > 0 && (
-            <span className="text-xs text-gray-400">{form.times.length} seleccionado{form.times.length > 1 ? "s" : ""}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{form.times.length} seleccionado{form.times.length > 1 ? "s" : ""}</span>
           )}
         </div>
         <div className="grid grid-cols-4 gap-1.5">
@@ -370,10 +363,10 @@ export default function AppointmentForm() {
                 title={taken ? "Horario ocupado" : undefined}
                 className={`py-2 rounded-lg text-sm font-medium transition ${
                   taken
-                    ? "bg-gray-100 text-gray-300 line-through cursor-not-allowed"
+                    ? "bg-gray-100 dark:bg-[#2a2a2a] text-gray-300 dark:text-gray-600 line-through cursor-not-allowed"
                     : selected
-                    ? "bg-black text-white"
-                    : "bg-white text-gray-700 border border-gray-200 active:bg-gray-100"
+                    ? "bg-brand text-brand-contrast"
+                    : "bg-white dark:bg-[#252525] text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 active:bg-gray-100 dark:active:bg-[#333]"
                 }`}
               >
                 {slot}
@@ -382,7 +375,7 @@ export default function AppointmentForm() {
           })}
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <span className="text-xs text-gray-400">Otro:</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">Otro:</span>
           <input
             type="time"
             onChange={(e) => {
@@ -391,7 +384,7 @@ export default function AppointmentForm() {
                 setForm((cur) => ({ ...cur, times: [...cur.times, val] }));
               }
             }}
-            className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-black"
+            className="text-sm border border-gray-200 dark:border-gray-700 dark:bg-[#252525] rounded-lg px-2 py-1.5 focus:outline-none focus:border-brand"
           />
         </div>
       </div>
@@ -422,7 +415,7 @@ export default function AppointmentForm() {
       </div>
 
       {message && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+        <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900 rounded-xl px-4 py-3">
           {message}
         </p>
       )}
@@ -430,7 +423,7 @@ export default function AppointmentForm() {
       <button
         type="submit"
         disabled={submitting || loadingServices}
-        className="w-full bg-black text-white py-3.5 rounded-xl font-medium text-sm disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full bg-brand text-brand-contrast py-3.5 rounded-xl font-medium text-sm disabled:opacity-60 flex items-center justify-center gap-2"
       >
         {submitting && <Loader2 size={16} className="animate-spin" />}
         {submitting ? "Guardando..." : form.times.length > 1 ? `Guardar ${form.times.length} turnos` : "Guardar turno"}
