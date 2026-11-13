@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { format, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
+import { formatMoney as money } from "@/lib/format";
 
 type Appointment = {
   id: string;
@@ -13,9 +14,6 @@ type Appointment = {
   servicePrice?: number | null;
   payments?: { amount: number; createdAt?: string | Date }[];
 };
-
-const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 export default function TodayBanner({
   appointments,
@@ -57,7 +55,7 @@ export default function TodayBanner({
   if (data.count === 0) return null;
 
   return (
-    <div className="w-full bg-black text-white rounded-2xl p-4 mb-4 relative overflow-hidden">
+    <div className="w-full bg-black dark:bg-[#252525] text-white rounded-2xl p-4 mb-4 relative overflow-hidden dark:border dark:border-gray-800">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
       <div className="relative z-10 flex items-center justify-between gap-3">
         <button
