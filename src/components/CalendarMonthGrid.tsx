@@ -40,21 +40,21 @@ export default function CalendarMonthGrid({
     <div className="mt-2">
       {/* Navegación */}
       <div className="flex items-center justify-between mb-3">
-        <button onClick={() => setCurrentDate((d) => addMonths(d, -1))} className="p-2 active:bg-gray-100 rounded-full transition">
-          <ChevronLeft size={20} className="text-gray-500" />
+        <button onClick={() => setCurrentDate((d) => addMonths(d, -1))} className="p-2 active:bg-gray-100 dark:active:bg-gray-800 rounded-full transition">
+          <ChevronLeft size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
         <h2 className="text-base font-semibold capitalize">
           {format(currentDate, "MMMM yyyy", { locale: es })}
         </h2>
-        <button onClick={() => setCurrentDate((d) => addMonths(d, 1))} className="p-2 active:bg-gray-100 rounded-full transition">
-          <ChevronRight size={20} className="text-gray-500" />
+        <button onClick={() => setCurrentDate((d) => addMonths(d, 1))} className="p-2 active:bg-gray-100 dark:active:bg-gray-800 rounded-full transition">
+          <ChevronRight size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
       </div>
 
       {/* Cabecera L M X J V S D */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_HEADERS.map((d) => (
-          <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+          <div key={d} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-1">{d}</div>
         ))}
       </div>
 
@@ -75,9 +75,9 @@ export default function CalendarMonthGrid({
               className="flex flex-col items-center py-1 cursor-pointer"
             >
               <span className={`w-9 h-9 flex items-center justify-center rounded-full text-sm font-medium transition
-                ${isToday ? "bg-black text-white" : ""}
-                ${isSelected && !isToday ? "bg-gray-100 ring-1 ring-gray-300" : ""}
-                ${!isToday && !isSelected ? (isPast ? "text-gray-400" : "text-gray-800") : ""}
+                ${isToday ? "bg-brand text-brand-contrast" : ""}
+                ${isSelected && !isToday ? "bg-gray-100 dark:bg-[#333] ring-1 ring-gray-300 dark:ring-gray-600" : ""}
+                ${!isToday && !isSelected ? (isPast ? "text-gray-400 dark:text-gray-500" : "text-gray-800 dark:text-gray-200") : ""}
               `}>
                 {format(day, "d")}
               </span>
@@ -91,7 +91,7 @@ export default function CalendarMonthGrid({
                   />
                 ))}
                 {appts.length > 6 && (
-                  <span className="text-[9px] text-gray-400 leading-none pt-[2px]">
+                  <span className="text-[9px] text-gray-500 dark:text-gray-400 leading-none pt-[2px]">
                     +{appts.length - 6}
                   </span>
                 )}
@@ -102,27 +102,27 @@ export default function CalendarMonthGrid({
       </div>
 
       {/* Turnos del día seleccionado */}
-      <div className="mt-4 border-t border-gray-100 pt-4">
-        <p className="text-sm font-medium text-gray-500 mb-3 capitalize">
+      <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 capitalize">
           {format(selectedDay, "EEEE d 'de' MMMM", { locale: es })}
         </p>
 
         {selectedAppts.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">Sin turnos</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 italic">Sin turnos</p>
         ) : (
           <div className="space-y-2">
             {selectedAppts.map((a) => (
               <div
                 key={a.id}
                 onClick={() => onSelectAppointment?.(a.id)}
-                className="bg-white rounded-xl px-4 py-3 flex justify-between items-center shadow-sm cursor-pointer active:bg-gray-50 transition overflow-hidden relative"
+                className="bg-white dark:bg-[#252525] rounded-xl px-4 py-3 flex justify-between items-center shadow-sm dark:shadow-none dark:border dark:border-gray-800 cursor-pointer active:bg-gray-50 dark:active:bg-[#2f2f2f] transition overflow-hidden relative"
               >
                 <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: a.service.color || "#000000" }} />
                 <div className="pl-2">
                   <p className="text-sm font-medium">{a.user.name} {a.user.lastName}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{a.service.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{a.service.name}</p>
                 </div>
-                <p className="text-sm font-bold tabular-nums text-gray-700">
+                <p className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-200">
                   {format(new Date(a.date), "HH:mm")}
                 </p>
               </div>
@@ -135,7 +135,7 @@ export default function CalendarMonthGrid({
         <div className="flex justify-center mt-4">
           <button
             onClick={() => { setCurrentDate(today); setSelectedDay(today); }}
-            className="text-xs px-4 py-1.5 rounded-full border border-gray-300 text-gray-500"
+            className="text-xs px-4 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400"
           >
             Volver a hoy
           </button>
