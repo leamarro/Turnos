@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 import { haptic } from "@/lib/haptics";
+import { formatMoney } from "@/lib/format";
 
 /* ========================= */
 /* TYPES */
@@ -170,26 +171,26 @@ export default function AdminPanel() {
       {/* FILTROS */}
       <div className="bg-white dark:bg-[#252525] rounded-2xl px-3 py-3 mb-4 overflow-x-auto scrollbar-hide">
         <div className="flex items-center gap-2 w-max sm:w-auto sm:flex-wrap">
-          <button onClick={() => setFilterOption("all")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "all" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
+          <button onClick={() => setFilterOption("all")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "all" ? "bg-brand text-brand-contrast border-brand" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Todos
           </button>
-          <button onClick={() => setFilterOption("today")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "today" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
+          <button onClick={() => setFilterOption("today")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "today" ? "bg-brand text-brand-contrast border-brand" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Hoy
           </button>
-          <button onClick={() => setFilterOption("tomorrow")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "tomorrow" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
+          <button onClick={() => setFilterOption("tomorrow")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "tomorrow" ? "bg-brand text-brand-contrast border-brand" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Mañana
           </button>
-          <button onClick={() => setFilterOption("week")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "week" ? "bg-black text-white border-black" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
+          <button onClick={() => setFilterOption("week")} className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${filterOption === "week" ? "bg-brand text-brand-contrast border-brand" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}>
             Semana
           </button>
 
-          <div className="w-px h-5 bg-gray-200 shrink-0" />
+          <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 shrink-0" />
 
           {/* Chip de fecha con picker nativo por detrás */}
           <div className="relative shrink-0">
             <button
               className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${
-                filterDate ? "bg-black text-white border-black" : "text-gray-600"
+                filterDate ? "bg-brand text-brand-contrast border-brand" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"
               }`}
               onClick={() => (document.getElementById("date-filter") as HTMLInputElement)?.showPicker?.()}
             >
@@ -201,7 +202,7 @@ export default function AdminPanel() {
             {filterDate && (
               <button
                 onClick={() => setFilterDate("")}
-                className="absolute -top-1 -right-1 bg-gray-300 rounded-full p-0.5"
+                className="absolute -top-1 -right-1 bg-gray-300 dark:bg-gray-600 rounded-full p-0.5"
               >
                 <X size={9} />
               </button>
@@ -215,17 +216,17 @@ export default function AdminPanel() {
             />
           </div>
 
-          <div className="w-px h-5 bg-gray-200 shrink-0" />
+          <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 shrink-0" />
 
           <button
             onClick={() => setShowPendingOnly((v) => !v)}
-            className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${showPendingOnly ? "bg-red-600 text-white border-red-600" : "text-gray-600"}`}
+            className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${showPendingOnly ? "bg-red-600 text-white border-red-600" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}
           >
             Deudas
           </button>
           <button
             onClick={() => setShowPast((v) => !v)}
-            className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${showPast ? "bg-black text-white border-black" : "text-gray-600"}`}
+            className={`px-3 py-1.5 border rounded-full text-sm whitespace-nowrap ${showPast ? "bg-brand text-brand-contrast border-brand" : "text-gray-600 dark:text-gray-400 dark:border-gray-600"}`}
           >
             Ver pasados
           </button>
@@ -307,7 +308,7 @@ export default function AdminPanel() {
 
                 {total > 0 && (
                   <div className="text-right text-sm">
-                    <p>Total: ${total}</p>
+                    <p>Total: {formatMoney(total)}</p>
 
                     {paid === 0 && (
                       <p className="text-gray-500 dark:text-gray-400">
@@ -317,24 +318,24 @@ export default function AdminPanel() {
 
                     {paid > 0 && paid < total && isPast && (
                       <>
-                        <p>Pagado: ${paid}</p>
-                        <p className="text-red-600 font-semibold">
-                          Debe: ${remaining}
+                        <p>Pagado: {formatMoney(paid)}</p>
+                        <p className="text-red-600 dark:text-red-400 font-semibold">
+                          Debe: {formatMoney(remaining)}
                         </p>
                       </>
                     )}
 
                     {paid > 0 && paid < total && !isPast && (
                       <>
-                        <p>Pagado: ${paid}</p>
-                        <p className="text-amber-600 font-semibold">
-                          Falta: ${remaining}
+                        <p>Pagado: {formatMoney(paid)}</p>
+                        <p className="text-amber-600 dark:text-amber-400 font-semibold">
+                          Falta: {formatMoney(remaining)}
                         </p>
                       </>
                     )}
 
                     {paid >= total && (
-                      <p className="text-green-600 font-semibold">
+                      <p className="text-green-600 dark:text-green-400 font-semibold">
                         Pago completo
                       </p>
                     )}
