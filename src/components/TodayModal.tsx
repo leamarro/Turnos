@@ -5,6 +5,7 @@ import { format, isSameDay, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { haptic } from "@/lib/haptics";
+import { formatMoney as money } from "@/lib/format";
 
 type Appointment = {
   id: string;
@@ -15,9 +16,6 @@ type Appointment = {
   servicePrice?: number | null;
   payments?: { amount: number; createdAt?: string | Date }[];
 };
-
-const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 function dayLabel(date: Date) {
   const today = new Date();
@@ -99,7 +97,7 @@ export default function TodayModal({
         onClick={onClose}
       />
       <div
-        className="relative w-full sm:max-w-md max-h-[80vh] bg-[#f5f3ef] dark:bg-[#1a1a1a] rounded-3xl p-5 overflow-y-auto shadow-xl animate-fade-up"
+        className="relative w-full sm:max-w-md max-h-[80vh] bg-[var(--bg-primary)] rounded-3xl p-5 overflow-y-auto shadow-xl animate-fade-up"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -110,17 +108,17 @@ export default function TodayModal({
             disabled={!canGoPrev}
             className={`p-2 rounded-full active:scale-95 transition ${canGoPrev ? "hover:bg-gray-200 dark:hover:bg-gray-800" : "opacity-20"}`}
           >
-            <ChevronLeft size={18} className="text-gray-500" />
+            <ChevronLeft size={18} className="text-gray-500 dark:text-gray-400" />
           </button>
 
           <div className="text-center">
             <h2 className="text-lg font-semibold capitalize">
               Turnos de {dayLabel(selectedDay)}
             </h2>
-            <p className="text-xs text-gray-400 capitalize">
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
               {format(selectedDay, "d MMMM yyyy", { locale: es })}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               {filteredApps.length} {filteredApps.length === 1 ? "turno" : "turnos"}
             </p>
           </div>
@@ -129,7 +127,7 @@ export default function TodayModal({
             onClick={() => goTo("next")}
             className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full active:scale-95 transition"
           >
-            <ChevronRight size={18} className="text-gray-500" />
+            <ChevronRight size={18} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -143,7 +141,7 @@ export default function TodayModal({
                 className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition ${
                   filter === f
                     ? "bg-white dark:bg-[#333] shadow-sm"
-                    : "text-gray-500"
+                    : "text-gray-500 dark:text-gray-400"
                 }`}
               >
                 {f === "all" ? "Todos" : f === "cobrado" ? "Cobrados" : "Pendientes"}
@@ -154,7 +152,7 @@ export default function TodayModal({
 
         {/* Lista */}
         {filteredApps.length === 0 ? (
-          <p className="text-center text-gray-400 py-8 text-sm">
+          <p className="text-center text-gray-500 dark:text-gray-400 py-8 text-sm">
             {filter === "cobrado"
               ? "Sin turnos cobrados este día"
               : filter === "agendado"
@@ -183,7 +181,7 @@ export default function TodayModal({
                     <span className="text-lg font-bold tabular-nums">
                       {format(date, "HH:mm")}
                     </span>
-                    <span className="text-[10px] text-gray-400">
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400">
                       {isPast ? "pasó" : ""}
                     </span>
                   </div>
@@ -195,7 +193,7 @@ export default function TodayModal({
                     <p className="font-medium text-sm">
                       {a.name} {a.lastName}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       {a.service.name}
                     </p>
                   </div>
@@ -213,7 +211,7 @@ export default function TodayModal({
         {/* Close */}
         <button
           onClick={onClose}
-          className="w-full mt-4 py-2.5 text-sm text-gray-400 border border-gray-200 dark:border-gray-700 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition"
+          className="w-full mt-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition"
         >
           Cerrar
         </button>
