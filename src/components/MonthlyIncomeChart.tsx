@@ -2,11 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { formatMoney as money } from "@/lib/format";
 
 type MonthEntry = { month: string; total: number };
-
-const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 function monthShort(year: number, monthIndex: number) {
   return new Date(year, monthIndex, 1)
@@ -112,7 +110,7 @@ export default function MonthlyIncomeChart({
           <h2 className="text-sm font-semibold dark:text-white">
             Ingresos por mes
           </h2>
-          <p className="text-xs text-gray-400 truncate">
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
             {selectedMonth
               ? monthLong(selectedMonth)
               : `Total ${selectedYear}: ${money(yearTotal)}`}
@@ -134,12 +132,12 @@ export default function MonthlyIncomeChart({
           </select>
           <ChevronDown
             size={12}
-            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500"
+            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
           />
         </div>
       </div>
 
-      <p className="text-[10px] text-gray-400 mb-3">
+      <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-3">
         {selectedMonth
           ? "Tocá el mes de nuevo para ver todo el año"
           : "Tocá un mes para filtrar ingresos por servicio"}
@@ -158,7 +156,7 @@ export default function MonthlyIncomeChart({
                   years.find((year) => year !== selectedYear) ?? selectedYear
                 )
               }
-              className="mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+              className="mt-2 text-xs font-medium text-brand-text"
             >
               Ver {years.find((year) => year !== selectedYear)}
             </button>
@@ -183,17 +181,17 @@ export default function MonthlyIncomeChart({
                 aria-pressed={isSelected}
                 className={`w-full min-h-9 flex items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left transition active:scale-[0.99] ${
                   isSelected
-                    ? "bg-emerald-50 dark:bg-emerald-900/20"
+                    ? "bg-brand-soft"
                     : "active:bg-gray-50 dark:active:bg-white/5"
                 }`}
               >
                 <span
                   className={`w-8 shrink-0 text-[10px] uppercase tracking-wide ${
                     isSelected
-                      ? "text-emerald-700 dark:text-emerald-400 font-semibold"
+                      ? "text-brand-text font-semibold"
                       : month.isCurrent
                         ? "text-gray-800 dark:text-gray-200 font-semibold"
-                        : "text-gray-400"
+                        : "text-gray-500 dark:text-gray-400"
                   }`}
                 >
                   {month.label}
@@ -203,9 +201,9 @@ export default function MonthlyIncomeChart({
                   <div
                     className={`h-full rounded-full transition-all ${
                       isSelected
-                        ? "bg-emerald-500"
+                        ? "bg-brand"
                         : month.isCurrent
-                          ? "bg-black dark:bg-white"
+                          ? "bg-brand"
                           : "bg-gray-300 dark:bg-gray-600"
                     }`}
                     style={{ width: `${width}%` }}
@@ -215,9 +213,9 @@ export default function MonthlyIncomeChart({
                 <span
                   className={`w-16 shrink-0 text-right text-[11px] tabular-nums ${
                     month.total === 0
-                      ? "text-gray-300 dark:text-gray-600"
+                      ? "text-gray-500 dark:text-gray-400"
                       : isSelected
-                        ? "text-emerald-700 dark:text-emerald-400 font-semibold"
+                        ? "text-brand-text font-semibold"
                         : "text-gray-600 dark:text-gray-300 font-medium"
                   }`}
                 >
@@ -228,7 +226,7 @@ export default function MonthlyIncomeChart({
                   size={12}
                   className={`shrink-0 ${
                     isSelected
-                      ? "text-emerald-600 dark:text-emerald-400"
+                      ? "text-brand-text"
                       : "opacity-0"
                   }`}
                 />
