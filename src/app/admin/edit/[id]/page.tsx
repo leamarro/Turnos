@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { formatMoney } from "@/lib/format";
 
 type Service = {
   id: string;
@@ -154,8 +155,8 @@ export default function EditAppointmentPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-md mx-auto bg-white shadow-xl rounded-2xl p-6 space-y-5">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#1a1a1a] p-6">
+      <div className="max-w-md mx-auto bg-white dark:bg-[#252525] shadow-xl dark:shadow-none dark:border dark:border-gray-800 rounded-2xl p-6 space-y-5">
 
         <h1 className="text-lg font-bold text-center">
           Editar Turno
@@ -227,18 +228,18 @@ export default function EditAppointmentPage({
         </div>
 
         {/* RESUMEN */}
-        <div className="bg-gray-100 p-4 rounded-xl text-sm space-y-1">
-          <p>Total servicio: ${totalServicio}</p>
-          <p>Total pagado: ${totalPagado}</p>
+        <div className="bg-gray-100 dark:bg-[#2a2a2a] p-4 rounded-xl text-sm space-y-1">
+          <p>Total servicio: {formatMoney(totalServicio)}</p>
+          <p>Total pagado: {formatMoney(totalPagado)}</p>
 
           {restante > 0 && (
-            <p className="text-red-600 font-semibold">
-              Restante: ${restante}
+            <p className="text-red-600 dark:text-red-400 font-semibold">
+              Restante: {formatMoney(restante)}
             </p>
           )}
 
           {pagoCompleto && (
-            <p className="text-green-600 font-semibold">
+            <p className="text-green-600 dark:text-green-400 font-semibold">
               Pago completo
             </p>
           )}
@@ -246,7 +247,7 @@ export default function EditAppointmentPage({
 
         {/* HISTORIAL */}
         {visiblePayments.length > 0 && (
-          <div className="border rounded-xl p-4 space-y-3 text-sm">
+          <div className="border dark:border-gray-700 rounded-xl p-4 space-y-3 text-sm">
             <p className="font-semibold">Historial de pagos</p>
 
             {visiblePayments.map((p) => {
@@ -271,15 +272,15 @@ export default function EditAppointmentPage({
               return (
                 <div
                   key={p.id}
-                  className="flex justify-between border-b pb-2"
+                  className="flex justify-between border-b dark:border-gray-800 pb-2"
                 >
                   <div>
                     <p>{metodo}</p>
-                    <p className="text-xs text-gray-500">{fecha}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{fecha}</p>
                   </div>
 
                   <span className="font-medium">
-                    ${p.amount}
+                    {formatMoney(p.amount)}
                   </span>
                 </div>
               );
@@ -295,7 +296,7 @@ export default function EditAppointmentPage({
             onChange={(e) => setDepositAmount(e.target.value)}
             disabled={pagoCompleto}
             placeholder="Agregar seña"
-            className="input disabled:bg-gray-200"
+            className="input disabled:bg-gray-200 dark:disabled:bg-[#333]"
           />
 
           <button
@@ -311,19 +312,19 @@ export default function EditAppointmentPage({
         {!pagoCompleto ? (
           <button
             onClick={handleCompletePayment}
-            className="w-full bg-green-600 text-white py-2 rounded-xl"
+            className="w-full bg-green-700 text-white py-2 rounded-xl"
           >
             Completar pago
           </button>
         ) : (
           <div className="space-y-2">
-            <div className="bg-green-100 text-green-700 text-center py-2 rounded-xl">
+            <div className="bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400 text-center py-2 rounded-xl">
               Pago completado
             </div>
 
             <button
               onClick={handleMarkUnpaid}
-              className="w-full border border-red-300 text-red-600 py-2 rounded-xl"
+              className="w-full border border-red-300 dark:border-red-900 text-red-600 dark:text-red-400 py-2 rounded-xl"
             >
               Marcar como no pagado
             </button>
@@ -341,7 +342,7 @@ export default function EditAppointmentPage({
 
           <button
             onClick={handleSave}
-            className="bg-black text-white py-2 rounded-xl w-full"
+            className="bg-brand text-brand-contrast py-2 rounded-xl w-full"
           >
             Guardar
           </button>
