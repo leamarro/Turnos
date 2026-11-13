@@ -1053,12 +1053,12 @@ function drawStory(
 /* ---------------- Componente ---------------- */
 
 const inputCls =
-  "w-full border border-gray-200 dark:border-gray-700 dark:bg-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-black dark:focus:border-white dark:text-gray-100";
+  "w-full border border-gray-200 dark:border-gray-700 dark:bg-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand dark:text-gray-100";
 
 const chipOn =
-  "px-3 py-1.5 rounded-full text-xs font-medium bg-black dark:bg-white text-white dark:text-black";
+  "px-3 py-1.5 rounded-full text-xs font-medium bg-brand text-brand-contrast";
 const chipOff =
-  "px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 border border-gray-200 dark:border-gray-700";
+  "px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700";
 
 function Seg({
   value,
@@ -1079,7 +1079,7 @@ function Seg({
           className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition ${
             value === o.value
               ? "bg-white dark:bg-[#333] shadow-sm dark:text-gray-100"
-              : "text-gray-500"
+              : "text-gray-500 dark:text-gray-400"
           }`}
         >
           {o.label}
@@ -1519,7 +1519,7 @@ export default function HistoriasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#1a1a1a]">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       <div className="sr-only" aria-hidden>
         <span className={playfair.className}>.</span>
         <span className={montserrat.className}>.</span>
@@ -1545,7 +1545,7 @@ export default function HistoriasPage() {
           <h1 className="text-2xl font-semibold">Historias</h1>
           <button
             onClick={download}
-            className="flex items-center gap-1.5 bg-black dark:bg-white text-white dark:text-black text-sm px-4 py-2.5 rounded-xl font-medium active:scale-95 transition"
+            className="flex items-center gap-1.5 bg-brand text-brand-contrast text-sm px-4 py-2.5 rounded-xl font-medium active:scale-95 transition"
           >
             <ImageDown size={16} />
             Descargar
@@ -1556,7 +1556,7 @@ export default function HistoriasPage() {
           {/* ===== EDITOR ===== */}
           <div className="bg-white dark:bg-[#252525] rounded-2xl shadow-sm dark:shadow-none dark:border dark:border-gray-800 p-5 space-y-5">
             <div className="flex items-center gap-2">
-              <Wand2 size={16} className="text-gray-400" />
+              <Wand2 size={16} className="text-gray-500 dark:text-gray-400" />
               <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-300">
                 Personalizá tu historia
               </h2>
@@ -1564,7 +1564,7 @@ export default function HistoriasPage() {
 
             {/* Plantillas */}
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Plantillas</label>
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Plantillas</label>
               <div className="flex flex-wrap gap-2">
                 {PRESETS.map((p) => (
                   <button
@@ -1581,7 +1581,7 @@ export default function HistoriasPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Emoji</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Emoji</label>
                   <input
                     value={config.emoji}
                     onChange={(e) => set({ emoji: e.target.value })}
@@ -1590,7 +1590,7 @@ export default function HistoriasPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Tipografía</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Tipografía</label>
                   <select
                     value={config.font}
                     onChange={(e) => set({ font: e.target.value })}
@@ -1606,7 +1606,7 @@ export default function HistoriasPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Título principal</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Título principal</label>
                 <input
                   value={config.title}
                   onChange={(e) => set({ title: e.target.value })}
@@ -1616,7 +1616,7 @@ export default function HistoriasPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Servicio / subtítulo</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Servicio / subtítulo</label>
                 <input
                   value={config.service}
                   onChange={(e) => set({ service: e.target.value })}
@@ -1626,7 +1626,7 @@ export default function HistoriasPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Días y horarios</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Días y horarios</label>
                 <div className="space-y-2">
                   {config.schedules.map((s, i) => (
                     <div key={i} className="flex items-center gap-2">
@@ -1654,7 +1654,7 @@ export default function HistoriasPage() {
                   ))}
                   <button
                     onClick={() => set({ schedules: [...config.schedules, ""] })}
-                    className="flex items-center gap-1 text-xs text-gray-500 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5"
+                    className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5"
                   >
                     <Plus size={14} />
                     Agregar horario
@@ -1663,7 +1663,7 @@ export default function HistoriasPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Mensaje / llamada a la acción</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Mensaje / llamada a la acción</label>
                 <input
                   value={config.cta}
                   onChange={(e) => set({ cta: e.target.value })}
@@ -1673,7 +1673,7 @@ export default function HistoriasPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Usuario de Instagram</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Usuario de Instagram</label>
                 <input
                   value={config.handle}
                   onChange={(e) => set({ handle: e.target.value })}
@@ -1684,7 +1684,7 @@ export default function HistoriasPage() {
 
               {/* Fondo */}
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Fondo</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Fondo</label>
                 <Seg
                   value={config.bgMode}
                   onChange={(v) => set({ bgMode: v as BgMode })}
@@ -1705,7 +1705,7 @@ export default function HistoriasPage() {
                           onClick={() => applySwatch(i)}
                           className={`w-8 h-8 rounded-full border-2 transition ${
                             swatchIndex === i
-                              ? "border-black dark:border-white scale-110"
+                              ? "border-brand scale-110"
                               : "border-transparent"
                           }`}
                           style={{ background: `linear-gradient(135deg, ${g.c1}, ${g.c2})` }}
@@ -1714,7 +1714,7 @@ export default function HistoriasPage() {
                       ))}
                     </div>
                     <div className="flex items-center gap-4 mt-3">
-                      <label className="flex flex-col gap-1 text-[11px] text-gray-400">
+                      <label className="flex flex-col gap-1 text-[11px] text-gray-500 dark:text-gray-400">
                         Color A
                         <input
                           type="color"
@@ -1726,7 +1726,7 @@ export default function HistoriasPage() {
                           className="w-10 h-8 rounded cursor-pointer border-0"
                         />
                       </label>
-                      <label className="flex flex-col gap-1 text-[11px] text-gray-400">
+                      <label className="flex flex-col gap-1 text-[11px] text-gray-500 dark:text-gray-400">
                         Color B
                         <input
                           type="color"
@@ -1738,7 +1738,7 @@ export default function HistoriasPage() {
                           className="w-10 h-8 rounded cursor-pointer border-0"
                         />
                       </label>
-                      <label className="flex flex-col gap-1 text-[11px] text-gray-400">
+                      <label className="flex flex-col gap-1 text-[11px] text-gray-500 dark:text-gray-400">
                         Acento
                         <input
                           type="color"
@@ -1764,7 +1764,7 @@ export default function HistoriasPage() {
                           onClick={() => applySolid(i)}
                           className={`w-8 h-8 rounded-full border-2 transition ${
                             solidIndex === i
-                              ? "border-black dark:border-white scale-110"
+                              ? "border-brand scale-110"
                               : "border-gray-200 dark:border-gray-700"
                           }`}
                           style={{ background: s.hex }}
@@ -1773,7 +1773,7 @@ export default function HistoriasPage() {
                       ))}
                     </div>
                     <div className="flex items-center gap-4 mt-3">
-                      <label className="flex flex-col gap-1 text-[11px] text-gray-400">
+                      <label className="flex flex-col gap-1 text-[11px] text-gray-500 dark:text-gray-400">
                         Color de fondo
                         <input
                           type="color"
@@ -1788,7 +1788,7 @@ export default function HistoriasPage() {
                           className="w-10 h-8 rounded cursor-pointer border-0"
                         />
                       </label>
-                      <label className="flex flex-col gap-1 text-[11px] text-gray-400">
+                      <label className="flex flex-col gap-1 text-[11px] text-gray-500 dark:text-gray-400">
                         Acento
                         <input
                           type="color"
@@ -1804,7 +1804,7 @@ export default function HistoriasPage() {
                 {config.bgMode === "photo" && (
                   <div className="space-y-3 mt-3">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <label className="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 cursor-pointer">
+                      <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 cursor-pointer">
                         <Upload size={13} />
                         {config.photo ? "Cambiar foto" : "Subir foto"}
                         <input type="file" accept="image/*" className="hidden" onChange={onPhoto} />
@@ -1819,7 +1819,7 @@ export default function HistoriasPage() {
                       )}
                     </div>
                     {config.photo && (
-                      <label className="flex items-center gap-2 text-xs text-gray-500">
+                      <label className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                         <input
                           type="checkbox"
                           checked={config.photoBlur}
@@ -1830,7 +1830,7 @@ export default function HistoriasPage() {
                     )}
                     {config.photo && (
                       <div>
-                        <label className="block text-[11px] text-gray-400 mb-1.5">
+                        <label className="block text-[11px] text-gray-500 dark:text-gray-400 mb-1.5">
                           Filtros de la foto
                         </label>
                         <div className="flex gap-1.5 flex-wrap">
@@ -1847,7 +1847,7 @@ export default function HistoriasPage() {
                       </div>
                     )}
                     {config.photo && (
-                      <p className="text-[11px] text-gray-400">
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
                         La foto cubre toda la historia de fondo y editás los textos encima.
                         Tocala en la vista previa para moverla, agrandarla con dos dedos
                         (pellizco) o rotarla.
@@ -1859,7 +1859,7 @@ export default function HistoriasPage() {
 
               {/* Texto */}
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Color del texto</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Color del texto</label>
                 <div className="flex gap-2">
                   {(
                     [
@@ -1881,7 +1881,7 @@ export default function HistoriasPage() {
 
               {/* Efectos */}
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Efectos</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Efectos</label>
                 <div className="flex gap-2 flex-wrap items-center">
                   <select
                     value={config.effect}
@@ -1989,11 +1989,11 @@ export default function HistoriasPage() {
                 )}
               </div>
 
-              <p className="text-center text-xs text-gray-400 mt-3">
+              <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3">
                 Tocá un elemento para seleccionarlo, arrastralo para moverlo, el círculo
                 de abajo a la derecha para redimensionar y el de arriba para rotar.
               </p>
-              <p className="text-center text-xs text-gray-400 mt-1">
+              <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Se descarga en 1080×1920 px (historia 9:16)
               </p>
 
@@ -2006,7 +2006,7 @@ export default function HistoriasPage() {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => resetElement(selected)}
-                        className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                       >
                         Restablecer
                       </button>
@@ -2022,7 +2022,7 @@ export default function HistoriasPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-1">Fuente</label>
+                      <label className="block text-[11px] text-gray-500 dark:text-gray-400 mb-1">Fuente</label>
                       <select
                         value={config.font}
                         onChange={(e) => set({ font: e.target.value })}
@@ -2036,9 +2036,9 @@ export default function HistoriasPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-1">Tamaño</label>
+                      <label className="block text-[11px] text-gray-500 dark:text-gray-400 mb-1">Tamaño</label>
                   <div className="flex items-center gap-3">
-                    <label className="text-[11px] text-gray-400 shrink-0 w-14">Rotación</label>
+                    <label className="text-[11px] text-gray-500 dark:text-gray-400 shrink-0 w-14">Rotación</label>
                     <input
                       type="range"
                       min={-180}
@@ -2059,7 +2059,7 @@ export default function HistoriasPage() {
                       }
                       className="flex-1"
                     />
-                    <span className="text-[11px] text-gray-400 w-10 text-right">
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400 w-10 text-right">
                       {Math.round(config.layout[selected].rotation)}°
                     </span>
                   </div>
@@ -2101,7 +2101,7 @@ export default function HistoriasPage() {
                           }
                           className="flex-1"
                         />
-                        <span className="text-[11px] text-gray-400 w-10 text-right">
+                        <span className="text-[11px] text-gray-500 dark:text-gray-400 w-10 text-right">
                           {Math.round(config.layout[selected].scale * 100)}%
                         </span>
                       </div>
@@ -2109,7 +2109,7 @@ export default function HistoriasPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <label className="text-[11px] text-gray-400 shrink-0">Color texto</label>
+                    <label className="text-[11px] text-gray-500 dark:text-gray-400 shrink-0">Color texto</label>
                     <div className="flex gap-1 flex-wrap">
                       {(
                         [
@@ -2130,7 +2130,7 @@ export default function HistoriasPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <label className="text-[11px] text-gray-400 shrink-0">Acento</label>
+                    <label className="text-[11px] text-gray-500 dark:text-gray-400 shrink-0">Acento</label>
                     <input
                       type="color"
                       value={config.accent}
@@ -2150,7 +2150,7 @@ export default function HistoriasPage() {
 
                   {selected === "photo" && (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <label className="text-[11px] text-gray-400 shrink-0">Filtro</label>
+                      <label className="text-[11px] text-gray-500 dark:text-gray-400 shrink-0">Filtro</label>
                       <div className="flex gap-1 flex-wrap">
                         {PHOTO_FILTERS.map((f) => (
                           <button
@@ -2169,7 +2169,7 @@ export default function HistoriasPage() {
 
               {hiddenIds.length > 0 && (
                 <div className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-3">
-                  <p className="text-[11px] text-gray-400 mb-1.5">Elementos ocultos</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1.5">Elementos ocultos</p>
                   <div className="flex gap-1.5 flex-wrap">
                     {hiddenIds.map((id) => (
                       <button
@@ -2187,14 +2187,14 @@ export default function HistoriasPage() {
 
               <button
                 onClick={resetAll}
-                className="w-full mt-3 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
+                className="w-full mt-3 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
               >
                 Reiniciar posiciones
               </button>
 
               <button
                 onClick={download}
-                className="w-full mt-3 flex items-center justify-center gap-1.5 bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl text-sm font-medium active:scale-95 transition"
+                className="w-full mt-3 flex items-center justify-center gap-1.5 bg-brand text-brand-contrast py-3 rounded-xl text-sm font-medium active:scale-95 transition"
               >
                 <ImageDown size={16} />
                 Descargar imagen
