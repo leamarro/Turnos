@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { X, ChevronDown, ChevronRight } from "lucide-react";
+import { formatMoney as money } from "@/lib/format";
 
 type Payment = {
   id?: string;
@@ -37,9 +38,6 @@ type ServiceEntry = {
   total: number;
   items: DetailItem[];
 };
-
-const money = (n: number) =>
-  `$ ${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 export default function IncomeModal({
   appointments,
@@ -134,12 +132,12 @@ export default function IncomeModal({
             onClick={onClose}
             className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
           >
-            <X size={18} className="text-gray-400" />
+            <X size={18} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
         {breakdown.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">
             {mode === "agendado"
               ? "Sin turnos pendientes este mes"
               : "Sin datos este mes"}
@@ -162,14 +160,14 @@ export default function IncomeModal({
                     <div className="flex justify-between items-center mb-1">
                       <div className="flex items-center gap-1.5 min-w-0">
                         {isExpanded ? (
-                          <ChevronDown size={14} className="text-gray-400 shrink-0" />
+                          <ChevronDown size={14} className="text-gray-500 dark:text-gray-400 shrink-0" />
                         ) : (
-                          <ChevronRight size={14} className="text-gray-400 shrink-0" />
+                          <ChevronRight size={14} className="text-gray-500 dark:text-gray-400 shrink-0" />
                         )}
                         <span className="text-sm font-medium dark:text-gray-200 truncate">
                           {item.name}
                         </span>
-                        <span className="text-xs text-gray-400 shrink-0">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
                           ×{item.count}
                         </span>
                       </div>
@@ -179,7 +177,7 @@ export default function IncomeModal({
                     </div>
                     <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-black dark:bg-white rounded-full transition-all"
+                        className="h-full bg-brand rounded-full transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -196,7 +194,7 @@ export default function IncomeModal({
                             <p className="text-sm text-gray-700 dark:text-gray-300 truncate">
                               {it.clientName}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
                               {format(it.date, "dd/MM")}
                               {it.isDeposit && (
                                 <span className="text-amber-500"> (seña)</span>
@@ -223,7 +221,7 @@ export default function IncomeModal({
                   {money(grandTotal)}
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {format(new Date(), "MMMM yyyy", { locale: es })}
               </p>
             </div>
