@@ -57,25 +57,25 @@ export default function AvailabilityView({
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setDay((d) => addDays(d, -1))}
-          className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition"
+          className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 transition"
         >
-          <ChevronLeft size={20} className="text-gray-500" />
+          <ChevronLeft size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
 
         <div className="text-center">
           <p className="text-base font-semibold capitalize">
             {format(day, "EEEE d", { locale: es })}
           </p>
-          <p className="text-xs text-gray-400 capitalize">
+          <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
             {format(day, "MMMM yyyy", { locale: es })}
           </p>
         </div>
 
         <button
           onClick={() => setDay((d) => addDays(d, 1))}
-          className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition"
+          className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 transition"
         >
-          <ChevronRight size={20} className="text-gray-500" />
+          <ChevronRight size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
       </div>
 
@@ -83,7 +83,7 @@ export default function AvailabilityView({
         <div className="flex justify-center mb-3">
           <button
             onClick={() => setDay(today)}
-            className="text-xs px-3 py-1 rounded-full border border-gray-300 text-gray-500"
+            className="text-xs px-3 py-1 rounded-full border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400"
           >
             Volver a hoy
           </button>
@@ -92,17 +92,17 @@ export default function AvailabilityView({
 
       {/* Resumen */}
       <div className="flex gap-3 mb-4">
-        <div className="flex-1 bg-white rounded-xl px-4 py-3 text-center shadow-sm">
+        <div className="flex-1 bg-white dark:bg-[#252525] rounded-xl px-4 py-3 text-center shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-2xl font-bold">{freeCount}</p>
-          <p className="text-xs text-gray-400 mt-0.5">libres</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">libres</p>
         </div>
-        <div className="flex-1 bg-white rounded-xl px-4 py-3 text-center shadow-sm">
+        <div className="flex-1 bg-white dark:bg-[#252525] rounded-xl px-4 py-3 text-center shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-2xl font-bold">{TIME_SLOTS.length - freeCount}</p>
-          <p className="text-xs text-gray-400 mt-0.5">ocupados</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">ocupados</p>
         </div>
-        <div className="flex-1 bg-white rounded-xl px-4 py-3 text-center shadow-sm">
+        <div className="flex-1 bg-white dark:bg-[#252525] rounded-xl px-4 py-3 text-center shadow-sm dark:shadow-none dark:border dark:border-gray-800">
           <p className="text-2xl font-bold">{TIME_SLOTS.length}</p>
-          <p className="text-xs text-gray-400 mt-0.5">en total</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">en total</p>
         </div>
       </div>
 
@@ -115,27 +115,27 @@ export default function AvailabilityView({
             <button
               key={slot}
               onClick={() => onSelectAppointment?.(appt.id)}
-              className="w-full flex items-center justify-between bg-gray-100 rounded-xl px-4 py-3 text-left active:opacity-70 transition"
+              className="w-full flex items-center justify-between bg-gray-100 dark:bg-[#2a2a2a] rounded-xl px-4 py-3 text-left active:opacity-70 transition"
             >
-              <span className="text-sm font-semibold tabular-nums text-gray-400 w-12 shrink-0">
+              <span className="text-sm font-semibold tabular-nums text-gray-500 dark:text-gray-400 w-12 shrink-0">
                 {slot}
               </span>
               <div className="flex-1 text-right">
-                <p className="text-sm font-medium text-gray-700 leading-tight">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200 leading-tight">
                   {appt.name} {appt.lastName}
                 </p>
-                <p className="text-xs text-gray-400">{appt.service.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{appt.service.name}</p>
               </div>
             </button>
           ) : (
             <div
               key={slot}
-              className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-gray-100"
+              className="flex items-center justify-between bg-white dark:bg-[#252525] rounded-xl px-4 py-3 border border-gray-100 dark:border-gray-800"
             >
-              <span className="text-sm font-semibold tabular-nums text-gray-800 w-12 shrink-0">
+              <span className="text-sm font-semibold tabular-nums text-gray-800 dark:text-gray-200 w-12 shrink-0">
                 {slot}
               </span>
-              <span className="text-sm text-emerald-500 font-medium">Libre</span>
+              <span className="text-sm text-emerald-500 dark:text-emerald-400 font-medium">Libre</span>
             </div>
           );
         })}
