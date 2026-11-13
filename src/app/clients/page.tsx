@@ -51,20 +51,20 @@ export default function ClientsPage() {
     <div className="max-w-2xl mx-auto px-4 py-4">
       <h1 className="text-xl font-semibold mb-4">
         Clientes
-        <span className="ml-2 text-sm font-normal text-gray-400">
+        <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
           {filtered.length}
         </span>
       </h1>
 
       {/* Buscador */}
       <div className="relative mb-4">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar por nombre, teléfono o Instagram…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#252525] text-sm focus:outline-none focus:border-gray-400 transition"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#252525] text-sm focus:outline-none focus:border-brand transition"
           />
       </div>
 
@@ -82,20 +82,20 @@ export default function ClientsPage() {
               </p>
 
               {c.telefono && (
-                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
                   <Phone size={11} />
                   {c.telefono}
                 </p>
               )}
               {!c.telefono && c.instagram && (
-                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
                   <Instagram size={11} />
                   {c.instagram}
                 </p>
               )}
 
               {c.lastAppointment && (
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Último:{" "}
                   {format(new Date(c.lastAppointment), "d MMM yyyy", {
                     locale: es,
@@ -107,9 +107,9 @@ export default function ClientsPage() {
             <div className="flex items-center gap-3 shrink-0 ml-3">
               <div className="text-right">
                 <p className="text-sm font-semibold">{c.totalAppointments}</p>
-                <p className="text-[10px] text-gray-400">turnos</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400">turnos</p>
               </div>
-              <ChevronRight size={16} className="text-gray-300" />
+              <ChevronRight size={16} className="text-gray-300 dark:text-gray-600" />
             </div>
           </Link>
         ))}
@@ -128,25 +128,25 @@ export default function ClientsPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-100 dark:border-gray-800">
             <tr>
-              <th className="p-3 text-left font-medium text-gray-600">Nombre</th>
-              <th className="p-3 text-left font-medium text-gray-600">Contacto</th>
-              <th className="p-3 text-center font-medium text-gray-600">Turnos</th>
-              <th className="p-3 text-left font-medium text-gray-600">Último turno</th>
+              <th className="p-3 text-left font-medium text-gray-600 dark:text-gray-300">Nombre</th>
+              <th className="p-3 text-left font-medium text-gray-600 dark:text-gray-300">Contacto</th>
+              <th className="p-3 text-center font-medium text-gray-600 dark:text-gray-300">Turnos</th>
+              <th className="p-3 text-left font-medium text-gray-600 dark:text-gray-300">Último turno</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((c) => (
-              <tr key={c.id} className="border-t border-gray-50 hover:bg-gray-50 transition">
+              <tr key={c.id} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition">
                 <td className="p-3">
                   <Link href={`/clients/${c.id}`} className="font-medium hover:underline">
                     {c.name} {c.lastName ?? ""}
                   </Link>
                 </td>
-                <td className="p-3 text-gray-500">
+                <td className="p-3 text-gray-500 dark:text-gray-400">
                   {c.telefono || c.instagram || "—"}
                 </td>
                 <td className="p-3 text-center font-medium">{c.totalAppointments}</td>
-                <td className="p-3 text-gray-500">
+                <td className="p-3 text-gray-500 dark:text-gray-400">
                   {c.lastAppointment
                     ? format(new Date(c.lastAppointment), "d MMM yyyy", { locale: es })
                     : "—"}
