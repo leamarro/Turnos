@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format, addDays, startOfWeek, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { formatMoney as money } from "@/lib/format";
 
 type Appointment = {
   id: string;
@@ -14,9 +15,6 @@ type Appointment = {
   servicePrice?: number | null;
   payments?: { amount: number; createdAt?: string | Date }[];
 };
-
-const money = (n: number) =>
-  `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
 export default function WeekView({
   appointments,
@@ -38,9 +36,9 @@ export default function WeekView({
       <div className="flex items-center justify-between">
         <button
           onClick={() => setWeekStart((d) => addDays(d, -7))}
-          className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full transition"
+          className="p-2 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 rounded-full transition"
         >
-          <ChevronLeft size={20} className="text-gray-500" />
+          <ChevronLeft size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
         <p className="text-sm font-medium capitalize">
           {format(weekStart, "d", { locale: es })} –{" "}
@@ -48,9 +46,9 @@ export default function WeekView({
         </p>
         <button
           onClick={() => setWeekStart((d) => addDays(d, 7))}
-          className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full transition"
+          className="p-2 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 rounded-full transition"
         >
-          <ChevronRight size={20} className="text-gray-500" />
+          <ChevronRight size={20} className="text-gray-500 dark:text-gray-400" />
         </button>
       </div>
 
@@ -65,13 +63,13 @@ export default function WeekView({
         return (
           <div
             key={day.toISOString()}
-            className={`bg-white rounded-2xl p-4 shadow-sm ${isPast ? "opacity-50" : ""}`}
+            className={`bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800 ${isPast ? "opacity-50" : ""}`}
           >
             <h3 className="flex items-center gap-2 font-medium mb-3 capitalize">
-              <span className="text-gray-600">{format(day, "EEEE", { locale: es })}</span>
+              <span className="text-gray-600 dark:text-gray-300">{format(day, "EEEE", { locale: es })}</span>
               <span
                 className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-semibold ${
-                  isToday ? "bg-black text-white" : "text-gray-700"
+                  isToday ? "bg-brand text-brand-contrast" : "text-gray-700 dark:text-gray-300"
                 }`}
               >
                 {format(day, "d")}
@@ -79,7 +77,7 @@ export default function WeekView({
             </h3>
 
             {items.length === 0 ? (
-              <p className="text-sm text-gray-400 italic">Sin turnos</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 italic">Sin turnos</p>
             ) : (
               <div className="space-y-2">
                 {items.map((a) => {
@@ -90,7 +88,7 @@ export default function WeekView({
                     <div
                       key={a.id}
                       onClick={() => onSelectAppointment?.(a.id)}
-                      className="bg-gray-50 rounded-xl px-3 py-3 cursor-pointer active:bg-gray-100 transition overflow-hidden relative"
+                      className="bg-gray-50 dark:bg-[#2a2a2a] rounded-xl px-3 py-3 cursor-pointer active:bg-gray-100 dark:active:bg-[#333] transition overflow-hidden relative"
                     >
                       <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ backgroundColor: a.service.color || "#000000" }} />
                       <div className="flex justify-between items-center gap-2 pl-2">
@@ -98,7 +96,7 @@ export default function WeekView({
                           <p className="text-sm font-medium">
                             {a.name} {a.lastName}
                           </p>
-                          <p className="text-xs text-gray-500">{a.service.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{a.service.name}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {remaining > 0 && total > 0 && (
@@ -106,7 +104,7 @@ export default function WeekView({
                               falta {money(remaining)}
                             </span>
                           )}
-                          <p className="text-sm font-bold tabular-nums text-gray-700">
+                          <p className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-200">
                             {format(new Date(a.date), "HH:mm")}
                           </p>
                         </div>
