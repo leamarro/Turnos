@@ -142,7 +142,7 @@ export default function HomePage() {
     >
       {/* PULL TO REFRESH */}
       {refreshing && (
-        <div className="flex justify-center items-center gap-2 py-2 mb-2 text-xs text-gray-400">
+        <div className="flex justify-center items-center gap-2 py-2 mb-2 text-xs text-gray-500 dark:text-gray-400">
           <Loader2 size={14} className="animate-spin" />
           Actualizando…
         </div>
@@ -153,17 +153,17 @@ export default function HomePage() {
         <h1 className="text-xl font-semibold">Agenda</h1>
 
         {/* Toggle lista / grilla */}
-        <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+        <div className="flex bg-gray-100 dark:bg-[#2a2a2a] rounded-xl p-1 gap-1">
           <button
             onClick={() => setGridMode(false)}
-            className={`p-1.5 rounded-lg transition ${!gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
+            className={`p-1.5 rounded-lg transition ${!gridMode ? "bg-white dark:bg-[#3a3a3a] dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400"}`}
             title="Vista lista"
           >
             <LayoutList size={16} />
           </button>
           <button
             onClick={() => setGridMode(true)}
-            className={`p-1.5 rounded-lg transition ${gridMode ? "bg-white shadow-sm" : "text-gray-400"}`}
+            className={`p-1.5 rounded-lg transition ${gridMode ? "bg-white dark:bg-[#3a3a3a] dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400"}`}
             title="Vista calendario"
           >
             <CalendarDays size={16} />
@@ -188,8 +188,8 @@ export default function HomePage() {
               onClick={() => { setView(v.key); if (v.key !== "month") setGridMode(false); }}
               className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition ${
                 view === v.key
-                  ? "bg-black text-white"
-                  : "border border-gray-200 text-gray-600"
+                  ? "bg-brand text-brand-contrast"
+                  : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300"
               }`}
             >
               {v.label}
@@ -202,14 +202,14 @@ export default function HomePage() {
       {loading && (
         <div className="space-y-3 mt-2 animate-pulse">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm">
+            <div key={i} className="bg-white dark:bg-[#252525] rounded-2xl p-4 shadow-sm dark:shadow-none dark:border dark:border-gray-800">
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-4 w-20 bg-gray-100 rounded-full" />
-                <div className="h-7 w-7 bg-gray-100 rounded-full" />
+                <div className="h-4 w-20 bg-gray-100 dark:bg-gray-700 rounded-full" />
+                <div className="h-7 w-7 bg-gray-100 dark:bg-gray-700 rounded-full" />
               </div>
               <div className="space-y-2">
-                <div className="h-12 bg-gray-50 rounded-xl" />
-                {i === 1 && <div className="h-12 bg-gray-50 rounded-xl" />}
+                <div className="h-12 bg-gray-50 dark:bg-[#2a2a2a] rounded-xl" />
+                {i === 1 && <div className="h-12 bg-gray-50 dark:bg-[#2a2a2a] rounded-xl" />}
               </div>
             </div>
           ))}
