@@ -7,6 +7,7 @@ import axios from "axios";
 import { Plus, Trash2, Save } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
+import { formatMoney } from "@/lib/format";
 
 type Service = {
   id: string;
@@ -20,14 +21,6 @@ const DEFAULT_COLORS = [
   "#E8A87C", "#D495A7", "#9FB4C7", "#A8C9A5", "#F4D58D",
   "#C7B8EA", "#F0A1A1", "#7EC8E3", "#E2B4BD", "#B8D4E3",
 ];
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 export default function ServicesPage() {
   const { toast } = useToast();
@@ -102,13 +95,13 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#252525]">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       <div className="max-w-lg mx-auto px-4 pt-6 pb-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold">Servicios</h1>
           <button
             onClick={() => setShowNew(!showNew)}
-            className="flex items-center gap-1.5 bg-black text-white text-sm px-4 py-2 rounded-xl font-medium"
+            className="flex items-center gap-1.5 bg-brand text-brand-contrast text-sm px-4 py-2 rounded-xl font-medium"
           >
             <Plus size={16} />
             Nuevo
@@ -118,12 +111,12 @@ export default function ServicesPage() {
         {/* Nuevo servicio */}
           {showNew && (
           <form onSubmit={createService} className="bg-white dark:bg-[#252525] rounded-2xl shadow dark:shadow-none dark:border dark:border-gray-800 p-5 mb-6 space-y-4">
-            <h2 className="font-medium text-sm text-gray-500">Nuevo servicio</h2>
+            <h2 className="font-medium text-sm text-gray-500 dark:text-gray-400">Nuevo servicio</h2>
             <input
               placeholder="Nombre"
               value={newForm.name}
               onChange={(e) => setNewForm({ ...newForm, name: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-black"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand"
               required
             />
             <input
@@ -131,18 +124,18 @@ export default function ServicesPage() {
               type="number"
               value={newForm.price}
               onChange={(e) => setNewForm({ ...newForm, price: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-black"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-brand"
               required
             />
             <div>
-              <label className="block text-xs text-gray-400 mb-2">Color</label>
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-2">Color</label>
               <div className="flex gap-2 flex-wrap">
                 {DEFAULT_COLORS.map((c) => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setNewForm({ ...newForm, color: c })}
-                    className={`w-7 h-7 rounded-full border-2 transition ${newForm.color === c ? "border-black scale-110" : "border-transparent"}`}
+                    className={`w-7 h-7 rounded-full border-2 transition ${newForm.color === c ? "border-brand scale-110" : "border-transparent"}`}
                     style={{ backgroundColor: c }}
                   />
                 ))}
@@ -154,7 +147,7 @@ export default function ServicesPage() {
                 />
               </div>
             </div>
-            <button type="submit" className="w-full bg-black text-white py-2.5 rounded-xl text-sm font-medium">
+            <button type="submit" className="w-full bg-brand text-brand-contrast py-2.5 rounded-xl text-sm font-medium">
               Crear servicio
             </button>
           </form>
@@ -169,14 +162,14 @@ export default function ServicesPage() {
                   <input
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand"
                     placeholder="Nombre"
                   />
                   <input
                     value={editForm.price}
                     type="number"
                     onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand"
                     placeholder="Precio"
                   />
                   <input
@@ -184,7 +177,7 @@ export default function ServicesPage() {
                     type="number"
                     min="1"
                     onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-black"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand"
                     placeholder="Duración (minutos)"
                   />
                   <div className="flex gap-2 flex-wrap">
@@ -193,7 +186,7 @@ export default function ServicesPage() {
                         key={c}
                         type="button"
                         onClick={() => setEditForm({ ...editForm, color: c })}
-                        className={`w-7 h-7 rounded-full border-2 transition ${editForm.color === c ? "border-black scale-110" : "border-transparent"}`}
+                        className={`w-7 h-7 rounded-full border-2 transition ${editForm.color === c ? "border-brand scale-110" : "border-transparent"}`}
                         style={{ backgroundColor: c }}
                       />
                     ))}
@@ -205,10 +198,10 @@ export default function ServicesPage() {
                     />
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => saveEdit(s.id)} className="flex-1 bg-black text-white py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5">
+                    <button onClick={() => saveEdit(s.id)} className="flex-1 bg-brand text-brand-contrast py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5">
                       <Save size={14} /> Guardar
                     </button>
-                    <button onClick={cancelEdit} className="flex-1 border border-gray-200 text-gray-600 py-2 rounded-xl text-sm">
+                    <button onClick={cancelEdit} className="flex-1 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl text-sm">
                       Cancelar
                     </button>
                   </div>
@@ -225,13 +218,13 @@ export default function ServicesPage() {
                   />
                   <div className="flex-1 min-w-0" onClick={() => startEdit(s)}>
                     <p className="font-medium text-sm">{s.name}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {formatMoney(s.price)} · {s.duration} min
                     </p>
                   </div>
                   <button
                     onClick={() => deleteService(s.id)}
-                    className="p-2 text-gray-300 hover:text-red-400 transition"
+                    className="p-2 text-gray-300 dark:text-gray-600 hover:text-red-400 transition"
                   >
                     <Trash2 size={16} />
                   </button>
